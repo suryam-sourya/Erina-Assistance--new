@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import Navbar from '../Navbar';
 
 // Mock next/link
@@ -28,6 +27,19 @@ jest.mock('framer-motion', () => ({
 // Mock ThemeToggle
 jest.mock('@/components/ThemeToggle', () => ({
   ThemeToggle: () => <button data-testid="theme-toggle">Toggle</button>,
+}));
+
+// Mock Firebase
+jest.mock('@/lib/firebase', () => ({
+  auth: {},
+}));
+
+jest.mock('firebase/auth', () => ({
+  onAuthStateChanged: jest.fn((auth, callback) => {
+    callback(null); // Mock logged out state
+    return () => {};
+  }),
+  signOut: jest.fn().mockResolvedValue(true),
 }));
 
 describe('Navbar', () => {
@@ -81,11 +93,11 @@ describe('Navbar', () => {
 
   describe('Emergency Button', () => {
     it('renders the Emergency text in the navigation bar', () => {
-      expect(screen.getByText('Emergency')).toBeInTheDocument();
+      expect(screen.getByText('Emergency Help')).toBeInTheDocument();
     });
 
     it('links to the booking page', () => {
-      const emergencyLink = screen.getByText('Emergency').closest('a');
+      const emergencyLink = screen.getByText('Emergency Help').closest('a');
       expect(emergencyLink).toHaveAttribute('href', '/booking');
     });
 
@@ -114,7 +126,7 @@ describe('Navbar', () => {
 
     it('mobile emergency button links to booking page', () => {
       // The desktop Emergency button is always visible and links to /booking
-      const emergencyLink = screen.getByText('Emergency').closest('a');
+      const emergencyLink = screen.getByText('Emergency Help').closest('a');
       expect(emergencyLink).toHaveAttribute('href', '/booking');
     });
   });

@@ -20,23 +20,23 @@ export default function EmergencyButton() {
             className="mb-4 flex flex-col gap-3"
           >
             <Link 
-              href="tel:+1234567890"
+              href="tel:+917340066655"
               className="flex items-center gap-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-5 py-3 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform"
             >
               <div className="bg-primary/20 p-2 rounded-full text-primary">
                 <Phone size={20} />
               </div>
-              <span className="font-semibold">Call Now</span>
+              <span className="font-semibold text-sm">Call +91 73400 66655</span>
             </Link>
             
             <Link 
-              href="https://wa.me/1234567890" target="_blank"
+              href="https://wa.me/917340066655" target="_blank"
               className="flex items-center gap-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-5 py-3 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 hover:scale-105 transition-transform"
             >
               <div className="relative w-9 h-9 flex items-center justify-center shrink-0">
                 <Image src="/whatsapp.png" alt="WhatsApp" width={28} height={28} />
               </div>
-              <span className="font-semibold">WhatsApp</span>
+              <span className="font-semibold text-sm">WhatsApp Chat</span>
             </Link>
             
             <Link 

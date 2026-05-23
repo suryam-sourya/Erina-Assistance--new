@@ -19,6 +19,15 @@ jest.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+// Mock global.fetch for JSDOM compliance
+beforeAll(() => {
+  global.fetch = jest.fn().mockImplementation(() =>
+    Promise.resolve({
+      json: () => Promise.resolve({ success: true, testimonials: [] }),
+    })
+  ) as jest.Mock;
+});
+
 describe('SuccessStoriesSection', () => {
   beforeEach(() => {
     render(<SuccessStoriesSection />);

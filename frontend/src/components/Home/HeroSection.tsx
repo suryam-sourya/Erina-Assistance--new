@@ -57,22 +57,22 @@ export default function HeroSection() {
             </Link>
             
             <Link 
-              href="tel:+919876543210"
-              className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md px-8 py-4 rounded-xl font-bold text-lg border border-white/20 transition-all hover:-translate-y-1"
+              href="tel:+917340066655"
+              className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md px-8 py-4 rounded-xl font-bold text-lg border border-white/20 transition-all hover:-translate-y-1 animate-pulse"
             >
-              <Phone size={20} />
-              Call Now
+              <Phone size={20} className="text-primary animate-bounce" />
+              Call +91 73400 66655
             </Link>
-
+            
             <Link 
-              href="https://wa.me/919876543210"
+              href="https://wa.me/917340066655"
               target="_blank"
               className="flex items-center justify-center gap-2 bg-[#25D366]/20 hover:bg-[#25D366]/40 text-white backdrop-blur-md px-8 py-4 rounded-xl font-bold text-lg border border-[#25D366]/30 transition-all hover:-translate-y-1"
             >
               <div className="relative w-5 h-5">
                 <Image src="/whatsapp.png" alt="WhatsApp" fill className="object-contain" />
               </div>
-              WhatsApp
+              WhatsApp Chat
             </Link>
           </motion.div>
 
