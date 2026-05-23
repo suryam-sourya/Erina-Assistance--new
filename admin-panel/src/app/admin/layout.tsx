@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminStore } from '@/frontend/store/adminStore';
 import { useAuth } from '@/frontend/contexts/AuthContext';
+import { useSettingsStore } from '@/frontend/store/settingsStore';
+import { useDispatchAlarm } from '@/frontend/lib/useDispatchAlarm';
 import { 
   LayoutDashboard, 
   CalendarRange, 
@@ -24,12 +26,26 @@ import {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { getStats, activeAlertMessage, clearAlert, fetchBookings } = useAdminStore();
+  const { getStats, activeAlertMessage, clearAlert, fetchBookings, bookings } = useAdminStore();
   const { user, logout } = useAuth();
-  
+  const { soundAlerts } = useSettingsStore();
+  const { playAlarm } = useDispatchAlarm();
+
+  // Track previous emergency count to detect NEW emergencies
+  const prevEmergencyCountRef = useRef<number>(0);
+
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
+
+  // 🚨 Acoustic Dispatch Alarm: fires when a new emergency booking appears
+  useEffect(() => {
+    const currentEmergencyCount = bookings.filter(b => b.status === 'emergency').length;
+    if (soundAlerts && currentEmergencyCount > prevEmergencyCountRef.current) {
+      playAlarm();
+    }
+    prevEmergencyCountRef.current = currentEmergencyCount;
+  }, [bookings, soundAlerts, playAlarm]);
 
   const stats = getStats();
 

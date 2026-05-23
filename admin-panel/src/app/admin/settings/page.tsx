@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from 'react';
-import { Settings, Volume2, ShieldAlert, BadgeCent, Clock, Moon, Sun, Save, BellRing, CheckCircle2 } from 'lucide-react';
+import { Volume2, BadgeCent, Clock, Moon, Sun, Save, CheckCircle2, Play } from 'lucide-react';
+import { useSettingsStore } from '@/frontend/store/settingsStore';
+import { useDispatchAlarm } from '@/frontend/lib/useDispatchAlarm';
 
 export default function OperationalSettings() {
-  const [soundAlerts, setSoundAlerts] = useState(true);
-  const [slaWarning, setSlaWarning] = useState('30');
-  const [shift, setShift] = useState<'day' | 'night'>('day');
-  const [ratePerKm, setRatePerKm] = useState('120');
+  const {
+    soundAlerts, setSoundAlerts,
+    slaWarning, setSlaWarning,
+    shift, setShift,
+    ratePerKm, setRatePerKm,
+  } = useSettingsStore();
+
+  const { playAlarm } = useDispatchAlarm();
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    // Changes are auto-persisted by Zustand; just show confirmation toast
     setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-    }, 2000);
+    setTimeout(() => setIsSaved(false), 2000);
   };
 
   return (
@@ -33,16 +38,26 @@ export default function OperationalSettings() {
         <form onSubmit={handleSave} className="glass-panel p-6 rounded-2xl border border-white/5 space-y-6">
           
           {/* Sounds toggles */}
-          <div className="flex items-center justify-between pb-5 border-b border-white/5">
+          <div className="flex items-start justify-between pb-5 border-b border-white/5">
             <div className="flex gap-3">
-              <Volume2 className="text-primary shrink-0" size={20} />
+              <Volume2 className="text-primary shrink-0 mt-0.5" size={20} />
               <div>
                 <h3 className="text-xs font-black text-white uppercase tracking-wider">Acoustic Dispatch Alarm</h3>
                 <span className="text-[10px] text-foreground/40 block mt-0.5 font-semibold">Play siren sound on incoming emergency requests</span>
+                {/* Live test button */}
+                <button
+                  type="button"
+                  onClick={playAlarm}
+                  disabled={!soundAlerts}
+                  className="mt-2 flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 disabled:opacity-30 disabled:cursor-not-allowed border border-primary/25 text-primary text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                >
+                  <Play size={10} />
+                  <span>Test Alarm</span>
+                </button>
               </div>
             </div>
             
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex items-center cursor-pointer mt-0.5">
               <input 
                 type="checkbox" 
                 checked={soundAlerts} 
