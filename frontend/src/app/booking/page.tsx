@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { MapPin, Camera, ShieldCheck, Navigation, CheckCircle2, XCircle } from 'lucide-react';
+import { MapPin, Camera, ShieldCheck, Navigation, CheckCircle2, XCircle, TrendingUp, Zap } from 'lucide-react';
+import { calculatePrice, DEFAULT_PRICING, PricingConfig } from '@/lib/pricingEngine';
 
 export default function BookingPage() {
   const [locationDetecting, setLocationDetecting] = useState(false);
@@ -17,6 +18,25 @@ export default function BookingPage() {
   const [selectedIssue, setSelectedIssue] = useState('');
   const [locationName, setLocationName] = useState('');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [distanceKm, setDistanceKm] = useState(10);
+
+  // Pricing
+  const [pricingConfig, setPricingConfig] = useState<PricingConfig>(DEFAULT_PRICING);
+  useEffect(() => {
+    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin-panel-psi-pearl.vercel.app';
+    fetch(`${adminUrl}/api/pricing`)
+      .then((r) => r.json())
+      .then((data) => { if (data?.pricing) setPricingConfig(data.pricing); })
+      .catch(() => { /* use default */ });
+  }, []);
+
+  const priceBreakdown = useMemo(() => calculatePrice({
+    serviceType:  selectedIssue || 'other',
+    vehicleType,
+    distanceKm,
+    isEmergency: isPriority,
+    config: pricingConfig,
+  }), [selectedIssue, vehicleType, distanceKm, isPriority, pricingConfig]);
 
   // Upload states
   const [imageUrl, setImageUrl] = useState('');
@@ -113,7 +133,8 @@ export default function BookingPage() {
           status: isPriority ? 'emergency' : 'pending',
           location: coordinates || { lat: 12.9716, lng: 77.5946 },
           address: locationName || 'Stranded Location, Bangalore',
-          paymentAmount: isPriority ? 5000 : 2500,
+          paymentAmount: priceBreakdown.total,
+          distanceKm,
           paymentStatus: 'pending',
           imageUrl: imageUrl || undefined,
         }),
@@ -421,6 +442,74 @@ export default function BookingPage() {
                   </div>
                 )}
               </div>
+
+              {/* Distance Slider */}
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Estimated Distance: <span className="text-primary">{distanceKm} km</span>
+                </label>
+                <input
+                  type="range"
+                  min={1}
+                  max={100}
+                  value={distanceKm}
+                  onChange={(e) => setDistanceKm(Number(e.target.value))}
+                  className="w-full accent-primary"
+                />
+                <div className="flex justify-between text-xs text-foreground/40 font-semibold mt-1">
+                  <span>1 km</span><span>100 km</span>
+                </div>
+              </div>
+
+              {/* Live Price Estimate Card */}
+              {selectedIssue && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl border border-primary/20 bg-primary/5 p-5 space-y-3"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp className="text-primary" size={16} />
+                    <span className="text-sm font-black text-foreground uppercase tracking-wider">Price Estimate</span>
+                    {isPriority && (
+                      <span className="ml-auto flex items-center gap-1 text-[9px] font-black text-emergency bg-emergency/10 border border-emergency/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        <Zap size={8} /> Priority Surcharge
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between text-foreground/60">
+                      <span>Base fee ({selectedIssue})</span>
+                      <span className="font-semibold text-foreground">₹{priceBreakdown.baseFee.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-foreground/60">
+                      <span>Distance ({distanceKm} km)</span>
+                      <span className="font-semibold text-foreground">₹{priceBreakdown.distanceFee.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-foreground/60">
+                      <span>Vehicle type</span>
+                      <span className="font-semibold text-foreground">{priceBreakdown.vehicleMultiplier}×</span>
+                    </div>
+                    {priceBreakdown.timeSurcharge > 1 && (
+                      <div className="flex justify-between text-foreground/60">
+                        <span>{priceBreakdown.surchargeLabel}</span>
+                        <span className="font-semibold text-warning">{priceBreakdown.timeSurcharge}×</span>
+                      </div>
+                    )}
+                    {isPriority && (
+                      <div className="flex justify-between text-foreground/60">
+                        <span>Emergency priority</span>
+                        <span className="font-semibold text-emergency">{priceBreakdown.emergencySurcharge}×</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-primary/15">
+                    <span className="text-sm font-black text-foreground">Estimated Total</span>
+                    <span className="text-2xl font-black text-primary">₹{priceBreakdown.total.toLocaleString()}</span>
+                  </div>
+                  <p className="text-[10px] text-foreground/40 font-semibold">Final amount confirmed by dispatcher. Estimate may vary with actual distance.</p>
+                </motion.div>
+              )}
 
               {/* Submit Button */}
               <button 
