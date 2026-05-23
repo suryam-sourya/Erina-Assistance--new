@@ -15,6 +15,7 @@ export interface Booking {
   paymentAmount: number;
   createdTime: string;
   location: string;
+  imageUrl?: string | null;
 }
 
 export interface Technician {
@@ -85,12 +86,13 @@ interface AdminState {
   };
   
   // Interactive Simulator Operations
-  addBooking: (booking: Omit<Booking, 'id' | 'createdTime'>) => void;
-  assignTechnician: (bookingId: string, technicianId: string) => void;
-  updateBookingStatus: (bookingId: string, status: Booking['status']) => void;
+  fetchBookings: () => Promise<void>;
+  addBooking: (booking: Omit<Booking, 'id' | 'createdTime'>) => Promise<void>;
+  assignTechnician: (bookingId: string, technicianId: string) => Promise<void>;
+  updateBookingStatus: (bookingId: string, status: Booking['status']) => Promise<void>;
   toggleTechnicianAvailability: (technicianId: string) => void;
   addActivity: (message: string, type: RecentActivity['type']) => void;
-  triggerEmergencyDispatch: (serviceType: Booking['serviceType'], location: string, customerName: string) => void;
+  triggerEmergencyDispatch: (serviceType: Booking['serviceType'], location: string, customerName: string) => Promise<void>;
   clearAlert: () => void;
   resolveTicket: (ticketId: string) => void;
   addSupportTicket: (ticket: Omit<SupportTicket, 'id' | 'createdTime' | 'status'>) => void;
@@ -411,7 +413,93 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     };
   },
 
-  addBooking: (bookingData) => {
+  fetchBookings: async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings`);
+      if (!response.ok) throw new Error("Failed to fetch bookings");
+      const data: any[] = await response.json();
+      
+      const mappedBookings: Booking[] = data.map((b: any) => ({
+        id: b.id || b._id,
+        customerName: b.customerName || "Customer",
+        customerPhone: b.phone || "",
+        serviceType: b.serviceType || "towing",
+        serviceLabel: b.serviceLabel || "Roadside Service",
+        vehicleName: b.vehicleName || b.vehicleType || "Vehicle",
+        vehiclePlate: b.vehiclePlate || b.vehicleNumber || "",
+        technicianId: b.technicianId || null,
+        technicianName: b.technicianName || null,
+        status: (b.status || "pending").toLowerCase() as Booking['status'],
+        paymentStatus: (b.paymentStatus || "pending").toLowerCase() as Booking['paymentStatus'],
+        paymentAmount: b.paymentAmount || 0,
+        createdTime: b.createdAt ? new Date(b.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just Now",
+        location: b.address || (b.location?.lat ? `${b.location.lat}, ${b.location.lng}` : "Unknown Location"),
+        imageUrl: b.imageUrl || null,
+      }));
+
+      // Calculate payments based on completed bookings
+      const computedPayments: PaymentRecord[] = mappedBookings
+        .filter(b => b.status === 'completed' || b.paymentStatus === 'completed')
+        .map((b, index) => ({
+          id: `PAY-${1000 + index}`,
+          bookingId: b.id,
+          customerName: b.customerName,
+          serviceLabel: b.serviceLabel,
+          amount: b.paymentAmount,
+          status: b.paymentStatus as any,
+          date: b.createdTime,
+        }));
+
+      // Calculate customer rescue counts
+      const computedCustomersMap: Record<string, Customer> = {};
+      initialCustomers.forEach(c => {
+        computedCustomersMap[c.name] = { ...c, rescuesCount: 0 };
+      });
+      mappedBookings.forEach(b => {
+        if (b.status === 'completed') {
+          if (computedCustomersMap[b.customerName]) {
+            computedCustomersMap[b.customerName].rescuesCount += 1;
+          } else {
+            computedCustomersMap[b.customerName] = {
+              id: `CUST-${Object.keys(computedCustomersMap).length + 1}`,
+              name: b.customerName,
+              phone: b.customerPhone,
+              membershipPlan: 'basic',
+              rescuesCount: 1,
+              vehicle: `${b.vehicleName} (${b.vehiclePlate})`,
+            };
+          }
+        }
+      });
+
+      set({ 
+        bookings: mappedBookings,
+        payments: computedPayments.length > 0 ? computedPayments : initialPayments,
+        customers: Object.values(computedCustomersMap),
+      });
+    } catch (error) {
+      console.warn("Could not fetch bookings from DB (offline or mock):", error);
+    }
+  },
+
+  addBooking: async (bookingData) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData),
+      });
+      if (response.ok) {
+        await get().fetchBookings();
+        return;
+      }
+    } catch (e) {
+      console.warn("MongoDB API add failed, using local fallback:", e);
+    }
+
+    // Local fallback
     const newId = `ER-${Math.floor(1000 + Math.random() * 9000)}`;
     const newBooking: Booking = {
       ...bookingData,
@@ -426,12 +514,41 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     get().addActivity(`New booking request ${newId} created for ${bookingData.customerName} (${bookingData.serviceLabel}).`, 'dispatch');
   },
 
-  assignTechnician: (bookingId, technicianId) => {
+  assignTechnician: async (bookingId, technicianId) => {
     const techs = get().technicians;
     const assignedTech = techs.find(t => t.id === technicianId);
     
     if (!assignedTech) return;
 
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          technicianId,
+          technicianName: assignedTech.name,
+          status: 'assigned',
+        }),
+      });
+      if (response.ok) {
+        await get().fetchBookings();
+        // Also update technician state
+        set((state) => ({
+          technicians: state.technicians.map(t => 
+            t.id === technicianId 
+              ? { ...t, availability: 'busy', currentJob: bookingId } 
+              : t
+          ),
+        }));
+        get().addActivity(`Technician ${assignedTech.name} assigned to Booking ${bookingId}.`, 'assignment');
+        return;
+      }
+    } catch (e) {
+      console.warn("MongoDB API assign failed, using local fallback:", e);
+    }
+
+    // Local fallback
     set((state) => ({
       bookings: state.bookings.map(b => 
         b.id === bookingId 
@@ -453,10 +570,43 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     get().addActivity(`Technician ${assignedTech.name} assigned to Booking ${bookingId}.`, 'assignment');
   },
 
-  updateBookingStatus: (bookingId, status) => {
+  updateBookingStatus: async (bookingId, status) => {
     const targetBooking = get().bookings.find(b => b.id === bookingId);
     if (!targetBooking) return;
 
+    try {
+      const updateData: any = { status };
+      if (status === 'completed') {
+        updateData.paymentStatus = 'completed';
+      }
+      
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+      });
+      
+      if (response.ok) {
+        await get().fetchBookings();
+        // Update technician local state if completed
+        if (status === 'completed' && targetBooking.technicianId) {
+          set((state) => ({
+            technicians: state.technicians.map(t => 
+              t.id === targetBooking.technicianId 
+                ? { ...t, availability: 'available', currentJob: null } 
+                : t
+            ),
+          }));
+        }
+        get().addActivity(`Booking ${bookingId} status updated to ${status}.`, 'dispatch');
+        return;
+      }
+    } catch (e) {
+      console.warn("MongoDB API status update failed, using local fallback:", e);
+    }
+
+    // Local fallback
     set((state) => ({
       bookings: state.bookings.map(b => 
         b.id === bookingId 
@@ -542,19 +692,17 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }));
   },
 
-  triggerEmergencyDispatch: (serviceType, location, customerName) => {
-    const newId = `ER-${Math.floor(1000 + Math.random() * 9000)}`;
+  triggerEmergencyDispatch: async (serviceType, location, customerName) => {
     const serviceLabels = {
       towing: 'Accident Flatbed Towing',
       battery: 'Emergency Battery Assistance',
       ev: 'Rapid Mobile EV Charging',
       lockout: 'Emergency Lockout Assistance',
     };
-    
-    const newBooking: Booking = {
-      id: newId,
+
+    const newBookingData = {
       customerName,
-      customerPhone: '+91 9' + Math.floor(100000000 + Math.random() * 900000000),
+      phone: '+91 9' + Math.floor(100000000 + Math.random() * 900000000),
       serviceType,
       serviceLabel: serviceLabels[serviceType],
       vehicleName: 'BMW X5 (Emergency)',
@@ -564,6 +712,42 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       status: 'emergency',
       paymentStatus: 'pending',
       paymentAmount: serviceType === 'towing' ? 6000 : 2500,
+      location: { lat: 12.9716, lng: 77.5946 },
+      address: location,
+    };
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBookingData),
+      });
+      if (response.ok) {
+        await get().fetchBookings();
+        set({ activeAlertMessage: `⚠️ DISPATCH ALERT: Emergency ${serviceLabels[serviceType]} requested at ${location}!` });
+        get().addActivity(`🚨 EMERGENCY DISPATCH ACTIVATED: ${customerName} stranded at ${location}!`, 'alert');
+        return;
+      }
+    } catch (e) {
+      console.warn("MongoDB API emergency dispatch failed, using local fallback:", e);
+    }
+
+    // Local fallback
+    const newId = `ER-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newBooking: Booking = {
+      id: newId,
+      customerName,
+      customerPhone: newBookingData.phone,
+      serviceType,
+      serviceLabel: newBookingData.serviceLabel,
+      vehicleName: newBookingData.vehicleName,
+      vehiclePlate: newBookingData.vehiclePlate,
+      technicianId: null,
+      technicianName: null,
+      status: 'emergency',
+      paymentStatus: 'pending',
+      paymentAmount: newBookingData.paymentAmount,
       createdTime: 'Just Now',
       location,
     };

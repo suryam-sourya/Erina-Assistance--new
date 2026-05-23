@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminStore } from '@/store/adminStore';
@@ -23,8 +24,13 @@ import {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { getStats, activeAlertMessage, clearAlert } = useAdminStore();
+  const { getStats, activeAlertMessage, clearAlert, fetchBookings } = useAdminStore();
   const { user, logout } = useAuth();
+  
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
   const stats = getStats();
 
   const navigationItems = [

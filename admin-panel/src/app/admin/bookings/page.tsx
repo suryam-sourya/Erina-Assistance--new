@@ -30,6 +30,9 @@ export default function BookingsManagement() {
   // Assign Tech Modal State
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
+  // Incident Image Preview State
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   // Filter Bookings
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = 
@@ -199,8 +202,21 @@ export default function BookingsManagement() {
 
                     {/* Vehicle */}
                     <td className="py-4 px-5">
-                      <div className="text-foreground/80">{booking.vehicleName}</div>
-                      <div className="font-mono text-[9px] text-foreground/40 mt-1 uppercase tracking-wider">{booking.vehiclePlate}</div>
+                      <div className="flex items-center gap-2">
+                        {booking.imageUrl && (
+                          <div 
+                            onClick={() => setPreviewImage(booking.imageUrl || null)}
+                            className="relative w-8 h-8 rounded-lg overflow-hidden border border-white/10 hover:border-primary/50 cursor-pointer flex-shrink-0 group/thumb"
+                            title="Click to view incident photo"
+                          >
+                            <img src={booking.imageUrl} alt="Incident" className="object-cover w-full h-full group-hover/thumb:scale-110 transition-all" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-foreground/80">{booking.vehicleName}</div>
+                          <div className="font-mono text-[9px] text-foreground/40 mt-1 uppercase tracking-wider">{booking.vehiclePlate}</div>
+                        </div>
+                      </div>
                     </td>
 
                     {/* Technician */}
@@ -383,6 +399,37 @@ export default function BookingsManagement() {
               )}
             </div>
 
+          </motion.div>
+        </div>
+      )}
+
+      {/* INCIDENT IMAGE FULL PREVIEW MODAL */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setPreviewImage(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative max-w-3xl w-full rounded-2xl overflow-hidden glass-panel border border-white/10 p-2 cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute right-4 top-4 z-10">
+              <button 
+                onClick={() => setPreviewImage(null)}
+                className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 border border-white/10 text-white flex items-center justify-center transition-all cursor-pointer font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="relative aspect-video w-full bg-black/40 rounded-xl overflow-hidden flex items-center justify-center">
+              <img 
+                src={previewImage} 
+                alt="Incident Vehicle Zoom" 
+                className="max-w-full max-h-[80vh] object-contain rounded-xl"
+              />
+            </div>
           </motion.div>
         </div>
       )}

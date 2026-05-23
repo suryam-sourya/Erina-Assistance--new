@@ -1,21 +1,185 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { MapPin, Camera, ShieldCheck, Navigation } from 'lucide-react';
+import { MapPin, Camera, ShieldCheck, Navigation, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function BookingPage() {
   const [locationDetecting, setLocationDetecting] = useState(false);
   const [isPriority, setIsPriority] = useState(false);
 
+  // Form states
+  const [customerName, setCustomerName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [vehicleType, setVehicleType] = useState('Car (Hatchback/Sedan)');
+  const [vehicleNumber, setVehicleNumber] = useState('');
+  const [selectedIssue, setSelectedIssue] = useState('');
+  const [locationName, setLocationName] = useState('');
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Upload states
+  const [imageUrl, setImageUrl] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState('');
+  const [createdBookingId, setCreatedBookingId] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Status states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('Image must be less than 5MB.');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setImageError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setImageUrl(data.url);
+      } else {
+        setImageError(data.error || 'Failed to upload image.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setImageError('Network error uploading image.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl('');
+    setImageError('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleDetectLocation = () => {
     setLocationDetecting(true);
     setTimeout(() => {
       setLocationDetecting(false);
-      // In a real app, this would use the Geolocation API
+      setCoordinates({ lat: 12.9716, lng: 77.5946 }); // Mock Bangalore Coordinates
+      setLocationName('Hebbal Flyover, Bangalore');
     }, 1500);
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedIssue) {
+      setErrorMessage('Please select the type of issue.');
+      setSubmitStatus('error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerName,
+          phone,
+          serviceType: selectedIssue.toLowerCase().replace(' ', '_'),
+          vehicleType,
+          vehicleNumber,
+          vehiclePlate: vehicleNumber,
+          status: isPriority ? 'emergency' : 'pending',
+          location: coordinates || { lat: 12.9716, lng: 77.5946 },
+          address: locationName || 'Stranded Location, Bangalore',
+          paymentAmount: isPriority ? 5000 : 2500,
+          paymentStatus: 'pending',
+          imageUrl: imageUrl || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmitStatus('success');
+        setCreatedBookingId(data.booking._id || data.booking.id || '');
+        // Clear fields
+        setCustomerName('');
+        setPhone('');
+        setVehicleNumber('');
+        setSelectedIssue('');
+        setLocationName('');
+        setCoordinates(null);
+      } else {
+        setErrorMessage(data.error || 'Failed to submit request.');
+        setSubmitStatus('error');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage('Network error occurred. Please try again.');
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (submitStatus === 'success') {
+    return (
+      <div className="min-h-screen pt-28 pb-16 bg-light dark:bg-[#0B0F19] flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-white dark:bg-gray-900 rounded-3xl shadow-xl p-8 border border-gray-100 dark:border-gray-800 text-center space-y-6"
+        >
+          <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle2 size={48} />
+          </div>
+          <h2 className="text-3xl font-extrabold text-foreground">Request Received!</h2>
+          <p className="text-foreground/60">
+            Your emergency roadside assistance request has been recorded. Our team is dispatching the nearest service operator to your location.
+          </p>
+          <div className="flex flex-col gap-3">
+            <a
+              href={`/tracking?id=${createdBookingId}`}
+              className="w-full bg-gradient-to-r from-primary to-primary-hover text-white py-4 rounded-xl font-bold transition-all hover:scale-[1.01] shadow-lg shadow-primary/20 block text-center"
+            >
+              Track Your Live Rescue
+            </a>
+            <button
+              onClick={() => {
+                setSubmitStatus('idle');
+                setCreatedBookingId('');
+              }}
+              className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-foreground py-4 rounded-xl font-bold transition-all cursor-pointer"
+            >
+              Submit Another Request
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-28 pb-16 bg-light dark:bg-[#0B0F19]">
@@ -46,7 +210,7 @@ export default function BookingPage() {
           className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800"
         >
           <div className="p-8 md:p-10">
-            <form className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* Priority Toggle */}
               <div className={`p-5 rounded-2xl border-2 transition-colors flex items-center justify-between cursor-pointer ${isPriority ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'}`} onClick={() => setIsPriority(!isPriority)}>
@@ -66,16 +230,37 @@ export default function BookingPage() {
                 </div>
               </div>
 
+              {submitStatus === 'error' && (
+                <div className="flex items-center gap-3 bg-emergency/10 border border-emergency/20 text-emergency p-4 rounded-xl text-sm font-semibold">
+                  <XCircle size={18} />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Personal Info */}
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">Full Name</label>
-                    <input type="text" placeholder="John Doe" className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" />
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="John Doe" 
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground" 
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">Mobile Number</label>
-                    <input type="tel" placeholder="+91 98765 43210" className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" />
+                    <input 
+                      type="tel" 
+                      required
+                      placeholder="+91 98765 43210" 
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground" 
+                    />
                   </div>
                 </div>
 
@@ -83,7 +268,11 @@ export default function BookingPage() {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">Vehicle Type</label>
-                    <select className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground">
+                    <select 
+                      value={vehicleType}
+                      onChange={(e) => setVehicleType(e.target.value)}
+                      className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground"
+                    >
                       <option>Car (Hatchback/Sedan)</option>
                       <option>SUV / MUV</option>
                       <option>Luxury Vehicle</option>
@@ -94,7 +283,14 @@ export default function BookingPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">Vehicle Number</label>
-                    <input type="text" placeholder="KA 01 AB 1234" className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all uppercase" />
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="KA 01 AB 1234" 
+                      value={vehicleNumber}
+                      onChange={(e) => setVehicleNumber(e.target.value)}
+                      className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all uppercase text-foreground" 
+                    />
                   </div>
                 </div>
               </div>
@@ -105,8 +301,15 @@ export default function BookingPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {['Towing', 'Flat Tyre', 'Battery', 'Fuel', 'Lockout', 'Engine', 'Accident', 'Other'].map((issue) => (
                     <label key={issue} className="cursor-pointer">
-                      <input type="radio" name="issue" className="peer sr-only" />
-                      <div className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all hover:bg-gray-50 dark:hover:bg-gray-800 peer-checked:hover:bg-primary font-medium">
+                      <input 
+                        type="radio" 
+                        name="issue" 
+                        value={issue}
+                        checked={selectedIssue === issue}
+                        onChange={() => setSelectedIssue(issue)}
+                        className="peer sr-only" 
+                      />
+                      <div className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all hover:bg-gray-50 dark:hover:bg-gray-800 peer-checked:hover:bg-primary font-medium text-foreground">
                         {issue}
                       </div>
                     </label>
@@ -120,7 +323,14 @@ export default function BookingPage() {
                 <div className="flex gap-4">
                   <div className="relative flex-grow">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input type="text" placeholder="Search location or drop pin..." className="w-full pl-12 pr-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" />
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="Search location or drop pin..." 
+                      value={locationName}
+                      onChange={(e) => setLocationName(e.target.value)}
+                      className="w-full pl-12 pr-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground" 
+                    />
                   </div>
                   <button 
                     type="button"
@@ -138,13 +348,18 @@ export default function BookingPage() {
                   </button>
                 </div>
                 {/* Mock Map Area */}
-                <div className="mt-4 w-full h-48 bg-gray-200 dark:bg-gray-800 rounded-xl relative overflow-hidden flex items-center justify-center group cursor-pointer border border-gray-200 dark:border-gray-700">
+                <div 
+                  onClick={handleDetectLocation}
+                  className="mt-4 w-full h-48 bg-gray-200 dark:bg-gray-800 rounded-xl relative overflow-hidden flex items-center justify-center group cursor-pointer border border-gray-200 dark:border-gray-700"
+                >
                    <div className="absolute inset-0 opacity-50 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
                    <div className="relative z-10 flex flex-col items-center">
                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg mb-2 group-hover:scale-110 transition-transform text-primary">
                        <MapPin size={24} />
                      </div>
-                     <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">Tap to select on map</span>
+                     <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                       {locationName ? `Selected: ${locationName}` : 'Tap to select on map'}
+                     </span>
                    </div>
                 </div>
               </div>
@@ -152,19 +367,75 @@ export default function BookingPage() {
               {/* Upload Image */}
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Upload Image (Optional)</label>
-                <div className="w-full border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer group">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Camera size={32} />
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden" 
+                />
+                
+                {imageUrl ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-4 flex items-center justify-between gap-4 group">
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex-shrink-0">
+                        <img src={imageUrl} alt="Uploaded vehicle" className="object-cover w-full h-full" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">Vehicle Photo Uploaded</p>
+                        <p className="text-xs text-success font-semibold flex items-center gap-1 mt-1">
+                          <CheckCircle2 size={12} />
+                          Saved to Cloudinary
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="px-4 py-2 text-xs font-bold text-emergency hover:bg-emergency/10 border border-emergency/20 hover:border-emergency/35 rounded-xl transition-all cursor-pointer"
+                    >
+                      Remove
+                    </button>
                   </div>
-                  <p className="font-semibold text-foreground mb-1">Click to upload or drag and drop</p>
-                  <p className="text-sm text-foreground/50">SVG, PNG, JPG or GIF (max. 5MB)</p>
-                </div>
+                ) : (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full border-2 border-dashed border-gray-200 dark:border-gray-800 hover:border-primary/50 dark:hover:border-primary/50 rounded-2xl p-8 text-center bg-white dark:bg-gray-900 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-all cursor-pointer group flex flex-col items-center justify-center space-y-4"
+                  >
+                    {isUploadingImage ? (
+                      <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center animate-spin border-2 border-primary border-t-transparent" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <Camera size={28} />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-bold text-foreground text-sm">
+                        {isUploadingImage ? 'Uploading photo to cloud...' : 'Upload incident or vehicle photo'}
+                      </p>
+                      <p className="text-xs text-foreground/50 mt-1">PNG, JPG, JPEG or WEBP (max. 5MB)</p>
+                    </div>
+                    {imageError && (
+                      <p className="text-xs font-semibold text-emergency mt-2">{imageError}</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Submit Button */}
-              <button className="w-full bg-gradient-to-r from-primary to-primary-hover text-white py-5 rounded-2xl font-bold text-xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.01] transition-all flex items-center justify-center gap-3">
-                <ShieldCheck size={24} />
-                Request Assistance Now
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-primary to-primary-hover text-white py-5 rounded-2xl font-bold text-xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.01] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <ShieldCheck size={24} />
+                    Request Assistance Now
+                  </>
+                )}
               </button>
               
             </form>
@@ -174,3 +445,4 @@ export default function BookingPage() {
     </div>
   );
 }
+
