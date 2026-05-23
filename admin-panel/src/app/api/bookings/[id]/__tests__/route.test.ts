@@ -3,16 +3,16 @@
  */
 
 import { PUT } from '../route';
-import { connectDB } from '@/lib/mongodb';
-import Booking from '@/models/Booking';
+import { connectDB } from '@/backend/lib/mongodb';
+import Booking from '@/backend/models/Booking';
 
 // Mock the database connection
-jest.mock('@/lib/mongodb', () => ({
+jest.mock('@/backend/lib/mongodb', () => ({
   connectDB: jest.fn().mockResolvedValue(null),
 }));
 
 // Mock the Booking model directly to prevent loading real mongoose/bson
-jest.mock('@/models/Booking', () => ({
+jest.mock('@/backend/models/Booking', () => ({
   __esModule: true,
   default: {
     findByIdAndUpdate: jest.fn(),

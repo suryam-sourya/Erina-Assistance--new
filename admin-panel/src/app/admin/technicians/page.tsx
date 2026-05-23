@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useAdminStore, Technician } from '@/store/adminStore';
+import { useAdminStore, Technician } from '@/frontend/store/adminStore';
 import { 
   UserCheck, 
   UserX, 

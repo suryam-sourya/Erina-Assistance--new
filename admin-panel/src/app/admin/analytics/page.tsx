@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useAdminStore } from '@/store/adminStore';
+import { useAdminStore } from '@/frontend/store/adminStore';
 import { 
   BarChart, 
   Bar, 

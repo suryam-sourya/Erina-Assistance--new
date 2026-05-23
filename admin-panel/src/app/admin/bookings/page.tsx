@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useAdminStore, Booking, Technician } from '@/store/adminStore';
+import { useAdminStore, Booking, Technician } from '@/frontend/store/adminStore';
 import { 
   Search, 
   Filter, 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useAdminStore, Booking } from '@/store/adminStore';
+import { useAdminStore, Booking } from '@/frontend/store/adminStore';
 import { 
   Flame, 
   UserCheck, 

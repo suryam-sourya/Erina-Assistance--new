@@ -1,4 +1,4 @@
-import { useAdminStore } from '@/store/adminStore';
+import { useAdminStore } from '@/frontend/store/adminStore';
 
 describe('Admin Store', () => {
   beforeEach(() => {
@@ -6,7 +6,7 @@ describe('Admin Store', () => {
     const { setState } = useAdminStore.getState();
     // Reinitialize using the original initial data by re-creating store (simple approach: reload module)
     jest.resetModules();
-    const { useAdminStore: freshStore } = require('@/store/adminStore');
+    const { useAdminStore: freshStore } = require('@/frontend/store/adminStore');
     // Replace the exported store with fresh one
     Object.assign(useAdminStore, freshStore);
   });

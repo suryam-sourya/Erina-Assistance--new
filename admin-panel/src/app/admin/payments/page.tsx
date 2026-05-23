@@ -1,6 +1,6 @@
 "use client";
 
-import { useAdminStore } from '@/store/adminStore';
+import { useAdminStore } from '@/frontend/store/adminStore';
 import { CreditCard, Search, ArrowUpRight, DollarSign, Wallet, FileText, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 

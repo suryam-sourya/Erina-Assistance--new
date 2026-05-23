@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Phone, Key, ShieldAlert, ArrowRight, Wrench, Shield } from 'lucide-react';
 
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/frontend/lib/firebase';
 
 export default function AdminLogin() {
   const router = useRouter();

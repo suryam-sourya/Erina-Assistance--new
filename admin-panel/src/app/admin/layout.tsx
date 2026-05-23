@@ -3,8 +3,8 @@
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAdminStore } from '@/store/adminStore';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminStore } from '@/frontend/store/adminStore';
+import { useAuth } from '@/frontend/contexts/AuthContext';
 import { 
   LayoutDashboard, 
   CalendarRange, 

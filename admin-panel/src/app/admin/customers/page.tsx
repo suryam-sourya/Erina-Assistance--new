@@ -1,6 +1,6 @@
 "use client";
 
-import { useAdminStore } from '@/store/adminStore';
+import { useAdminStore } from '@/frontend/store/adminStore';
 import { Users, Search, Award, ShieldAlert, CheckCircle2, User } from 'lucide-react';
 import { useState } from 'react';
 

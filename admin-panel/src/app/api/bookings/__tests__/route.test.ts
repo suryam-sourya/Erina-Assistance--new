@@ -3,17 +3,17 @@
  */
 
 import { GET } from '../route';
-import { connectDB } from '@/lib/mongodb';
-import Booking from '@/models/Booking';
+import { connectDB } from '@/backend/lib/mongodb';
+import Booking from '@/backend/models/Booking';
 
 // Mock the database connection
-jest.mock('@/lib/mongodb', () => ({
+jest.mock('@/backend/lib/mongodb', () => ({
   connectDB: jest.fn().mockResolvedValue(null),
 }));
 
 // Setup query mock for chained .find().sort()
 const mockSort = jest.fn();
-jest.mock('@/models/Booking', () => ({
+jest.mock('@/backend/models/Booking', () => ({
   __esModule: true,
   default: {
     find: jest.fn().mockImplementation(() => ({
