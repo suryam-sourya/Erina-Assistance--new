@@ -29,7 +29,7 @@ export default function Footer() {
               <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-115 transition-transform relative w-7 h-7 block">
                 <Image src="/linkedin.png" alt="LinkedIn" fill className="object-contain" />
               </a>
-              <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="hover:scale-115 transition-transform relative w-7 h-7 block">
+              <a href="https://wa.me/917340066655" target="_blank" rel="noopener noreferrer" className="hover:scale-115 transition-transform relative w-7 h-7 block">
                 <Image src="/whatsapp.png" alt="WhatsApp" fill className="object-contain" />
               </a>
             </div>
@@ -78,7 +78,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={20} className="text-primary shrink-0" />
-                <span className="text-sm">+91 98765 43210</span>
+                <a href="tel:+917340066655" className="text-sm hover:text-primary transition-colors">+91 73400 66655</a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={20} className="text-primary shrink-0" />

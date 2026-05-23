@@ -20,7 +20,7 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Contact Info Cards */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 h-fit">
             <motion.div 
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
               className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl border border-gray-100 dark:border-gray-800 flex items-start gap-4"
@@ -31,7 +31,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-bold text-lg text-foreground mb-1">Call Us (24/7)</h3>
                 <p className="text-foreground/60 text-sm mb-2">Immediate emergency support</p>
-                <a href="tel:+919876543210" className="text-primary font-bold hover:underline">+91 98765 43210</a>
+                <a href="tel:+917340066655" className="text-primary font-bold hover:underline">+91 73400 66655</a>
               </div>
             </motion.div>
 
@@ -45,7 +45,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-bold text-lg text-foreground mb-1">WhatsApp</h3>
                 <p className="text-foreground/60 text-sm mb-2">Share location easily</p>
-                <a href="https://wa.me/1234567890" target="_blank" className="text-[#25D366] font-bold hover:underline">Chat with us</a>
+                <a href="https://wa.me/917340066655" target="_blank" className="text-[#25D366] font-bold hover:underline">Chat with us</a>
               </div>
             </motion.div>
 

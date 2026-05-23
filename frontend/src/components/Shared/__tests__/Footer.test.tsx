@@ -55,7 +55,7 @@ describe('Footer', () => {
     it('WhatsApp link points to the correct wa.me URL', () => {
       const waIcon = screen.getByAltText('WhatsApp');
       const link = waIcon.closest('a');
-      expect(link).toHaveAttribute('href', 'https://wa.me/919876543210');
+      expect(link).toHaveAttribute('href', 'https://wa.me/917340066655');
       expect(link).toHaveAttribute('target', '_blank');
     });
   });
@@ -128,7 +128,7 @@ describe('Footer', () => {
     });
 
     it('displays the phone number', () => {
-      expect(screen.getByText('+91 98765 43210')).toBeInTheDocument();
+      expect(screen.getByText('+91 73400 66655')).toBeInTheDocument();
     });
 
     it('displays the email', () => {
