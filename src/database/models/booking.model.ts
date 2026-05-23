@@ -184,11 +184,9 @@ const bookingSchema =
       },
 
       technicianId: {
-        type:
-          Schema.Types.ObjectId,
-        ref: "Technician",
-        default: null,
-      },
+      type: String,
+      default: null,
+    },
 
       technicianName: {
         type: String,

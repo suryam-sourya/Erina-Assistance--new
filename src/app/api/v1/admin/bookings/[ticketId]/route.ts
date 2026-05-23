@@ -1,8 +1,11 @@
-import { NextRequest } from "next/server";
+import { NextRequest }
+from "next/server";
 
-import { connectDB } from "@/database/mongodb";
+import { connectDB }
+from "@/database/mongodb";
 
-import { bookingController } from "@/modules/booking/booking.controller";
+import adminController
+from "@/modules/admin/admin.controller";
 
 interface RouteParams {
   params: Promise<{
@@ -17,17 +20,15 @@ export async function GET(
   try {
     await connectDB();
 
-    const { ticketId } =
-      await params;
+    const {
+      ticketId,
+    } = await params;
 
-    return bookingController.getBookingByTicketId(
+    return adminController.getBookingByTicket(
       ticketId
     );
   } catch (error) {
-    console.error(
-      "Get Booking Error:",
-      error
-    );
+    console.error(error);
 
     return Response.json(
       {

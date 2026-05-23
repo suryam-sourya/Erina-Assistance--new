@@ -1,14 +1,24 @@
+import { NextRequest }
+from "next/server";
+
 import { connectDB }
 from "@/database/mongodb";
 
 import adminController
 from "@/modules/admin/admin.controller";
 
-export async function GET() {
+export async function PATCH(
+  request: NextRequest
+) {
   try {
     await connectDB();
 
-    return adminController.getDashboardStats();
+    const body =
+      await request.json();
+
+    return adminController.updateBookingStatus(
+      body
+    );
   } catch (error) {
     console.error(error);
 

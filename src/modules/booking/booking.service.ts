@@ -38,12 +38,55 @@ export class BookingService {
       // Activity Logs
 
       return {
-        success: true,
-        message:
-          "Booking created successfully",
+  success: true,
+  message:
+    "Booking fetched successfully",
 
-        data: booking,
-      };
+  data: {
+    ticketId:
+      booking.ticketId,
+
+    serviceType:
+      booking.serviceType,
+
+    status:
+      booking.status,
+
+    customer: {
+      name:
+        booking.customer
+          .name,
+    },
+
+    vehicle: {
+      type:
+        booking.vehicle
+          .type,
+
+      plateNumber:
+        booking.vehicle
+          .plateNumber,
+    },
+
+    location: {
+      address:
+        booking.location
+          .address,
+    },
+
+    technicianName:
+      booking.technicianName,
+
+    estimatedArrivalTime:
+      booking.estimatedArrivalTime,
+
+    paymentStatus:
+      booking.paymentStatus,
+
+    createdAt:
+      booking.createdAt,
+  },
+};
     } catch (error: any) {
   console.error(
     "Create Booking Error:",
