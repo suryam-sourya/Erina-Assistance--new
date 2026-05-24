@@ -137,7 +137,13 @@ class AdminController {
   async updateBookingStatus(
     body: {
       ticketId: string;
-      status: string;
+      status:
+      | "PENDING"
+      | "ASSIGNED"
+      | "ACCEPTED"
+      | "IN_PROGRESS"
+      | "COMPLETED"
+      | "CANCELLED";
     }
   ) {
     try {

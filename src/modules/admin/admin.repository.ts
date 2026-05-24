@@ -127,19 +127,98 @@ async assignTechnician(
   return updatedBooking;
 }
   async updateBookingStatus(
-    ticketId: string,
-    status: string
+  ticketId: string,
+  status:
+    | "PENDING"
+    | "ASSIGNED"
+    | "ACCEPTED"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "CANCELLED"
+) {
+  const booking =
+    await BookingModel.findOne({
+      ticketId,
+    });
+
+  if (!booking) {
+    throw new Error(
+      "Booking not found"
+    );
+  }
+
+  const currentStatus =
+    booking.status;
+
+  const validTransitions = {
+    PENDING: [
+      "ASSIGNED",
+      "CANCELLED",
+    ],
+
+    ASSIGNED: [
+      "IN_PROGRESS",
+      "CANCELLED",
+    ],
+
+    ACCEPTED: [
+      "IN_PROGRESS",
+    ],
+
+    IN_PROGRESS: [
+      "COMPLETED",
+    ],
+
+    COMPLETED: [],
+
+    CANCELLED: [],
+  };
+
+  const allowedStatuses:
+  string[] =
+    validTransitions[
+      currentStatus as keyof typeof validTransitions
+    ] || [];
+
+  if (
+    !allowedStatuses.includes(
+      status
+    )
   ) {
-    return BookingModel.findOneAndUpdate(
-      { ticketId },
+    throw new Error(
+      `Invalid status transition from ${currentStatus} to ${status}`
+    );
+  }
+
+  booking.status =
+    status;
+
+  // Release technician
+  if (
+    [
+      "COMPLETED",
+      "CANCELLED",
+    ].includes(status) &&
+    booking.technicianId
+  ) {
+    await TechnicianModel.findOneAndUpdate(
       {
-        status,
+        technicianId:
+          String(
+            booking.technicianId
+          ),
       },
       {
-        new: true,
+        availability:
+          "AVAILABLE",
       }
     );
   }
+
+  await booking.save();
+
+  return booking;
+}
 
   async getDashboardStats() {
     const [

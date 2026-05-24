@@ -116,18 +116,25 @@ class AdminService {
 }
 
   async updateBookingStatus(
-    ticketId: string,
-    status: string
-  ) {
-    const allowedStatuses =
-      [
-        "PENDING",
-        "ASSIGNED",
-        "IN_PROGRESS",
-        "COMPLETED",
-        "CANCELLED",
-      ];
-
+  ticketId: string,
+  status:
+    | "PENDING"
+    | "ASSIGNED"
+    | "ACCEPTED"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "CANCELLED"
+) {
+    const allowedStatuses: string[] =
+  [
+    "PENDING",
+    "ASSIGNED",
+    "ACCEPTED",
+    "IN_PROGRESS",
+    "COMPLETED",
+    "CANCELLED",
+  ];
+    
     if (
       !allowedStatuses.includes(
         status
