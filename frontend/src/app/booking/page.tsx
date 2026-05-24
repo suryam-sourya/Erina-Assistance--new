@@ -3,11 +3,21 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { MapPin, Camera, ShieldCheck, Navigation, CheckCircle2, XCircle, TrendingUp, Zap } from 'lucide-react';
+import { Camera, ShieldCheck, CheckCircle2, XCircle, TrendingUp, Zap } from 'lucide-react';
 import { calculatePrice, DEFAULT_PRICING, PricingConfig } from '@/lib/pricingEngine';
+import dynamic from 'next/dynamic';
+
+const MapSelector = dynamic(() => import('@/components/Booking/MapSelector'), {
+  ssr: false,
+  loading: () => <div className="h-52 bg-gray-50 dark:bg-gray-800 animate-pulse rounded-2xl flex items-center justify-center font-bold text-xs text-foreground/40 uppercase tracking-widest">Loading Live Breakdown Map...</div>
+});
 
 export default function BookingPage() {
-  const [locationDetecting, setLocationDetecting] = useState(false);
+  // Location selection handler
+  const handleLocationSelect = (lat: number, lng: number, address: string) => {
+    setCoordinates({ lat, lng });
+    setLocationName(address);
+  };
   const [isPriority, setIsPriority] = useState(false);
 
   // Form states
@@ -95,14 +105,7 @@ export default function BookingPage() {
     }
   };
 
-  const handleDetectLocation = () => {
-    setLocationDetecting(true);
-    setTimeout(() => {
-      setLocationDetecting(false);
-      setCoordinates({ lat: 12.9716, lng: 77.5946 }); // Mock Bangalore Coordinates
-      setLocationName('Hebbal Flyover, Bangalore');
-    }, 1500);
-  };
+  // handleDetectLocation deleted (now fully managed inside Leaflet MapSelector)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -362,51 +365,10 @@ export default function BookingPage() {
                 </div>
               </div>
 
-              {/* Location */}
+              {/* Pickup Location Map Selector */}
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Pickup Location</label>
-                <div className="flex gap-4">
-                  <div className="relative flex-grow">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="Search location or drop pin..." 
-                      value={locationName}
-                      onChange={(e) => setLocationName(e.target.value)}
-                      className="w-full pl-12 pr-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground" 
-                    />
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={handleDetectLocation}
-                    className="flex items-center justify-center gap-2 px-6 py-4 bg-gray-900 dark:bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
-                  >
-                    {locationDetecting ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <Navigation size={18} />
-                        <span className="hidden sm:inline">Detect</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                {/* Mock Map Area */}
-                <div 
-                  onClick={handleDetectLocation}
-                  className="mt-4 w-full h-48 bg-gray-200 dark:bg-gray-800 rounded-xl relative overflow-hidden flex items-center justify-center group cursor-pointer border border-gray-200 dark:border-gray-700"
-                >
-                   <div className="absolute inset-0 opacity-50 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                   <div className="relative z-10 flex flex-col items-center">
-                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg mb-2 group-hover:scale-110 transition-transform text-primary">
-                       <MapPin size={24} />
-                     </div>
-                     <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                       {locationName ? `Selected: ${locationName}` : 'Tap to select on map'}
-                     </span>
-                   </div>
-                </div>
+                <MapSelector onLocationSelect={handleLocationSelect} />
               </div>
 
               {/* Upload Image */}
