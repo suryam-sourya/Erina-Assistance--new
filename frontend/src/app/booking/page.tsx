@@ -427,7 +427,7 @@ export default function BookingPage() {
                         <p className="text-sm font-bold text-foreground">Vehicle Photo Uploaded</p>
                         <p className="text-xs text-success font-semibold flex items-center gap-1 mt-1">
                           <CheckCircle2 size={12} />
-                          Saved to Cloudinary
+                          Uploaded successfully
                         </p>
                       </div>
                     </div>

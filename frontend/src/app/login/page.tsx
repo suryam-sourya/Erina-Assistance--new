@@ -106,13 +106,30 @@ export default function LoginPage() {
       >
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center gap-2 mb-4">
-            <div className="relative w-9 h-9">
-              <Image src="/warning.png" alt="Logo" fill className="object-contain animate-pulse" />
+          <Link href="/" className="inline-flex items-center justify-center gap-2.5 mb-4 group">
+            {/* Logo Icon */}
+            <div className="relative h-9 w-9 shrink-0 transition-transform group-hover:scale-105 duration-300">
+              <Image
+                src="/logo-icon.svg"
+                alt="Erina Assistance"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
-            <span className="text-2xl font-black text-foreground tracking-tight">
-              erina<span className="text-primary">.</span>
-            </span>
+            
+            {/* Brand Text */}
+            <div className="flex flex-col text-left">
+              <div className="flex items-center gap-1 leading-none">
+                <span className="text-lg font-black tracking-wider text-foreground uppercase">Erina</span>
+                <span className="text-[7px] bg-primary/15 text-primary border border-primary/20 px-1 py-0 rounded-full font-black uppercase tracking-widest scale-90 origin-left">
+                  RSA
+                </span>
+              </div>
+              <span className="text-[8px] text-foreground/45 uppercase tracking-wider font-extrabold block mt-0.5">
+                Assistance
+              </span>
+            </div>
           </Link>
           <h2 className="text-2xl font-black text-foreground mb-1.5">
             {isLogin ? 'Welcome Back' : 'Create Account'}

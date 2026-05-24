@@ -82,7 +82,7 @@ export default function Navbar() {
                 {/* Logo Icon (always crisp SVG) */}
                 <div className="relative h-10 w-10 shrink-0 transition-transform group-hover:scale-105 duration-300">
                   <Image
-                    src="/icon.svg"
+                    src="/logo-icon.svg"
                     alt="Erina Assistance"
                     fill
                     className="object-contain"
