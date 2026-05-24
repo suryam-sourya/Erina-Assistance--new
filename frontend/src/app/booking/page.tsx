@@ -112,6 +112,22 @@ export default function BookingPage() {
       return;
     }
 
+    // Enforce rigorous digit-only 10-digit mobile number check
+    const cleanedPhone = phone.replace(/\D/g, "");
+    if (cleanedPhone.length < 10) {
+      setErrorMessage('Please enter a valid 10-digit mobile number.');
+      setSubmitStatus('error');
+      return;
+    }
+
+    // Enforce rigorous vehicle license plate check (min 5 characters)
+    const cleanedPlate = vehicleNumber.replace(/[^a-zA-Z0-9]/g, "");
+    if (cleanedPlate.length < 5) {
+      setErrorMessage('Please enter a valid vehicle plate number (e.g. KA03MY1234).');
+      setSubmitStatus('error');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus('idle');
     setErrorMessage('');
@@ -275,11 +291,15 @@ export default function BookingPage() {
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">Mobile Number</label>
                     <input 
-                      type="tel" 
+                      type="text" 
                       required
-                      placeholder="+91 98765 43210" 
+                      placeholder="Enter 10-digit mobile" 
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => {
+                        // Sanitize live: allow digits only and cap at 10 digits max
+                        const digits = e.target.value.replace(/\D/g, "").substring(0, 10);
+                        setPhone(digits);
+                      }}
                       className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground" 
                     />
                   </div>
@@ -307,9 +327,13 @@ export default function BookingPage() {
                     <input 
                       type="text" 
                       required
-                      placeholder="KA 01 AB 1234" 
+                      placeholder="e.g. KA03MY1234" 
                       value={vehicleNumber}
-                      onChange={(e) => setVehicleNumber(e.target.value)}
+                      onChange={(e) => {
+                        // Sanitize live: alphanumeric only, force uppercase, cap at 10 chars max
+                        const plate = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().substring(0, 10);
+                        setVehicleNumber(plate);
+                      }}
                       className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all uppercase text-foreground" 
                     />
                   </div>
