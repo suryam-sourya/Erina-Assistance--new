@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Camera, ShieldCheck, CheckCircle2, XCircle, TrendingUp, Zap } from 'lucide-react';
+import { Camera, ShieldCheck, CheckCircle2, XCircle, TrendingUp, Zap, Truck, Wrench, BatteryCharging, Fuel, Key, Activity, ShieldAlert, Sparkles } from 'lucide-react';
 import { calculatePrice, DEFAULT_PRICING, PricingConfig } from '@/lib/pricingEngine';
 import dynamic from 'next/dynamic';
 
@@ -344,24 +344,59 @@ export default function BookingPage() {
               </div>
 
               {/* Issue Type */}
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Select Issue</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {['Towing', 'Flat Tyre', 'Battery', 'Fuel', 'Lockout', 'Engine', 'Accident', 'Other'].map((issue) => (
-                    <label key={issue} className="cursor-pointer">
-                      <input 
-                        type="radio" 
-                        name="issue" 
-                        value={issue}
-                        checked={selectedIssue === issue}
-                        onChange={() => setSelectedIssue(issue)}
-                        className="peer sr-only" 
-                      />
-                      <div className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all hover:bg-gray-50 dark:hover:bg-gray-800 peer-checked:hover:bg-primary font-medium text-foreground">
-                        {issue}
-                      </div>
-                    </label>
-                  ))}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="block text-sm font-semibold text-foreground">Select Breakdown Issue</label>
+                  <span className="text-xs text-foreground/40 font-bold uppercase">1-Tap Quick Select</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { id: 'Towing', label: 'Car Towing', desc: 'Flatbed dispatch', icon: Truck, hoverAnim: { x: [0, 4, 0] }, activeColor: 'border-primary bg-primary/5 text-primary' },
+                    { id: 'Flat Tyre', label: 'Flat Tyre', desc: 'Puncture rescue', icon: Wrench, hoverAnim: { rotate: [0, 35, 0] }, activeColor: 'border-secondary bg-secondary/5 text-secondary' },
+                    { id: 'Battery', label: 'Battery Check', desc: 'Jumpstart & swap', icon: BatteryCharging, hoverAnim: { scale: [1, 1.12, 1] }, activeColor: 'border-yellow-500 bg-yellow-500/5 text-yellow-500' },
+                    { id: 'Fuel', label: 'Fuel Delivery', desc: 'Emergency fuel', icon: Fuel, hoverAnim: { y: [0, -3, 0] }, activeColor: 'border-emerald-500 bg-emerald-500/5 text-emerald-400' },
+                    { id: 'Lockout', label: 'Lockout', desc: 'Unlock keys', icon: Key, hoverAnim: { rotate: [0, -20, 20, 0] }, activeColor: 'border-blue-500 bg-blue-500/5 text-blue-400' },
+                    { id: 'Engine', label: 'Engine Failure', desc: 'Overheating & noise', icon: Activity, hoverAnim: { scale: [1, 1.08, 0.95, 1.05, 1] }, activeColor: 'border-red-500 bg-red-500/5 text-red-400' },
+                    { id: 'Accident', label: 'Accident Help', desc: 'Towing & support', icon: ShieldAlert, hoverAnim: { x: [-2, 2, -2, 2, 0] }, activeColor: 'border-rose-500 bg-rose-500/5 text-rose-400' },
+                    { id: 'Other', label: 'Other Support', desc: 'General checks', icon: Sparkles, hoverAnim: { rotate: [0, 180] }, activeColor: 'border-purple-500 bg-purple-500/5 text-purple-400' }
+                  ].map((option) => {
+                    const IconComponent = option.icon;
+                    const isSelected = selectedIssue === option.id;
+
+                    return (
+                      <motion.div
+                        key={option.id}
+                        onClick={() => setSelectedIssue(option.id)}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`cursor-pointer rounded-2xl p-5 border text-left transition-all relative overflow-hidden flex flex-col justify-between gap-3 ${
+                          isSelected 
+                            ? `${option.activeColor} border-2 shadow-lg` 
+                            : 'bg-gray-50 dark:bg-gray-800/40 border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800/60'
+                        }`}
+                      >
+                        {isSelected && (
+                          <span className="absolute top-0 right-0 w-3 h-3 rounded-bl-lg bg-current opacity-80" />
+                        )}
+                        
+                        <motion.div 
+                          animate={isSelected ? { scale: [1, 1.05, 1] } : {}}
+                          whileHover={{ ...option.hoverAnim }}
+                          transition={{ duration: 0.4 }}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                            isSelected ? 'bg-current/15' : 'bg-gray-100 dark:bg-gray-900 text-foreground/70'
+                          }`}
+                        >
+                          <IconComponent size={20} className={isSelected ? 'text-current' : ''} />
+                        </motion.div>
+
+                        <div>
+                          <h4 className="font-extrabold text-foreground text-sm tracking-tight">{option.label}</h4>
+                          <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">{option.desc}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
 
