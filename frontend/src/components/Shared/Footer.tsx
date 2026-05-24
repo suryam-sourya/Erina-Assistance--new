@@ -59,6 +59,9 @@ export default function Footer() {
               <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
                 <Image src="/linkedin.png" alt="LinkedIn" fill className="object-contain" />
               </a>
+              <a href="https://www.instagram.com/erinaassistance?igsh=dTFnMmh4NDJqcTRx" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hover:scale-110 transition-transform w-7 h-7 flex items-center justify-center rounded-lg bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-md shadow-pink-500/10">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+              </a>
               <a href="https://wa.me/917340066655" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
                 <Image src="/whatsapp.png" alt="WhatsApp" fill className="object-contain" />
               </a>

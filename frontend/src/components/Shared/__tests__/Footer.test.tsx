@@ -29,7 +29,7 @@ describe('Footer', () => {
     });
 
     it('renders the tagline text', () => {
-      expect(screen.getByText(/24\/7 AI-powered roadside assistance/i)).toBeInTheDocument();
+      expect(screen.getByText(/India's smartest roadside assistance platform/i)).toBeInTheDocument();
     });
   });
 
@@ -57,6 +57,13 @@ describe('Footer', () => {
       const link = waIcon.closest('a');
       expect(link).toHaveAttribute('href', 'https://wa.me/917340066655');
       expect(link).toHaveAttribute('target', '_blank');
+    });
+
+    it('renders the Instagram icon with correct link', () => {
+      const instaLink = screen.getByLabelText('Instagram');
+      expect(instaLink).toBeInTheDocument();
+      expect(instaLink).toHaveAttribute('href', 'https://www.instagram.com/erinaassistance?igsh=dTFnMmh4NDJqcTRx');
+      expect(instaLink).toHaveAttribute('target', '_blank');
     });
   });
 
@@ -97,12 +104,12 @@ describe('Footer', () => {
       expect(screen.getByText('Our Services')).toBeInTheDocument();
     });
 
-    it('has Towing Service link', () => {
-      expect(screen.getByText('Towing Service')).toBeInTheDocument();
+    it('has Car Towing link', () => {
+      expect(screen.getByText('Car Towing')).toBeInTheDocument();
     });
 
-    it('has Flat Tyre link', () => {
-      expect(screen.getByText('Flat Tyre')).toBeInTheDocument();
+    it('has Bike Assistance link', () => {
+      expect(screen.getByText('Bike Assistance')).toBeInTheDocument();
     });
 
     it('has Battery Jumpstart link', () => {
@@ -113,22 +120,22 @@ describe('Footer', () => {
       expect(screen.getByText('Fuel Delivery')).toBeInTheDocument();
     });
 
-    it('has EV Assistance link', () => {
-      expect(screen.getByText('EV Assistance')).toBeInTheDocument();
+    it('has EV Charging link', () => {
+      expect(screen.getByText('EV Charging')).toBeInTheDocument();
     });
   });
 
   describe('Contact Info', () => {
     it('renders the Contact Info heading', () => {
-      expect(screen.getByText('Contact Info')).toBeInTheDocument();
+      expect(screen.getByText('Operations Hub')).toBeInTheDocument();
     });
 
     it('displays the address', () => {
-      expect(screen.getByText(/123 Tech Park, HSR Layout/i)).toBeInTheDocument();
+      expect(screen.getByText(/Dinnur Main Road, Kadugodi Colony/i)).toBeInTheDocument();
     });
 
     it('displays the phone number', () => {
-      expect(screen.getByText('+91 73400 66655')).toBeInTheDocument();
+      expect(screen.getAllByText('+91 73400 66655')[0]).toBeInTheDocument();
     });
 
     it('displays the email', () => {
