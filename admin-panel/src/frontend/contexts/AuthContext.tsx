@@ -20,6 +20,13 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+const ALLOWED_ADMIN_EMAILS = [
+  'abhishekbajpai680@gmail.com',
+  'amanjoshi2518@gmail.com',
+  'ops@erina-assistance.com',
+  'ops@erinaassistance.com'
+];
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,13 +35,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Listen for Firebase Auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser && currentUser.email) {
+        const emailLower = currentUser.email.toLowerCase();
+        if (!ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+          console.warn("Access denied for unauthorized admin email:", emailLower);
+          await signOut(auth);
+          setUser(null);
+          setLoading(false);
+          router.push('/admin/login?error=unauthorized');
+          return;
+        }
+      }
       setUser(currentUser);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!loading) {

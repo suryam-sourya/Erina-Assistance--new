@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Phone, Key, ShieldAlert, ArrowRight, Wrench, Shield } from 'lucide-react';
 
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '@/frontend/lib/firebase';
+
+const ALLOWED_ADMIN_EMAILS = [
+  'abhishekbajpai680@gmail.com',
+  'amanjoshi2518@gmail.com',
+  'ops@erina-assistance.com',
+  'ops@erinaassistance.com'
+];
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -20,6 +27,15 @@ export default function AdminLogin() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('error') === 'unauthorized') {
+        setError('Access Denied: Your email is not whitelisted as an operational dispatcher.');
+      }
+    }
+  }, []);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +44,14 @@ export default function AdminLogin() {
     
     if (loginMethod === 'email') {
       try {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const emailLower = userCredential.user.email?.toLowerCase();
+        if (!emailLower || !ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+          await auth.signOut();
+          setError('Access Denied: Your email is not whitelisted as an operational dispatcher.');
+          setIsLoading(false);
+          return;
+        }
         router.push('/admin/dashboard');
       } catch (err: any) {
         console.error(err);
@@ -64,7 +87,14 @@ export default function AdminLogin() {
     setError('');
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const userCredential = await signInWithPopup(auth, provider);
+      const emailLower = userCredential.user.email?.toLowerCase();
+      if (!emailLower || !ALLOWED_ADMIN_EMAILS.includes(emailLower)) {
+        await auth.signOut();
+        setError('Access Denied: Your email is not whitelisted as an operational dispatcher.');
+        setIsLoading(false);
+        return;
+      }
       router.push('/admin/dashboard');
     } catch (err: any) {
       console.error(err);
