@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Volume2, Clock, Moon, Sun, Save, CheckCircle2, Play,
   TrendingUp, Car, Zap, AlertTriangle, RotateCcw
@@ -67,6 +67,25 @@ export default function OperationalSettings() {
 
   const { playAlarm } = useDispatchAlarm();
   const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Hydrate settings store from MongoDB on mount
+  useEffect(() => {
+    fetch('/api/pricing')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.pricing) {
+          setPricing(data.pricing);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch operational pricing from DB:", err);
+        setErrorMessage("Could not load pricing settings from database. Using offline cache.");
+      })
+      .finally(() => setIsLoading(false));
+  }, [setPricing]);
 
   // Live preview state
   const [previewService, setPreviewService] = useState<keyof ServicePricing>('towing');
@@ -82,10 +101,31 @@ export default function OperationalSettings() {
     config: pricing,
   });
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+    setIsSaving(true);
+    setErrorMessage('');
+    try {
+      const response = await fetch('/api/pricing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pricing }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 3000);
+      } else {
+        setErrorMessage(data.error || 'Failed to save pricing configuration.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage('Network error occurred. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReset = () => {
@@ -349,22 +389,42 @@ export default function OperationalSettings() {
         </div>
 
         {/* ── Save button ── */}
-        <div className="flex items-center justify-between">
-          {isSaved ? (
-            <span className="text-[10px] text-success font-black uppercase tracking-wider flex items-center gap-1">
-              <CheckCircle2 size={12} />
-              <span>All Settings Saved!</span>
-            </span>
-          ) : (
-            <span className="text-[9px] text-foreground/30 font-bold uppercase tracking-widest">
-              Changes persist automatically
-            </span>
+        <div className="flex flex-col gap-2 pt-2">
+          {errorMessage && (
+            <div className="text-[10px] font-black text-emergency uppercase tracking-wider bg-emergency/10 border border-emergency/20 px-4 py-2 rounded-xl">
+              {errorMessage}
+            </div>
           )}
-          <button type="submit"
-            className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-background font-black px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/20">
-            <Save size={14} />
-            <span>Apply Changes</span>
-          </button>
+          {isLoading && (
+            <div className="text-[10px] font-black text-primary uppercase tracking-wider animate-pulse">
+              Syncing settings with MongoDB database...
+            </div>
+          )}
+          
+          <div className="flex items-center justify-between">
+            {isSaved ? (
+              <span className="text-[10px] text-success font-black uppercase tracking-wider flex items-center gap-1">
+                <CheckCircle2 size={12} />
+                <span>Saved & Synced Live to Database!</span>
+              </span>
+            ) : (
+              <span className="text-[9px] text-foreground/30 font-bold uppercase tracking-widest">
+                {isSaving ? "Saving to database..." : "Changes persist automatically"}
+              </span>
+            )}
+            <button 
+              type="submit"
+              disabled={isLoading || isSaving}
+              className="flex items-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-background font-black px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/20"
+            >
+              {isSaving ? (
+                <div className="w-3.5 h-3.5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Save size={14} />
+              )}
+              <span>{isSaving ? "Saving..." : "Apply Changes"}</span>
+            </button>
+          </div>
         </div>
 
       </form>

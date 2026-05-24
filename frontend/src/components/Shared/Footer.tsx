@@ -1,12 +1,42 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-dark text-gray-300 pt-16 pb-8 border-t border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="bg-dark text-gray-300 border-t border-gray-800">
+
+      {/* Emergency Hotline Banner */}
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/10 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center glow-primary">
+              <Phone size={18} className="text-primary" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">24/7 Emergency Hotline</p>
+              <a href="tel:+917340066655" className="text-lg font-black text-white hover:text-primary transition-colors">
+                +91 73400 66655
+              </a>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold">
+              <Clock size={14} className="text-emerald-500" />
+              <span>Always Available</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold">
+              <ShieldCheck size={14} className="text-primary" />
+              <span>Verified Technicians</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center">
@@ -20,16 +50,16 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-sm text-gray-400 mt-4 leading-relaxed">
-              24/7 AI-powered roadside assistance. We get you back on the road safely and quickly, anywhere in Bangalore.
+              India&apos;s smartest roadside assistance platform. AI-powered dispatch, live GPS tracking, and verified technicians — available 24/7 across Bangalore.
             </p>
             <div className="flex items-center space-x-4 pt-2">
-              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-115 transition-transform relative w-7 h-7 block">
+              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
                 <Image src="/facebook.png" alt="Facebook" fill className="object-contain" />
               </a>
-              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-115 transition-transform relative w-7 h-7 block">
+              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
                 <Image src="/linkedin.png" alt="LinkedIn" fill className="object-contain" />
               </a>
-              <a href="https://wa.me/917340066655" target="_blank" rel="noopener noreferrer" className="hover:scale-115 transition-transform relative w-7 h-7 block">
+              <a href="https://wa.me/917340066655" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
                 <Image src="/whatsapp.png" alt="WhatsApp" fill className="object-contain" />
               </a>
             </div>
@@ -37,9 +67,9 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6 relative inline-block">
+            <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-6 relative inline-block">
               Quick Links
-              <span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-primary rounded-full"></span>
+              <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full" />
             </h3>
             <ul className="space-y-3">
               <li><Link href="/" className="hover:text-primary transition-colors text-sm">Home</Link></li>
@@ -47,41 +77,43 @@ export default function Footer() {
               <li><Link href="/membership" className="hover:text-primary transition-colors text-sm">Membership Plans</Link></li>
               <li><Link href="/partner" className="hover:text-primary transition-colors text-sm">Partner With Us</Link></li>
               <li><Link href="/contact" className="hover:text-primary transition-colors text-sm">Contact Us</Link></li>
+              <li><Link href="/login" className="hover:text-primary transition-colors text-sm">Customer Login</Link></li>
             </ul>
           </div>
 
           {/* Services */}
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6 relative inline-block">
+            <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-6 relative inline-block">
               Our Services
-              <span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-primary rounded-full"></span>
+              <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full" />
             </h3>
             <ul className="space-y-3">
-              <li><Link href="/#services" className="hover:text-primary transition-colors text-sm">Towing Service</Link></li>
-              <li><Link href="/#services" className="hover:text-primary transition-colors text-sm">Flat Tyre</Link></li>
-              <li><Link href="/#services" className="hover:text-primary transition-colors text-sm">Battery Jumpstart</Link></li>
-              <li><Link href="/#services" className="hover:text-primary transition-colors text-sm">Fuel Delivery</Link></li>
-              <li><Link href="/#services" className="hover:text-primary transition-colors text-sm">EV Assistance</Link></li>
+              <li><Link href="/booking?service=towing" className="hover:text-primary transition-colors text-sm">Car Towing</Link></li>
+              <li><Link href="/booking?service=bike-towing" className="hover:text-primary transition-colors text-sm">Bike Assistance</Link></li>
+              <li><Link href="/booking?service=battery" className="hover:text-primary transition-colors text-sm">Battery Jumpstart</Link></li>
+              <li><Link href="/booking?service=fuel" className="hover:text-primary transition-colors text-sm">Fuel Delivery</Link></li>
+              <li><Link href="/booking?service=lockout" className="hover:text-primary transition-colors text-sm">Lockout Assistance</Link></li>
+              <li><Link href="/booking?service=ev" className="hover:text-primary transition-colors text-sm">EV Charging</Link></li>
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6 relative inline-block">
-              Contact Info
-              <span className="absolute -bottom-2 left-0 w-1/2 h-1 bg-primary rounded-full"></span>
+            <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-6 relative inline-block">
+              Operations Hub
+              <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full" />
             </h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <MapPin size={20} className="text-primary shrink-0 mt-0.5" />
-                <span className="text-sm">123 Tech Park, HSR Layout, Bangalore, 560102</span>
+                <MapPin size={16} className="text-primary shrink-0 mt-0.5" />
+                <span className="text-sm leading-relaxed">Shop No. 02, Dinnur Main Road, Kadugodi Colony, Opp: Srihalli Cafe, Bengaluru, Karnataka — 560067</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone size={20} className="text-primary shrink-0" />
-                <a href="tel:+917340066655" className="text-sm hover:text-primary transition-colors">+91 73400 66655</a>
+                <Phone size={16} className="text-primary shrink-0" />
+                <a href="tel:+917340066655" className="text-sm hover:text-primary transition-colors font-semibold">+91 73400 66655</a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail size={20} className="text-primary shrink-0" />
+                <Mail size={16} className="text-primary shrink-0" />
                 <span className="text-sm">support@erina-assistance.com</span>
               </li>
             </ul>
@@ -89,12 +121,13 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} Erina Assistance. All rights reserved.
+          <p className="text-xs text-gray-500">
+            &copy; {new Date().getFullYear()} Erina Assistance Pvt. Ltd. All rights reserved.
           </p>
-          <div className="flex gap-4 text-sm text-gray-500">
+          <div className="flex gap-6 text-xs text-gray-500">
             <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="#" className="hover:text-white transition-colors">Refund Policy</Link>
           </div>
         </div>
       </div>
