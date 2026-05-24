@@ -9,25 +9,17 @@ from "@/database/mongodb";
 import adminController
 from "@/modules/admin/admin.controller";
 
-export async function GET(
-  request: NextRequest,
-  {
-    params,
-  }: {
-    params: Promise<{
-      technicianId: string;
-    }>;
-  }
+export async function PATCH(
+  request: NextRequest
 ) {
   try {
     await connectDB();
 
-    const {
-      technicianId,
-    } = await params;
+    const body =
+      await request.json();
 
-    return adminController.getTechnicianById(
-      technicianId
+    return adminController.updateTechnicianStatus(
+      body
     );
   } catch (error) {
     console.error(error);

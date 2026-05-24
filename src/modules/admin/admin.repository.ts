@@ -220,6 +220,249 @@ async assignTechnician(
   return booking;
 }
 
+async createTechnician(data: {
+  name: string;
+  phone: string;
+  email?: string;
+  vehicleType: string;
+  serviceTypes: string[];
+  availability?: "AVAILABLE" | "BUSY" | "OFFLINE";
+  location: {
+    coordinates: [number, number];
+    address: string;
+  };
+}) {
+  const lastTechnician =
+    await TechnicianModel.findOne()
+      .sort({
+        createdAt: -1,
+      });
+
+  let technicianId =
+    "TECH-001";
+
+  if (
+    lastTechnician?.technicianId
+  ) {
+    const lastNumber =
+      Number(
+        lastTechnician.technicianId.replace(
+          "TECH-",
+          ""
+        )
+      );
+
+    technicianId =
+      `TECH-${String(
+        lastNumber + 1
+      ).padStart(
+        3,
+        "0"
+      )}`;
+  }
+
+  const technician =
+    await TechnicianModel.create(
+      {
+        technicianId,
+
+        name: data.name,
+
+        phone: data.phone,
+
+        email:
+          data.email,
+
+        vehicleType:
+          data.vehicleType,
+
+        serviceTypes:
+          data.serviceTypes,
+
+        availability:
+          data.availability ||
+          "AVAILABLE",
+
+        location: {
+          type: "Point",
+
+          coordinates:
+            data.location
+              .coordinates,
+
+          address:
+            data.location
+              .address,
+        },
+      }
+    );
+
+  return technician;
+}
+
+async getAllTechnicians(query: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  availability?: string;
+}) {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    availability,
+  } = query;
+
+  const skip =
+    (page - 1) * limit;
+
+  const filters: any = {};
+
+  // Search
+  if (search) {
+    filters.$or = [
+      {
+        technicianId: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        name: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        phone: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+    ];
+  }
+
+  // Availability filter
+  if (availability) {
+    filters.availability =
+      availability;
+  }
+
+  const [
+    technicians,
+    total,
+  ] = await Promise.all([
+    TechnicianModel.find(
+      filters
+    )
+      .sort({
+        createdAt: -1,
+      })
+      .skip(skip)
+      .limit(limit),
+
+    TechnicianModel.countDocuments(
+      filters
+    ),
+  ]);
+
+  return {
+    technicians,
+
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages:
+        Math.ceil(
+          total / limit
+        ),
+    },
+  };
+}
+async getTechnicianById(
+  technicianId: string
+) {
+  const technician =
+    await TechnicianModel.findOne(
+      {
+        technicianId,
+      }
+    );
+
+  if (!technician) {
+    throw new Error(
+      "Technician not found"
+    );
+  }
+
+  const activeBooking =
+    await BookingModel.findOne(
+      {
+        technicianId,
+        status: {
+          $in: [
+            "ASSIGNED",
+            "IN_PROGRESS",
+          ],
+        },
+      }
+    );
+
+  return {
+    technician,
+    activeBooking,
+  };
+}
+async updateTechnicianStatus(
+  technicianId: string,
+  availability:
+    | "AVAILABLE"
+    | "OFFLINE"
+) {
+  const technician =
+    await TechnicianModel.findOne(
+      {
+        technicianId,
+      }
+    );
+
+  if (!technician) {
+    throw new Error(
+      "Technician not found"
+    );
+  }
+
+  const activeBooking =
+    await BookingModel.findOne(
+      {
+        technicianId,
+        status: {
+          $in: [
+            "ASSIGNED",
+            "IN_PROGRESS",
+          ],
+        },
+      }
+    );
+
+  if (
+    activeBooking &&
+    availability ===
+      "OFFLINE"
+  ) {
+    throw new Error(
+      "Technician has active booking"
+    );
+  }
+
+  technician.availability =
+    availability;
+
+  await technician.save();
+
+  return technician;
+}
   async getDashboardStats() {
     const [
       totalBookings,

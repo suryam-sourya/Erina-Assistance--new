@@ -114,7 +114,78 @@ class AdminService {
     data: updatedBooking,
   };
 }
+async createTechnician(
+  data: {
+    name: string;
+    phone: string;
+    email?: string;
+    vehicleType: string;
+    serviceTypes: string[];
+    availability?:
+      | "AVAILABLE"
+      | "BUSY"
+      | "OFFLINE";
 
+    location: {
+      coordinates: [
+        number,
+        number
+      ];
+
+      address: string;
+    };
+  }
+) {
+  const technician =
+    await adminRepository.createTechnician(
+      data
+    );
+
+  return {
+    success: true,
+    message:
+      "Technician created successfully",
+    data: technician,
+  };
+}
+async getAllTechnicians(
+  query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    availability?: string;
+  }
+) {
+  return await adminRepository.getAllTechnicians(
+    query
+  );
+}
+async getTechnicianById(
+  technicianId: string
+) {
+  return await adminRepository.getTechnicianById(
+    technicianId
+  );
+}
+async updateTechnicianStatus(
+  technicianId: string,
+  availability:
+    | "AVAILABLE"
+    | "OFFLINE"
+) {
+  const technician =
+    await adminRepository.updateTechnicianStatus(
+      technicianId,
+      availability
+    );
+
+  return {
+    success: true,
+    message:
+      "Technician status updated successfully",
+    data: technician,
+  };
+}
   async updateBookingStatus(
   ticketId: string,
   status:
