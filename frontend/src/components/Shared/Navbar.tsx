@@ -76,27 +76,32 @@ export default function Navbar() {
 
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              {/* Full logo for desktop */}
-              <div className="relative hidden md:block h-12 w-52">
-                <Image
-                  src="/logo-full.png"
-                  alt="Erina Assistance"
-                  fill
-                  className="object-contain object-left"
-                  priority
-                />
-              </div>
-              
-              {/* Icon only for mobile */}
-              <div className="relative md:hidden h-10 w-10">
-                <Image
-                  src="/warning.png"
-                  alt="Erina Assistance"
-                  fill
-                  className="object-contain"
-                  priority
-                />
+            <Link href="/" className="flex items-center gap-2.5 group">
+              {/* Brand Logo Container */}
+              <div className="flex items-center gap-2.5">
+                {/* Logo Icon (always crisp SVG) */}
+                <div className="relative h-10 w-10 shrink-0 transition-transform group-hover:scale-105 duration-300">
+                  <Image
+                    src="/icon.svg"
+                    alt="Erina Assistance"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+                
+                {/* Brand Text (styled elegantly, highly responsive) */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    <span className="text-base md:text-lg font-black tracking-wider text-foreground uppercase">Erina</span>
+                    <span className="text-[8px] bg-primary/15 text-primary border border-primary/20 px-1.5 py-0.1 rounded-full font-black uppercase tracking-widest scale-90 origin-left">
+                      RSA
+                    </span>
+                  </div>
+                  <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-extrabold block -mt-1">
+                    Assistance
+                  </span>
+                </div>
               </div>
             </Link>
           </div>
