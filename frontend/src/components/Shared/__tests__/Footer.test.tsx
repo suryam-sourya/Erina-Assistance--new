@@ -139,7 +139,7 @@ describe('Footer', () => {
     });
 
     it('displays the email', () => {
-      expect(screen.getByText('support@erinaassistance.com')).toBeInTheDocument();
+      expect(screen.getByText('support@erinaassistance.in')).toBeInTheDocument();
     });
   });
 

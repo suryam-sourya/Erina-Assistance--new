@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://www.erina-assistance.com"; // Replace with your production domain
+  const baseUrl = "https://www.erinaassistance.in"; // Replace with your production domain
 
   const routes = [
     "",

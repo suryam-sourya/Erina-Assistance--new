@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: "Erina Assistance | 24/7 AI-Powered Roadside Help",
     description:
       "Stranded on the road? Get emergency help in under 30 minutes — towing, battery, tyre, fuel & more. AI-dispatched, GPS-tracked, verified technicians.",
-    url: "https://www.erina-assistance.com",
+    url: "https://www.erinaassistance.in",
     siteName: "Erina Assistance",
     type: "website",
     locale: "en_IN",

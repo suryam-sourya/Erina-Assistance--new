@@ -59,7 +59,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-bold text-lg text-foreground mb-1">Email</h3>
                 <p className="text-foreground/60 text-sm mb-2">For queries & partnerships</p>
-                <a href="mailto:support@erinaassistance.com" className="text-blue-500 font-bold hover:underline text-sm truncate block">support@erinaassistance.com</a>
+                <a href="mailto:support@erinaassistance.in" className="text-blue-500 font-bold hover:underline text-sm truncate block">support@erinaassistance.in</a>
               </div>
             </motion.div>
 
