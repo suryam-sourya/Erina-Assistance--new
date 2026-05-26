@@ -50,7 +50,30 @@ export default function BookingsManagement() {
 
   // Expanded visual dispatch progress row
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+// Product Invoice Modal State
+const [
+  selectedBookingForProducts,
+  setSelectedBookingForProducts,
+] = useState<Booking | null>(
+  null
+);
 
+const [
+  productSearch,
+  setProductSearch,
+] = useState("");
+
+const [
+  selectedProductQuantities,
+  setSelectedProductQuantities,
+] = useState<
+  Record<string, number>
+>({});
+
+const [
+  isSubmittingProducts,
+  setIsSubmittingProducts,
+] = useState(false);
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const [ticketForm, setTicketForm] = useState({
   customerName: "",
@@ -108,6 +131,106 @@ export default function BookingsManagement() {
     }
     
     setSelectedBooking(null);
+  };
+  // temporary MVP products
+const availableProducts = [
+  {
+    _id: "1",
+    name: "Tyre Inflator",
+    category: "Tyre",
+    stock: 10,
+    sku: "TY-101",
+    sellingPrice: 1500,
+  },
+  {
+    _id: "2",
+    name: "Jump Start Battery",
+    category: "Battery",
+    stock: 6,
+    sku: "BT-201",
+    sellingPrice: 3500,
+  },
+  {
+    _id: "3",
+    name: "Engine Oil",
+    category: "Engine",
+    stock: 12,
+    sku: "EN-301",
+    sellingPrice: 1200,
+  },
+];
+
+// quantity control
+const adjustProductQty = (
+  productId: string,
+  change: number,
+  stock: number
+) => {
+  setSelectedProductQuantities(
+    (prev) => {
+      const current =
+        prev[productId] || 0;
+
+      const nextQty =
+        Math.max(
+          0,
+          Math.min(
+            stock,
+            current + change
+          )
+        );
+
+      const updated =
+        { ...prev };
+
+      if (nextQty === 0) {
+        delete updated[
+          productId
+        ];
+      } else {
+        updated[
+          productId
+        ] = nextQty;
+      }
+
+      return updated;
+    }
+  );
+};
+
+// temp resolve
+const handleResolveWithProducts =
+  async () => {
+    setIsSubmittingProducts(
+      true
+    );
+
+    setTimeout(() => {
+      if (
+        selectedBookingForProducts
+      ) {
+        updateBookingStatus(
+          selectedBookingForProducts.id,
+          "completed"
+        );
+      }
+
+      setSelectedBookingForProducts(
+        null
+      );
+
+      setSelectedProductQuantities(
+        {}
+      );
+
+      setIsSubmittingProducts(
+        false
+      );
+
+      alert(
+        "Invoice Generated Successfully"
+      );
+    }, 1500);
   };
 const handleCreateTicket =
   async (
