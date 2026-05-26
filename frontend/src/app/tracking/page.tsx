@@ -31,6 +31,7 @@ function TrackingContent() {
     if (!id) return;
 
     let unsubscribeFirestore: any = null;
+    let firstSnapshotReceived = false;
 
     const fetchBookingFromAPI = async () => {
       try {
@@ -44,10 +45,18 @@ function TrackingContent() {
           setError(data.error || 'Booking not found');
         }
       } catch (err) {
-        console.error(err);
+        console.error("MongoDB API fetch failed:", err);
         setError('Failed to fetch live updates.');
       }
     };
+
+    // Fast 3-second timeout to bypass slow Firestore socket handshakes on poor mobile networks
+    const timeoutTimer = setTimeout(() => {
+      if (!firstSnapshotReceived) {
+        console.warn("Firestore connection slow/pending. Falling back to MongoDB REST API.");
+        fetchBookingFromAPI().finally(() => setLoading(false));
+      }
+    }, 3000);
 
     const setupLiveTracking = async () => {
       setLoading(true);
@@ -59,6 +68,9 @@ function TrackingContent() {
         if (db && typeof db.app !== 'undefined') {
           // Listen directly to Cloud Firestore active tracking document!
           unsubscribeFirestore = onSnapshot(doc(db, "active_bookings", id), (docSnap) => {
+            firstSnapshotReceived = true;
+            clearTimeout(timeoutTimer);
+            
             if (docSnap.exists()) {
               const activeData = docSnap.data();
               // Format structure for compatibility with frontend view variables
@@ -78,14 +90,17 @@ function TrackingContent() {
               fetchBookingFromAPI().finally(() => setLoading(false));
             }
           }, (err) => {
+            clearTimeout(timeoutTimer);
             console.error("Firestore onSnapshot error:", err);
             // On Firestore error, fallback to HTTP API fetch
             fetchBookingFromAPI().finally(() => setLoading(false));
           });
         } else {
+          clearTimeout(timeoutTimer);
           fetchBookingFromAPI().finally(() => setLoading(false));
         }
       } catch (err) {
+        clearTimeout(timeoutTimer);
         console.error("Failed to load Firebase Firestore module dynamically:", err);
         fetchBookingFromAPI().finally(() => setLoading(false));
       }
@@ -94,6 +109,7 @@ function TrackingContent() {
     setupLiveTracking();
 
     return () => {
+      clearTimeout(timeoutTimer);
       if (unsubscribeFirestore) {
         unsubscribeFirestore();
       }
