@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Booking from "@/models/Booking";
+import { db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
@@ -143,6 +145,7 @@ export async function POST(req: Request) {
       isPriority: rawStatus.toLowerCase() === "emergency",
       images: rawImageUrl ? [rawImageUrl] : [],
       status: rawStatus.toLowerCase() === "emergency" ? "EMERGENCY" : "PENDING",
+      subStatus: "COLLECTING_TOOLS", // Default starting subStatus
       technicianId: null,
       technicianName: null,
       estimatedArrivalTime: null,
@@ -164,6 +167,37 @@ export async function POST(req: Request) {
     };
 
     const booking = await Booking.create(dbPayload);
+
+    // Sync to Cloud Firestore Active Sessions for lightweight real-time tracking
+    try {
+      if (db && typeof db.app !== 'undefined') {
+        const firestoreId = booking._id.toString();
+        await setDoc(doc(db, "active_bookings", firestoreId), {
+          id: firestoreId,
+          customerName: rawCustomerName,
+          customerPhone: finalPhone,
+          serviceType: rawServiceType,
+          serviceLabel: dbPayload.serviceLabel,
+          vehicleName: rawVehicleType,
+          vehiclePlate: cleanedPlate,
+          status: dbPayload.status.toLowerCase(),
+          subStatus: "collecting_tools",
+          location: {
+            lat: latitude,
+            lng: longitude
+          },
+          address: rawAddress,
+          paymentStatus: rawPaymentStatus.toLowerCase(),
+          paymentAmount: rawPaymentAmount,
+          technicianId: null,
+          technicianName: null,
+          imageUrl: rawImageUrl || null,
+          createdTime: new Date().toISOString()
+        });
+      }
+    } catch (fsErr) {
+      console.error("Firestore active session sync failed:", fsErr);
+    }
 
     return NextResponse.json({
       success: true,

@@ -62,6 +62,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Home', href: '/' },
+    { name: 'My Bookings', href: '/my-bookings' },
     { name: 'Services', href: '/#services' },
     { name: 'Membership', href: '/membership' },
     { name: 'Partner With Us', href: '/partner' },
@@ -171,6 +172,15 @@ export default function Navbar() {
                             {user.email}
                           </p>
                         </div>
+
+                        <Link
+                          href="/my-bookings"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-bold text-foreground/85 hover:bg-primary/10 hover:text-primary transition-colors text-left"
+                        >
+                          <User size={14} />
+                          <span>My Bookings</span>
+                        </Link>
 
                         {activeBookingId && (
                           <Link

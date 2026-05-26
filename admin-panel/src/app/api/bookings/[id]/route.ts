@@ -33,6 +33,33 @@ export async function PUT(
       }, { status: 404 });
     }
 
+    // Sync dispatcher updates directly to Cloud Firestore Active Sessions channel
+    try {
+      const { db } = await import("@/frontend/lib/firebase");
+      const { doc, updateDoc, deleteDoc } = await import("firebase/firestore");
+      
+      if (db && typeof db.app !== 'undefined') {
+        const firestoreId = resolvedParams.id;
+        
+        if (body.status?.toLowerCase() === "completed") {
+          // Incident Closed: Purge from Firestore active list to preserve free tier capacity
+          await deleteDoc(doc(db, "active_bookings", firestoreId));
+        } else {
+          // Still Active: Sync dispatcher status metrics
+          const fsUpdate: Record<string, any> = {};
+          if (body.status) fsUpdate.status = body.status.toLowerCase();
+          if (body.subStatus !== undefined) fsUpdate.subStatus = body.subStatus ? body.subStatus.toLowerCase() : null;
+          if (body.technicianId) fsUpdate.technicianId = body.technicianId;
+          if (body.technicianName) fsUpdate.technicianName = body.technicianName;
+          if (body.paymentStatus) fsUpdate.paymentStatus = body.paymentStatus.toLowerCase();
+          
+          await updateDoc(doc(db, "active_bookings", firestoreId), fsUpdate);
+        }
+      }
+    } catch (fsErr) {
+      console.error("Firestore status synchronization failed:", fsErr);
+    }
+
     const obj = booking.toObject();
 
     const serviceLabels: Record<string, string> = {

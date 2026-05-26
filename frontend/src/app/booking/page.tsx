@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Camera, ShieldCheck, CheckCircle2, XCircle, TrendingUp, Zap, Truck, Wrench, BatteryCharging, Fuel, Key, Activity, ShieldAlert, Sparkles } from 'lucide-react';
+import { Camera, ShieldCheck, CheckCircle2, XCircle, TrendingUp, Zap, Truck, Wrench, BatteryCharging, Fuel, Key, Activity, ShieldAlert, Sparkles, CreditCard, Wallet } from 'lucide-react';
 import { calculatePrice, DEFAULT_PRICING, PricingConfig } from '@/lib/pricingEngine';
 import dynamic from 'next/dynamic';
 
@@ -14,6 +14,12 @@ const MapSelector = dynamic(() => import('@/components/Booking/MapSelector'), {
 
 export default function BookingPage() {
   const [isOutOfService, setIsOutOfService] = useState(false);
+
+  // Payment states
+  const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'PAY_ON_DELIVERY'>('PAY_ON_DELIVERY');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<'form' | 'processing' | 'success'>('form');
+  const [paymentProgressText, setPaymentProgressText] = useState('Contacting bank...');
 
   // Haversine distance calculation in kilometers
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -46,6 +52,28 @@ export default function BookingPage() {
       setIsOutOfService(false);
     }
   };
+
+  // Simulated PCI Card Authorization Pipeline
+  const handleSimulatePaymentComplete = async () => {
+    setPaymentStep('processing');
+    setPaymentProgressText('Contacting secure PCI-DSS gateway...');
+    
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setPaymentProgressText('Verifying card credentials & 3D Secure OTP...');
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setPaymentProgressText('Authorizing ₹' + priceBreakdown.total.toLocaleString() + ' fare charge...');
+    
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setPaymentStep('success');
+    
+    await new Promise(resolve => setTimeout(resolve, 600));
+    setShowPaymentModal(false);
+    
+    // Now trigger actual API submission with payment verified!
+    handleSubmit(null as any, true);
+  };
+
   const [isPriority, setIsPriority] = useState(false);
 
   // Form states
@@ -135,8 +163,8 @@ export default function BookingPage() {
 
   // handleDetectLocation deleted (now fully managed inside Leaflet MapSelector)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent, isPaymentBypassed = false) => {
+    if (e) e.preventDefault();
     if (!selectedIssue) {
       setErrorMessage('Please select the type of issue.');
       setSubmitStatus('error');
@@ -166,11 +194,23 @@ export default function BookingPage() {
       return;
     }
 
+    // Intercept checkout for payment simulation
+    if (paymentMethod === 'ONLINE' && !isPaymentBypassed) {
+      setPaymentStep('form');
+      setShowPaymentModal(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus('idle');
     setErrorMessage('');
 
     try {
+      // Save phone number locally for frictionless e-commerce My Bookings dashboard lookups
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('erina_user_phone', phone);
+      }
+
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${apiUrl}/api/bookings/create`, {
         method: 'POST',
@@ -189,7 +229,8 @@ export default function BookingPage() {
           address: locationName || 'Stranded Location, Bangalore',
           paymentAmount: priceBreakdown.total,
           distanceKm,
-          paymentStatus: 'pending',
+          paymentStatus: paymentMethod === 'ONLINE' ? 'completed' : 'pending',
+          paymentMethod: paymentMethod,
           imageUrl: imageUrl || undefined,
         }),
       });
@@ -527,6 +568,54 @@ export default function BookingPage() {
                 </div>
               </div>
 
+              {/* Select Payment Method Grid */}
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-foreground">Select Payment Method</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Option 1: POD */}
+                  <div 
+                    onClick={() => setPaymentMethod('PAY_ON_DELIVERY')}
+                    className={`rounded-2xl border p-4 cursor-pointer transition-all relative flex items-center gap-3.5 ${
+                      paymentMethod === 'PAY_ON_DELIVERY'
+                        ? 'border-primary bg-primary/5 text-primary shadow-md shadow-primary/5'
+                        : 'border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-850 hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground/80'
+                    }`}
+                  >
+                    <div className={`p-2.5 rounded-xl ${paymentMethod === 'PAY_ON_DELIVERY' ? 'bg-primary/10' : 'bg-gray-200 dark:bg-gray-800'}`}>
+                      <Wallet size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-sm text-foreground">Pay on Delivery</h4>
+                      <p className="text-[10px] text-foreground/45 mt-0.5 font-semibold">Cash/UPI on-scene to tech</p>
+                    </div>
+                    {paymentMethod === 'PAY_ON_DELIVERY' && (
+                      <span className="absolute top-0 right-0 w-3 h-3 rounded-bl-lg bg-primary" />
+                    )}
+                  </div>
+
+                  {/* Option 2: Online Pay Now */}
+                  <div 
+                    onClick={() => setPaymentMethod('ONLINE')}
+                    className={`rounded-2xl border p-4 cursor-pointer transition-all relative flex items-center gap-3.5 ${
+                      paymentMethod === 'ONLINE'
+                        ? 'border-primary bg-primary/5 text-primary shadow-md shadow-primary/5'
+                        : 'border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-850 hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground/80'
+                    }`}
+                  >
+                    <div className={`p-2.5 rounded-xl ${paymentMethod === 'ONLINE' ? 'bg-primary/10' : 'bg-gray-200 dark:bg-gray-800'}`}>
+                      <CreditCard size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-sm text-foreground">Pay Now (Simulated)</h4>
+                      <p className="text-[10px] text-foreground/45 mt-0.5 font-semibold">Netbanking / Card Gate</p>
+                    </div>
+                    {paymentMethod === 'ONLINE' && (
+                      <span className="absolute top-0 right-0 w-3 h-3 rounded-bl-lg bg-primary" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Live Price Estimate Card */}
               {selectedIssue && (
                 <motion.div
@@ -581,7 +670,7 @@ export default function BookingPage() {
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-primary to-primary-hover text-white py-5 rounded-2xl font-bold text-xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.01] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-primary to-primary-hover text-white py-5 rounded-2xl font-bold text-xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.01] transition-all flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -597,6 +686,118 @@ export default function BookingPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* Simulated SECURE PAYMENT GATEWAY MODAL */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-2xl relative"
+          >
+            {paymentStep === 'form' && (
+              <div className="space-y-5">
+                <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-800 pb-3">
+                  <div>
+                    <h3 className="text-lg font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <CreditCard className="text-primary animate-pulse" size={20} />
+                      Secure Online Checkout
+                    </h3>
+                    <p className="text-[10px] text-foreground/50 uppercase tracking-widest font-black mt-0.5">PCI-DSS Encrypted Gate</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowPaymentModal(false)}
+                    className="text-foreground/45 hover:text-foreground p-1 transition-colors cursor-pointer text-sm font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Amount to pay */}
+                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-center justify-between text-sm">
+                  <span className="text-foreground/60 font-semibold">Assistance Fare:</span>
+                  <span className="text-2xl font-black text-primary">₹{priceBreakdown.total.toLocaleString()}</span>
+                </div>
+
+                {/* Simulated Credit Card form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-foreground/65 uppercase tracking-wider mb-1.5">Card Number</label>
+                    <input 
+                      type="text" 
+                      maxLength={19}
+                      placeholder="4111 2222 3333 4444" 
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-semibold"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-foreground/65 uppercase tracking-wider mb-1.5">Expiry Date</label>
+                      <input 
+                        type="text" 
+                        maxLength={5}
+                        placeholder="MM/YY" 
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-foreground/65 uppercase tracking-wider mb-1.5">CVV / CVC</label>
+                      <input 
+                        type="password" 
+                        maxLength={3}
+                        placeholder="***" 
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-foreground/65 uppercase tracking-wider mb-1.5">Cardholder Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. ARJUN KRISHNAN" 
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground font-semibold uppercase"
+                    />
+                  </div>
+                </div>
+
+                {/* Complete Button */}
+                <button
+                  type="button"
+                  onClick={handleSimulatePaymentComplete}
+                  className="w-full bg-gradient-to-r from-primary to-primary-hover text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-[1.01] shadow-lg shadow-primary/20 cursor-pointer"
+                >
+                  <ShieldCheck size={18} />
+                  Authorize Secure Charge
+                </button>
+              </div>
+            )}
+
+            {paymentStep === 'processing' && (
+              <div className="py-12 flex flex-col items-center justify-center text-center space-y-6">
+                <div className="w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin flex items-center justify-center text-primary" />
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-foreground text-lg uppercase tracking-wider">Processing Transaction</h4>
+                  <p className="text-xs text-foreground/50 animate-pulse font-medium">{paymentProgressText}</p>
+                </div>
+              </div>
+            )}
+
+            {paymentStep === 'success' && (
+              <div className="py-12 flex flex-col items-center justify-center text-center space-y-6">
+                <div className="w-16 h-16 bg-success/15 text-success rounded-full flex items-center justify-center shadow-lg shadow-success/10 border border-success/30">
+                  <CheckCircle2 size={32} />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-foreground text-lg uppercase tracking-wider">Authorization Approved!</h4>
+                  <p className="text-xs text-success font-black uppercase tracking-wider">Transaction code: AUTH-7792</p>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -26,11 +26,13 @@ function TrackingContent() {
   // Search input
   const [searchId, setSearchId] = useState('');
 
-  // Polling updates
+  // Realtime Firestore WebSocket Active Listener with REST fallback
   useEffect(() => {
     if (!id) return;
 
-    const fetchBooking = async () => {
+    let unsubscribeFirestore: any = null;
+
+    const fetchBookingFromAPI = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
         const response = await fetch(`${apiUrl}/api/bookings/${id}`);
@@ -47,12 +49,55 @@ function TrackingContent() {
       }
     };
 
-    setLoading(true);
-    fetchBooking().finally(() => setLoading(false));
+    const setupLiveTracking = async () => {
+      setLoading(true);
+      
+      try {
+        const { db } = await import('@/lib/firebase');
+        const { doc, onSnapshot } = await import('firebase/firestore');
 
-    // Poll database updates every 8 seconds
-    const interval = setInterval(fetchBooking, 8000);
-    return () => clearInterval(interval);
+        if (db && typeof db.app !== 'undefined') {
+          // Listen directly to Cloud Firestore active tracking document!
+          unsubscribeFirestore = onSnapshot(doc(db, "active_bookings", id), (docSnap) => {
+            if (docSnap.exists()) {
+              const activeData = docSnap.data();
+              // Format structure for compatibility with frontend view variables
+              setBooking({
+                ...activeData,
+                customerPhone: activeData.customerPhone || '',
+                location: activeData.location || { lat: 12.9716, lng: 77.5946 },
+                serviceLabel: activeData.serviceLabel || 'Roadside Rescue',
+                vehiclePlate: activeData.vehiclePlate || '',
+                vehicleName: activeData.vehicleName || 'Vehicle',
+                phone: activeData.customerPhone || ''
+              });
+              setLoading(false);
+              setError('');
+            } else {
+              // Active booking not in Firestore (e.g. was archived/completed) -> Fallback to MongoDB API fetch
+              fetchBookingFromAPI().finally(() => setLoading(false));
+            }
+          }, (err) => {
+            console.error("Firestore onSnapshot error:", err);
+            // On Firestore error, fallback to HTTP API fetch
+            fetchBookingFromAPI().finally(() => setLoading(false));
+          });
+        } else {
+          fetchBookingFromAPI().finally(() => setLoading(false));
+        }
+      } catch (err) {
+        console.error("Failed to load Firebase Firestore module dynamically:", err);
+        fetchBookingFromAPI().finally(() => setLoading(false));
+      }
+    };
+
+    setupLiveTracking();
+
+    return () => {
+      if (unsubscribeFirestore) {
+        unsubscribeFirestore();
+      }
+    };
   }, [id]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
