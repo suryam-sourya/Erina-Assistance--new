@@ -40,10 +40,11 @@ export async function PUT(
       
       if (db && typeof db.app !== 'undefined') {
         const firestoreId = resolvedParams.id;
+        let fsPromise: Promise<any>;
         
         if (body.status?.toLowerCase() === "completed") {
           // Incident Closed: Purge from Firestore active list to preserve free tier capacity
-          await deleteDoc(doc(db, "active_bookings", firestoreId));
+          fsPromise = deleteDoc(doc(db, "active_bookings", firestoreId));
         } else {
           // Still Active: Sync dispatcher status metrics
           const fsUpdate: Record<string, any> = {};
@@ -53,11 +54,18 @@ export async function PUT(
           if (body.technicianName) fsUpdate.technicianName = body.technicianName;
           if (body.paymentStatus) fsUpdate.paymentStatus = body.paymentStatus.toLowerCase();
           
-          await updateDoc(doc(db, "active_bookings", firestoreId), fsUpdate);
+          fsPromise = updateDoc(doc(db, "active_bookings", firestoreId), fsUpdate);
         }
+
+        // Enforce 1.2-second write limit to guarantee fast response
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Firestore sync timed out")), 1200)
+        );
+
+        await Promise.race([fsPromise, timeoutPromise]);
       }
     } catch (fsErr) {
-      console.error("Firestore status synchronization failed:", fsErr);
+      console.warn("Firestore status synchronization timed out or failed:", fsErr);
     }
 
     const obj = booking.toObject();

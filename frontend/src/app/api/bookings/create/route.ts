@@ -168,11 +168,11 @@ export async function POST(req: Request) {
 
     const booking = await Booking.create(dbPayload);
 
-    // Sync to Cloud Firestore Active Sessions for lightweight real-time tracking
+    // Sync to Cloud Firestore Active Sessions with a strict 1.2s timeout to prevent serverless socket hangs
     try {
       if (db && typeof db.app !== 'undefined') {
         const firestoreId = booking._id.toString();
-        await setDoc(doc(db, "active_bookings", firestoreId), {
+        const firestorePromise = setDoc(doc(db, "active_bookings", firestoreId), {
           id: firestoreId,
           customerName: rawCustomerName,
           customerPhone: finalPhone,
@@ -194,9 +194,16 @@ export async function POST(req: Request) {
           imageUrl: rawImageUrl || null,
           createdTime: new Date().toISOString()
         });
+
+        // Enforce 1.2-second write limit to guarantee fast response
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Firestore sync timed out")), 1200)
+        );
+
+        await Promise.race([firestorePromise, timeoutPromise]);
       }
     } catch (fsErr) {
-      console.error("Firestore active session sync failed:", fsErr);
+      console.warn("Firestore active session sync timed out or failed:", fsErr);
     }
 
     return NextResponse.json({
