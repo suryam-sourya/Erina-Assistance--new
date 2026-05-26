@@ -42,7 +42,7 @@ export default function Footer() {
             <Link href="/" className="flex items-center">
               <div className="relative h-10 w-44">
                 <Image
-                  src="/logo-full.png"
+                  src="/logo-full.svg"
                   alt="Erina Assistance"
                   fill
                   className="object-contain object-left brightness-0 invert"

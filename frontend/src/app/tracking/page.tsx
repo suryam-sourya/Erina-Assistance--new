@@ -4,6 +4,16 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, MessageSquare, Star, Clock, CheckCircle2, CircleDashed, Search, Navigation, XCircle } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const TrackingLiveMap = dynamic(() => import('./TrackingLiveMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-[#0B0F19] animate-pulse rounded-3xl flex items-center justify-center font-bold text-xs text-[#FF3366]/40 uppercase tracking-widest min-h-[500px]">
+      Initializing GPS Tracking Map...
+    </div>
+  )
+});
 
 function TrackingContent() {
   const searchParams = useSearchParams();
@@ -132,34 +142,41 @@ function TrackingContent() {
     );
   }
 
-  // State 4: Booking found -> Map fields and render Live timeline
   const status = booking.status || 'pending';
+  const subStatus = booking.subStatus || null;
   
   // Calculate dynamic steps based on Mongoose status
   const steps = [
     { title: 'Booking Confirmed', time: 'Received', completed: true },
     { 
       title: 'Technician Assigned', 
-      time: booking.technicianId ? 'Assigned' : 'Searching Units...', 
+      time: booking.technicianId 
+        ? (subStatus === 'collecting_tools' ? 'Preparing Gear' : 'Assigned') 
+        : 'Searching...', 
       completed: !!booking.technicianId,
       current: !booking.technicianId 
     },
     { 
-      title: 'Technician En Route', 
-      time: (status === 'assigned' || status === 'in-progress') ? 'En Route' : 'Pending', 
-      completed: status === 'in-progress' || status === 'completed',
-      current: status === 'assigned' 
+      title: 'Outbound (Left Hub)', 
+      time: (status === 'in-progress' && (subStatus === 'leaving_hub' || subStatus === 'arrived')) || status === 'completed'
+        ? 'En Route' 
+        : (status === 'assigned' ? 'Loading Rig' : 'Pending'), 
+      completed: (status === 'in-progress' && (subStatus === 'leaving_hub' || subStatus === 'arrived')) || status === 'completed',
+      current: status === 'assigned' || (status === 'in-progress' && subStatus === 'collecting_tools')
     },
     { 
       title: 'Arrived at Location', 
-      time: status === 'in-progress' ? 'Active' : status === 'completed' ? 'Arrived' : 'Pending', 
-      completed: status === 'completed',
-      current: status === 'in-progress' 
+      time: (status === 'in-progress' && subStatus === 'arrived') || status === 'completed'
+        ? 'At Scene' 
+        : 'Pending', 
+      completed: (status === 'in-progress' && subStatus === 'arrived') || status === 'completed',
+      current: status === 'in-progress' && subStatus === 'leaving_hub'
     },
     { 
-      title: 'Job Completed', 
+      title: 'Assistance Resolved', 
       time: status === 'completed' ? 'Resolved' : 'Pending', 
-      completed: status === 'completed' 
+      completed: status === 'completed',
+      current: status === 'in-progress' && subStatus === 'arrived'
     }
   ];
 
@@ -191,52 +208,14 @@ function TrackingContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Map Section */}
-          <div className="lg:col-span-2 bg-gray-200 dark:bg-gray-800 rounded-3xl min-h-[500px] relative overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-            <div className="absolute inset-0 opacity-40 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-            <div className="absolute inset-0 bg-blue-50/20 dark:bg-blue-900/10" />
-            
-            {/* User Pin */}
-            <motion.div 
-              initial={{ scale: 0 }} animate={{ scale: 1 }}
-              className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
-            >
-              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center animate-pulse">
-                <div className="w-8 h-8 bg-primary rounded-full border-4 border-white dark:border-gray-900 shadow-xl" />
-              </div>
-            </motion.div>
-
-            {/* Technician Pin (if assigned) */}
-            {booking.technicianId && (
-              <motion.div 
-                initial={{ x: -100, y: 100 }}
-                animate={{ x: 0, y: 0 }}
-                transition={{ duration: 10, repeat: Infinity, repeatType: 'reverse' }}
-                className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 z-10"
-              >
-                <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-2 mb-2">
-                  <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-750">
-                    <span className="font-bold text-xs">{booking.technicianName}</span>
-                    <span className="text-[9px] bg-green-150 text-green-700 px-1.5 py-0.2 rounded-full font-black uppercase tracking-wider">En Route</span>
-                  </div>
-                </div>
-                <div className="w-10 h-10 bg-secondary rounded-full border-4 border-white dark:border-gray-900 shadow-xl mx-auto flex items-center justify-center text-white">
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M19 13.5A5.5 5.5 0 0 1 13.5 19H5.5A2.5 2.5 0 0 1 3 16.5V9.114a2.5 2.5 0 0 1 1.096-2.067l4.5-3.085A2.5 2.5 0 0 1 10.024 4h5.476A3.5 3.5 0 0 1 19 7.5v6Z"/></svg>
-                </div>
-              </motion.div>
-            )}
-            
-            {/* If not assigned, show Radar sweeping effect */}
-            {!booking.technicianId && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
-                <div className="relative w-72 h-72 rounded-full border-2 border-primary/20 flex items-center justify-center animate-ping">
-                  <div className="w-48 h-48 rounded-full border-2 border-primary/30 flex items-center justify-center">
-                    <div className="w-24 h-24 rounded-full bg-primary/10 animate-pulse flex items-center justify-center">
-                      <CircleDashed size={32} className="animate-spin text-primary" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="lg:col-span-2 bg-[#0B0F19] rounded-3xl min-h-[500px] relative overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
+            <TrackingLiveMap 
+              customerLat={booking.location?.lat || 12.9716}
+              customerLng={booking.location?.lng || 77.5946}
+              status={booking.status}
+              subStatus={booking.subStatus || null}
+              technicianName={booking.technicianName}
+            />
           </div>
 
           <div className="space-y-8">

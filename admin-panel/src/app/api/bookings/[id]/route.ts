@@ -58,6 +58,7 @@ export async function PUT(
       vehiclePlate: obj.vehicle?.plateNumber || obj.vehiclePlate || "",
       imageUrl: (obj.images && obj.images.length > 0) ? obj.images[0] : obj.imageUrl,
       status: (obj.status || "pending").toLowerCase(),
+      subStatus: obj.subStatus ? obj.subStatus.toLowerCase() : null,
       address: obj.location?.address || obj.address || "",
       serviceLabel: serviceLabels[obj.serviceType || ""] || obj.serviceLabel || "Roadside Help",
       location: obj.location?.address || obj.address || "Bengaluru",

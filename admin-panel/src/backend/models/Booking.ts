@@ -33,6 +33,11 @@ const BookingSchema = new mongoose.Schema(
       uppercase: true, // "PENDING", "EMERGENCY", "ASSIGNED", "IN_PROGRESS", "COMPLETED"
       default: "PENDING",
     },
+    subStatus: {
+      type: String,
+      uppercase: true, // "COLLECTING_TOOLS", "LEAVING_HUB", "ARRIVED"
+      default: null,
+    },
     technicianId: { type: String, default: null },
     technicianName: { type: String, default: null },
     estimatedArrivalTime: { type: String, default: null },

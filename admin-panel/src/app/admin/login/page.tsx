@@ -123,8 +123,12 @@ export default function AdminLogin() {
       >
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-primary/20">
-            <Wrench size={28} className="text-background stroke-[2.5]" />
+          <div className="w-14 h-14 relative flex items-center justify-center mb-3 transition-transform hover:scale-105 duration-300">
+            <img
+              src="/logo-icon.svg"
+              alt="Erina Assistance"
+              className="w-full h-full object-contain"
+            />
           </div>
           
           <div className="flex items-center gap-1.5 justify-center">

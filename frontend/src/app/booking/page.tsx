@@ -13,10 +13,38 @@ const MapSelector = dynamic(() => import('@/components/Booking/MapSelector'), {
 });
 
 export default function BookingPage() {
+  const [isOutOfService, setIsOutOfService] = useState(false);
+
+  // Haversine distance calculation in kilometers
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   // Location selection handler
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
     setCoordinates({ lat, lng });
     setLocationName(address);
+
+    // Calculate distance to Erina Ops Central Hub (Kadugodi station: 12.9902, 77.7602)
+    const dist = calculateDistance(12.9902, 77.7602, lat, lng);
+    setDistanceKm(dist);
+
+    // Restriction: Primary active SLA grid is East Bangalore (Whitefield, Marathahalli, Kadugodi within 25km radius)
+    if (dist > 25) {
+      setIsOutOfService(true);
+    } else {
+      setIsOutOfService(false);
+    }
   };
   const [isPriority, setIsPriority] = useState(false);
 
@@ -111,6 +139,13 @@ export default function BookingPage() {
     e.preventDefault();
     if (!selectedIssue) {
       setErrorMessage('Please select the type of issue.');
+      setSubmitStatus('error');
+      return;
+    }
+
+    // SLA Active Area Check - Restrict bookings outside Whitefield/Marathahalli grid (25km hub radius)
+    if (isOutOfService || (coordinates && calculateDistance(12.9902, 77.7602, coordinates.lat, coordinates.lng) > 25)) {
+      setErrorMessage('Service Unavailable: Erina Roadside Assistance only services the Bangalore East region (Whitefield, Marathahalli, Kadugodi, and surrounding areas within 25km of our Central Hub).');
       setSubmitStatus('error');
       return;
     }
@@ -404,6 +439,16 @@ export default function BookingPage() {
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Pickup Location</label>
                 <MapSelector onLocationSelect={handleLocationSelect} />
+                
+                {isOutOfService && (
+                  <div className="mt-3.5 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs font-semibold leading-relaxed flex items-start gap-2.5 animate-pulse">
+                    <ShieldAlert className="shrink-0 mt-0.5" size={16} />
+                    <div>
+                      <strong className="block text-sm font-black uppercase tracking-wider mb-1">Out of Service Area</strong>
+                      Erina Assistance primary active SLA grids are currently restricted to Bengaluru East (Whitefield, Marathahalli, Kadugodi, and areas within a 25km radius from our Kadugodi Central Hub). Bookings are suspended for this location.
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Upload Image */}

@@ -11,11 +11,13 @@ export interface Booking {
   technicianId: string | null;
   technicianName: string | null;
   status: 'pending' | 'assigned' | 'in-progress' | 'completed' | 'emergency';
+  subStatus?: 'collecting_tools' | 'leaving_hub' | 'arrived' | null;
   paymentStatus: 'completed' | 'pending' | 'failed';
   paymentAmount: number;
   createdTime: string;
   location: string;
   imageUrl?: string | null;
+  coordinates?: { lat: number; lng: number };
 }
 
 export interface Technician {
@@ -89,7 +91,7 @@ interface AdminState {
   fetchBookings: () => Promise<void>;
   addBooking: (booking: Omit<Booking, 'id' | 'createdTime'>) => Promise<void>;
   assignTechnician: (bookingId: string, technicianId: string) => Promise<void>;
-  updateBookingStatus: (bookingId: string, status: Booking['status']) => Promise<void>;
+  updateBookingStatus: (bookingId: string, status: Booking['status'], subStatus?: Booking['subStatus']) => Promise<void>;
   toggleTechnicianAvailability: (technicianId: string) => void;
   addActivity: (message: string, type: RecentActivity['type']) => void;
   triggerEmergencyDispatch: (serviceType: Booking['serviceType'], location: string, customerName: string) => Promise<void>;
@@ -115,6 +117,7 @@ const initialBookings: Booking[] = [
     paymentAmount: 1800,
     createdTime: '22 Mins Ago',
     location: 'Nandi Hills Road, Bangalore',
+    coordinates: { lat: 13.3702, lng: 77.6835 },
   },
   {
     id: 'ER-4891',
@@ -131,6 +134,7 @@ const initialBookings: Booking[] = [
     paymentAmount: 4500,
     createdTime: '28 Mins Ago',
     location: 'NICE Road Expressway, Bangalore',
+    coordinates: { lat: 12.8761, lng: 77.5011 },
   },
   {
     id: 'ER-4890',
@@ -147,6 +151,7 @@ const initialBookings: Booking[] = [
     paymentAmount: 2500,
     createdTime: '1 Hour Ago',
     location: 'Outer Ring Road, Marathahalli',
+    coordinates: { lat: 12.9562, lng: 77.7011 },
   },
   {
     id: 'ER-4889',
@@ -163,6 +168,7 @@ const initialBookings: Booking[] = [
     paymentAmount: 1500,
     createdTime: '2 Hours Ago',
     location: 'Phoenix Marketcity, Whitefield',
+    coordinates: { lat: 12.9961, lng: 77.7291 },
   },
   {
     id: 'ER-4893',
@@ -179,6 +185,7 @@ const initialBookings: Booking[] = [
     paymentAmount: 5200,
     createdTime: '2 Mins Ago',
     location: 'Hebbal Flyover, Bangalore',
+    coordinates: { lat: 13.0358, lng: 77.5978 },
   },
 ];
 
@@ -431,11 +438,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         technicianId: b.technicianId || null,
         technicianName: b.technicianName || null,
         status: (b.status || "pending").toLowerCase() as Booking['status'],
+        subStatus: b.subStatus || null,
         paymentStatus: (b.paymentStatus || "pending").toLowerCase() as Booking['paymentStatus'],
         paymentAmount: b.paymentAmount || 0,
         createdTime: b.createdAt ? new Date(b.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just Now",
         location: b.address || (b.location?.lat ? `${b.location.lat}, ${b.location.lng}` : "Unknown Location"),
         imageUrl: b.imageUrl || null,
+        coordinates: b.coordinates || { lat: 12.9716, lng: 77.5946 },
       }));
 
       // Calculate payments based on completed bookings
@@ -529,6 +538,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           technicianId,
           technicianName: assignedTech.name,
           status: 'assigned',
+          subStatus: 'collecting_tools',
         }),
       });
       if (response.ok) {
@@ -570,14 +580,18 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     get().addActivity(`Technician ${assignedTech.name} assigned to Booking ${bookingId}.`, 'assignment');
   },
 
-  updateBookingStatus: async (bookingId, status) => {
+  updateBookingStatus: async (bookingId, status, subStatus) => {
     const targetBooking = get().bookings.find(b => b.id === bookingId);
     if (!targetBooking) return;
 
     try {
       const updateData: any = { status };
+      if (subStatus !== undefined) {
+        updateData.subStatus = subStatus;
+      }
       if (status === 'completed') {
         updateData.paymentStatus = 'completed';
+        updateData.subStatus = null;
       }
       
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';

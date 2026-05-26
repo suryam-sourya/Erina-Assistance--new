@@ -96,8 +96,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         
         {/* Brand Header */}
         <div className="p-6 border-b border-border flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-lg shadow-primary/25">
-            <Wrench size={20} className="text-background stroke-[2.5]" />
+          <div className="w-10 h-10 relative overflow-hidden transition-transform hover:scale-105 duration-300">
+            <img
+              src="/logo-icon.svg"
+              alt="Erina Assistance"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <div className="flex items-center gap-1">

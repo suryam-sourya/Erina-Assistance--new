@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { useAdminStore, Booking, Technician } from '@/frontend/store/adminStore';
 import { 
   Search, 
@@ -15,9 +15,13 @@ import {
   CreditCard,
   User,
   ShieldAlert,
-  ChevronRight
+  ChevronRight,
+  Truck,
+  Wrench,
+  Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import LiveTrackingMap from './LiveTrackingMap';
 
 export default function BookingsManagement() {
   const { bookings, technicians, assignTechnician, updateBookingStatus } = useAdminStore();
@@ -32,6 +36,9 @@ export default function BookingsManagement() {
 
   // Incident Image Preview State
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Expanded visual dispatch progress row
+  const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
   // Filter Bookings
   const filteredBookings = bookings.filter(booking => {
@@ -169,147 +176,355 @@ export default function BookingsManagement() {
             </thead>
             <tbody className="divide-y divide-white/5 font-semibold">
               {filteredBookings.length > 0 ? (
-                filteredBookings.map((booking) => (
-                  <tr 
-                    key={booking.id}
-                    className={`hover:bg-white/3 transition-colors ${booking.status === 'emergency' ? 'bg-emergency/5' : ''}`}
-                  >
-                    {/* Booking ID */}
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-white text-xs">{booking.id}</span>
-                        {booking.status === 'emergency' && (
-                          <span className="w-2 h-2 rounded-full bg-emergency animate-ping" />
-                        )}
-                      </div>
-                      <span className="text-[9px] text-foreground/30 font-bold block mt-1 tracking-wider uppercase">
-                        {booking.createdTime}
-                      </span>
-                    </td>
-
-                    {/* Customer */}
-                    <td className="py-4 px-5">
-                      <div className="font-black text-white">{booking.customerName}</div>
-                      <div className="text-[10px] text-foreground/40 mt-0.5">{booking.customerPhone}</div>
-                    </td>
-
-                    {/* Service */}
-                    <td className="py-4 px-5">
-                      <span className={`px-2.5 py-0.8 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}>
-                        {booking.serviceLabel}
-                      </span>
-                    </td>
-
-                    {/* Vehicle */}
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-2">
-                        {booking.imageUrl && (
-                          <div 
-                            onClick={() => setPreviewImage(booking.imageUrl || null)}
-                            className="relative w-8 h-8 rounded-lg overflow-hidden border border-white/10 hover:border-primary/50 cursor-pointer flex-shrink-0 group/thumb"
-                            title="Click to view incident photo"
-                          >
-                            <img src={booking.imageUrl} alt="Incident" className="object-cover w-full h-full group-hover/thumb:scale-110 transition-all" />
+                filteredBookings.map((booking) => {
+                  const techInfo = technicians.find(t => t.id === booking.technicianId);
+                  
+                  return (
+                    <Fragment key={booking.id}>
+                      {/* Interactive Case Row */}
+                      <tr 
+                        key={booking.id}
+                        onClick={() => setExpandedBookingId(expandedBookingId === booking.id ? null : booking.id)}
+                        className={`hover:bg-white/3 transition-all cursor-pointer ${booking.status === 'emergency' ? 'bg-emergency/5' : ''} ${
+                          expandedBookingId === booking.id ? 'bg-white/5 border-l-2 border-primary' : ''
+                        }`}
+                      >
+                        {/* Booking ID */}
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-white text-xs">{booking.id}</span>
+                            {booking.status === 'emergency' && (
+                              <span className="w-2 h-2 rounded-full bg-emergency animate-ping" />
+                            )}
                           </div>
-                        )}
-                        <div>
-                          <div className="text-foreground/80">{booking.vehicleName}</div>
-                          <div className="font-mono text-[9px] text-foreground/40 mt-1 uppercase tracking-wider">{booking.vehiclePlate}</div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Technician */}
-                    <td className="py-4 px-5">
-                      {booking.technicianName ? (
-                        <div>
-                          <div className="flex items-center gap-1 text-white font-bold">
-                            <UserCheck size={12} className="text-primary" />
-                            <span>{booking.technicianName}</span>
-                          </div>
-                          <span className="text-[9px] text-foreground/35 block mt-0.5">{booking.location}</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 text-foreground/30 italic">
-                          <AlertCircle size={12} className="text-foreground/20" />
-                          <span>No Tech Dispatched</span>
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-4 px-5">
-                      <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${getStatusBadgeStyles(booking.status)}`}>
-                        {booking.status}
-                      </span>
-                    </td>
-
-                    {/* Payment */}
-                    <td className="py-4 px-5">
-                      <div className="text-white font-bold">₹{booking.paymentAmount.toLocaleString('en-IN')}</div>
-                      <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 block ${booking.paymentStatus === 'completed' ? 'text-success' : 'text-warning'}`}>
-                        {booking.paymentStatus}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-4 px-5 text-right">
-                      <div className="flex justify-end items-center gap-2">
-                        {booking.status === 'completed' ? (
-                          <span className="text-[10px] text-success flex items-center gap-1 justify-end font-bold uppercase tracking-wider">
-                            <CheckCircle2 size={12} />
-                            <span>Archived Case</span>
+                          <span className="text-[9px] text-foreground/30 font-bold block mt-1 tracking-wider uppercase">
+                            {booking.createdTime}
                           </span>
-                        ) : (
-                          <>
-                            {/* If unassigned, show Assign Technician */}
-                            {!booking.technicianId ? (
-                              <button
-                                onClick={() => setSelectedBooking(booking)}
-                                className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/20"
+                        </td>
+
+                        {/* Customer */}
+                        <td className="py-4 px-5">
+                          <div className="font-black text-white">{booking.customerName}</div>
+                          <div className="text-[10px] text-foreground/40 mt-0.5">{booking.customerPhone}</div>
+                        </td>
+
+                        {/* Service */}
+                        <td className="py-4 px-5">
+                          <span className={`px-2.5 py-0.8 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}>
+                            {booking.serviceLabel}
+                          </span>
+                        </td>
+
+                        {/* Vehicle */}
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-2">
+                            {booking.imageUrl && (
+                              <div 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPreviewImage(booking.imageUrl || null);
+                                }}
+                                className="relative w-8 h-8 rounded-lg overflow-hidden border border-white/10 hover:border-primary/50 cursor-pointer flex-shrink-0 group/thumb"
+                                title="Click to view incident photo"
                               >
-                                Dispatch Technician
-                              </button>
+                                <img src={booking.imageUrl} alt="Incident" className="object-cover w-full h-full group-hover/thumb:scale-110 transition-all" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="text-foreground/80">{booking.vehicleName}</div>
+                              <div className="font-mono text-[9px] text-foreground/40 mt-1 uppercase tracking-wider">{booking.vehiclePlate}</div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Technician */}
+                        <td className="py-4 px-5">
+                          {booking.technicianName ? (
+                            <div>
+                              <div className="flex items-center gap-1 text-white font-bold">
+                                <UserCheck size={12} className="text-primary" />
+                                <span>{booking.technicianName}</span>
+                              </div>
+                              <span className="text-[9px] text-foreground/35 block mt-0.5 max-w-[140px] truncate">{booking.location}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-foreground/30 italic">
+                              <AlertCircle size={12} className="text-foreground/20" />
+                              <span>No Tech Dispatched</span>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-4 px-5">
+                          <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
+                            booking.status === 'assigned'
+                              ? 'bg-blue-500/15 text-blue-400 border-blue-500/35'
+                              : booking.status === 'in-progress' && booking.subStatus === 'leaving_hub'
+                                ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/35 animate-pulse'
+                                : booking.status === 'in-progress' && booking.subStatus === 'arrived'
+                                  ? 'bg-orange-500/15 text-orange-400 border-orange-500/35'
+                                  : getStatusBadgeStyles(booking.status)
+                          }`}>
+                            {booking.status === 'assigned'
+                              ? 'Assigned (Preparing)'
+                              : booking.status === 'in-progress' && booking.subStatus === 'leaving_hub'
+                                ? 'En Route (Left Hub)'
+                                : booking.status === 'in-progress' && booking.subStatus === 'arrived'
+                                  ? 'Unit On-Scene'
+                                  : booking.status}
+                          </span>
+                        </td>
+
+                        {/* Payment */}
+                        <td className="py-4 px-5">
+                          <div className="text-white font-bold">₹{booking.paymentAmount.toLocaleString('en-IN')}</div>
+                          <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 block ${booking.paymentStatus === 'completed' ? 'text-success' : 'text-warning'}`}>
+                            {booking.paymentStatus}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-end items-center gap-2">
+                            {booking.status === 'completed' ? (
+                              <span className="text-[10px] text-success flex items-center gap-1 justify-end font-bold uppercase tracking-wider">
+                                <CheckCircle2 size={12} />
+                                <span>Archived Case</span>
+                              </span>
                             ) : (
                               <>
-                                {/* Assigned -> In Progress */}
-                                {booking.status === 'assigned' && (
+                                {/* If unassigned, show Assign Technician */}
+                                {!booking.technicianId ? (
                                   <button
-                                    onClick={() => updateBookingStatus(booking.id, 'in-progress')}
-                                    className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                    onClick={() => setSelectedBooking(booking)}
+                                    className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/20"
                                   >
-                                    Progress case
+                                    Dispatch Technician
                                   </button>
-                                )}
+                                ) : (
+                                  <>
+                                    {/* Assigned (collecting_tools) -> En Route (leaving_hub) */}
+                                    {booking.status === 'assigned' && (
+                                      <button
+                                        onClick={() => updateBookingStatus(booking.id, 'in-progress', 'leaving_hub')}
+                                        className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-indigo-500/10"
+                                        title="Collect gear at Kadugodi Central Hub & start outbound travel"
+                                      >
+                                        Set En Route
+                                      </button>
+                                    )}
 
-                                {/* In Progress -> Completed */}
-                                {booking.status === 'in-progress' && (
-                                  <button
-                                    onClick={() => updateBookingStatus(booking.id, 'completed')}
-                                    className="px-3 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-                                  >
-                                    Mark Complete
-                                  </button>
-                                )}
+                                    {/* En Route (leaving_hub) -> Arrived (arrived) */}
+                                    {booking.status === 'in-progress' && booking.subStatus === 'leaving_hub' && (
+                                      <button
+                                        onClick={() => updateBookingStatus(booking.id, 'in-progress', 'arrived')}
+                                        className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-500/10"
+                                        title="Confirm responder has arrived at motorists stranded site"
+                                      >
+                                        Mark Arrived
+                                      </button>
+                                    )}
 
-                                {/* Emergency with Tech -> Progress */}
-                                {booking.status === 'emergency' && (
-                                  <button
-                                    onClick={() => updateBookingStatus(booking.id, 'in-progress')}
-                                    className="px-3 py-1.5 bg-emergency hover:bg-emergency/80 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer animate-pulse"
-                                  >
-                                    Activate Case
-                                  </button>
+                                    {/* Arrived (arrived) -> Resolved (completed) */}
+                                    {booking.status === 'in-progress' && booking.subStatus === 'arrived' && (
+                                      <button
+                                        onClick={() => updateBookingStatus(booking.id, 'completed')}
+                                        className="px-3 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-success/15"
+                                        title="Resolve incident and close command ticket"
+                                      >
+                                        Mark Complete
+                                      </button>
+                                    )}
+
+                                    {/* Fallback for other en-route / in-progress states */}
+                                    {booking.status === 'in-progress' && !booking.subStatus && (
+                                      <button
+                                        onClick={() => updateBookingStatus(booking.id, 'completed')}
+                                        className="px-3 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                      >
+                                        Mark Complete
+                                      </button>
+                                    )}
+
+                                    {/* Emergency with Tech -> Progress */}
+                                    {booking.status === 'emergency' && (
+                                      <button
+                                        onClick={() => updateBookingStatus(booking.id, 'in-progress')}
+                                        className="px-3 py-1.5 bg-emergency hover:bg-emergency/80 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer animate-pulse"
+                                      >
+                                        Activate Case
+                                      </button>
+                                    )}
+                                  </>
                                 )}
                               </>
                             )}
-                          </>
-                        )}
-                      </div>
-                    </td>
+                          </div>
+                        </td>
 
-                  </tr>
-                ))
+                      </tr>
+
+                      {/* Expandable Visual Journey Timeline */}
+                      {expandedBookingId === booking.id && (
+                        <tr className="bg-black/30 border-b border-border">
+                          <td colSpan={8} className="p-6">
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex flex-col lg:flex-row items-stretch justify-between gap-6"
+                            >
+                              
+                              {/* Left Panel: Central Ops Hub & Stage Radar Stack */}
+                              <div className="lg:w-2/5 flex flex-col gap-4">
+                                {/* Central Ops Hub Badge card */}
+                                <div className="space-y-3.5 bg-card/60 p-5 rounded-2xl border border-white/5 text-left relative overflow-hidden">
+                                  <div className="absolute top-0 right-0 w-24 h-24 bg-primary/2 rounded-full blur-xl pointer-events-none" />
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                                    <h4 className="text-[10px] font-black text-white uppercase tracking-wider">Erina Ops Central Hub</h4>
+                                  </div>
+                                  
+                                  <p className="text-[11px] text-foreground/75 leading-relaxed font-medium">
+                                    <strong>Central Hub Address:</strong><br />
+                                    Shop No. 02, Dinnur Main Road, Kadugodi Colony, Opp: Srihalli Cafe, Bengaluru, Karnataka — 560067
+                                  </p>
+                                  
+                                  <div className="flex items-center justify-between text-[9px] text-foreground/45 border-t border-white/5 pt-2.5 font-bold uppercase tracking-wider">
+                                    <span>Station Coordinates</span>
+                                    <span className="text-primary font-mono">12.9902° N, 77.7602° E</span>
+                                  </div>
+                                  
+                                  {techInfo && (
+                                    <div className="text-[9px] text-foreground/50 border-t border-white/5 pt-2.5 font-semibold">
+                                      <strong>Dispatched Unit:</strong> {techInfo.name} <br />
+                                      <span className="text-foreground/40">{techInfo.vehicleType}</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Interactive Stages Map Progress Timeline */}
+                                <div className="flex-1 flex flex-col justify-center bg-card/25 p-5 rounded-2xl border border-white/5 min-h-[180px]">
+                                  <h4 className="text-[10px] font-black text-white uppercase tracking-wider mb-6 text-left flex items-center gap-1.5">
+                                    <Activity size={12} className="text-primary animate-pulse" />
+                                    <span>Live Dispatch Stage Radar</span>
+                                  </h4>
+
+                                  <div className="relative flex items-center justify-between w-full px-2">
+                                    {/* Horizontal connector line */}
+                                    <div className="absolute left-8 right-8 top-5 h-[2px] bg-white/5 -z-10" />
+                                    
+                                    {/* Milestone Nodes */}
+                                    {/* Node 1: Setup */}
+                                    <div className="flex flex-col items-center text-center max-w-[70px]">
+                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
+                                        booking.status !== 'pending' && booking.status !== 'emergency'
+                                          ? 'bg-success/20 text-success border-success/35 shadow-lg shadow-success/5'
+                                          : 'bg-card text-foreground/30 border-white/5'
+                                      }`}>
+                                        <Clock size={16} />
+                                      </div>
+                                      <span className="text-[9px] font-black uppercase tracking-wider mt-2.5 text-white">Hub Setup</span>
+                                      <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
+                                        {booking.status === 'pending' || booking.status === 'emergency' ? 'Pending Queue' : 'Incident Logged'}
+                                      </span>
+                                    </div>
+
+                                    {/* Node 2: Collecting Tools */}
+                                    <div className="flex flex-col items-center text-center max-w-[90px]">
+                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
+                                        booking.status === 'completed' || (booking.status === 'in-progress') || (booking.status === 'assigned' && booking.subStatus !== 'collecting_tools')
+                                          ? 'bg-success/20 text-success border-success/35 shadow-lg shadow-success/5'
+                                          : (booking.status === 'assigned' && booking.subStatus === 'collecting_tools')
+                                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 animate-pulse shadow-md shadow-blue-500/10'
+                                            : 'bg-card text-foreground/30 border-white/5'
+                                      }`}>
+                                        <Wrench size={16} />
+                                      </div>
+                                      <span className="text-[9px] font-black uppercase tracking-wider mt-2.5 text-white">Collecting Tools</span>
+                                      <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
+                                        {booking.status === 'assigned' && booking.subStatus === 'collecting_tools' ? 'Gathering Gear' : (booking.status === 'pending' || booking.status === 'emergency' ? 'Awaiting Dispatch' : 'Unit Loaded')}
+                                      </span>
+                                    </div>
+
+                                    {/* Node 3: Outbound */}
+                                    <div className="flex flex-col items-center text-center max-w-[90px]">
+                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
+                                        booking.status === 'completed' || (booking.status === 'in-progress' && booking.subStatus === 'arrived')
+                                          ? 'bg-success/20 text-success border-success/35 shadow-lg shadow-success/5'
+                                          : (booking.status === 'in-progress' && booking.subStatus === 'leaving_hub')
+                                            ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/50 animate-pulse shadow-md shadow-indigo-500/10'
+                                            : 'bg-card text-foreground/30 border-white/5'
+                                      }`}>
+                                        <Truck size={16} />
+                                      </div>
+                                      <span className="text-[9px] font-black uppercase tracking-wider mt-2.5 text-white">Leaving Hub</span>
+                                      <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
+                                        {booking.status === 'in-progress' && booking.subStatus === 'leaving_hub' ? 'Leaving station' : (booking.status === 'completed' || (booking.status === 'in-progress' && booking.subStatus === 'arrived') ? 'Left Hub' : 'En-route')}
+                                      </span>
+                                    </div>
+
+                                    {/* Node 4: On-Scene */}
+                                    <div className="flex flex-col items-center text-center max-w-[90px]">
+                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
+                                        booking.status === 'completed'
+                                          ? 'bg-success/20 text-success border-success/35 shadow-lg shadow-success/5'
+                                          : (booking.status === 'in-progress' && booking.subStatus === 'arrived')
+                                            ? 'bg-orange-500/20 text-orange-400 border-orange-500/50 animate-pulse shadow-md shadow-orange-500/10'
+                                            : 'bg-card text-foreground/30 border-white/5'
+                                      }`}>
+                                        <MapPin size={16} />
+                                      </div>
+                                      <span className="text-[9px] font-black uppercase tracking-wider mt-2.5 text-white">Arrived Scene</span>
+                                      <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
+                                        {booking.status === 'in-progress' && booking.subStatus === 'arrived' ? 'Active Rescue' : (booking.status === 'completed' ? 'Arrived' : 'On-Scene')}
+                                      </span>
+                                    </div>
+
+                                    {/* Node 5: Success */}
+                                    <div className="flex flex-col items-center text-center max-w-[70px]">
+                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
+                                        booking.status === 'completed'
+                                          ? 'bg-success/20 text-success border-success/35 shadow-lg shadow-success/5'
+                                          : 'bg-card text-foreground/30 border-white/5'
+                                      }`}>
+                                        <CheckCircle2 size={16} />
+                                      </div>
+                                      <span className="text-[9px] font-black uppercase tracking-wider mt-2.5 text-white">Resolved</span>
+                                      <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
+                                        {booking.status === 'completed' ? 'Case Resolved' : 'Ticket Open'}
+                                      </span>
+                                    </div>
+
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Right Panel: Interactive Dispatch Live Map */}
+                              <div className="flex-1 flex flex-col bg-card/60 p-5 rounded-2xl border border-white/5 min-h-[350px]">
+                                <h4 className="text-[10px] font-black text-white uppercase tracking-wider mb-4 text-left flex items-center gap-1.5">
+                                  <MapPin size={12} className="text-primary animate-pulse" />
+                                  <span>Live Operations Radar Map</span>
+                                </h4>
+                                <div className="flex-1 min-h-[280px]">
+                                  <LiveTrackingMap 
+                                    bookingId={booking.id}
+                                    customerLat={booking.coordinates?.lat || 12.9716}
+                                    customerLng={booking.coordinates?.lng || 77.5946}
+                                    status={booking.status}
+                                    subStatus={booking.subStatus || null}
+                                    technicianName={booking.technicianName}
+                                  />
+                                </div>
+                              </div>
+
+                            </motion.div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-foreground/30 font-bold uppercase tracking-widest">

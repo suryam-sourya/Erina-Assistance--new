@@ -50,8 +50,8 @@ describe('Navbar', () => {
   describe('Logo', () => {
     it('renders the desktop logo with correct src', () => {
       const logos = screen.getAllByAltText('Erina Assistance');
-      // Desktop logo uses logo-full.png
-      const desktopLogo = logos.find(img => (img as HTMLImageElement).src.includes('logo-full.png'));
+      // Desktop logo uses logo-icon.svg
+      const desktopLogo = logos.find(img => (img as HTMLImageElement).src.includes('logo-icon.svg'));
       expect(desktopLogo).toBeDefined();
     });
 
