@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminStore } from '@/frontend/store/adminStore';
@@ -21,7 +21,8 @@ import {
   Flame, 
   Wrench,
   Package,
-  X
+  X,
+  Menu
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -73,8 +74,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return matched ? matched.name : 'Operations';
   };
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-foreground flex font-sans overflow-hidden">
+    <div className="min-h-screen bg-[#0B0F19] text-foreground flex font-sans overflow-hidden relative">
       
       {/* 1. Dynamic Top Operational Emergency Banner */}
       {activeAlertMessage && (
@@ -93,25 +96,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      {/* 2. Left Navigation Sidebar */}
-      <aside className="w-64 bg-card border-r border-border shrink-0 flex flex-col h-screen sticky top-0 z-20">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-40 md:hidden transition-all duration-300"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* 2. Responsive Navigation Sidebar (Drawer on Mobile / Sticky on Desktop) */}
+      <aside 
+        className={`fixed md:sticky top-0 left-0 z-50 md:z-20 w-64 bg-card border-r border-border shrink-0 flex flex-col h-screen transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         
         {/* Brand Header */}
-        <div className="p-6 border-b border-border flex items-center gap-3">
-          <div className="w-10 h-10 relative overflow-hidden transition-transform hover:scale-105 duration-300">
-            <img
-              src="/logo-icon.svg"
-              alt="Erina Assistance"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-1">
-              <span className="text-base font-black tracking-wider text-white uppercase">Erina</span>
-              <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-widest">Ops</span>
+        <div className="p-6 border-b border-border flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 relative overflow-hidden transition-transform hover:scale-105 duration-300">
+              <img
+                src="/logo-icon.svg"
+                alt="Erina Assistance"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-semibold block mt-0.5">Control Center</span>
+            <div>
+              <div className="flex items-center gap-1">
+                <span className="text-base font-black tracking-wider text-white uppercase">Erina</span>
+                <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-widest">Ops</span>
+              </div>
+              <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-semibold block mt-0.5">Control Center</span>
+            </div>
           </div>
+          {/* Mobile Close Button */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="md:hidden text-foreground/45 hover:text-white p-1 cursor-pointer transition-colors"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Menu Navigation */}
@@ -124,6 +148,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all group ${
                   isActive 
                     ? 'bg-primary/10 text-primary border border-primary/20 font-bold shadow-lg shadow-primary/5' 
@@ -173,46 +198,54 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="h-16 bg-card/65 backdrop-blur-md border-b border-border flex items-center justify-between px-8 z-10 shrink-0">
+        <header className="h-16 bg-card/65 backdrop-blur-md border-b border-border flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
           
-          {/* Section Title */}
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-black text-white uppercase tracking-widest">
+          {/* Mobile hamburger menu & Section Title */}
+          <div className="flex items-center gap-2 md:gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden p-2 hover:bg-white/5 rounded-xl border border-white/5 text-foreground/60 hover:text-white transition-all cursor-pointer mr-1"
+            >
+              <Menu size={18} />
+            </button>
+            <h2 className="text-xs md:text-sm font-black text-white uppercase tracking-widest truncate max-w-[100px] sm:max-w-none">
               {getPageTitle()}
             </h2>
-            <div className="h-4 w-[1px] bg-border" />
-            <span className="text-[10px] text-foreground/35 font-bold uppercase tracking-wider">
+            <div className="h-4 w-[1px] bg-border hidden sm:block" />
+            <span className="text-[10px] text-foreground/35 font-bold uppercase tracking-wider hidden sm:block">
               Control Panel Grid
             </span>
           </div>
 
           {/* Operational Indicators */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-6">
             
             {/* Active emergencies indicators */}
             {stats.activeEmergencies > 0 && (
-              <div className="flex items-center gap-1.5 bg-emergency/10 border border-emergency/30 px-3 py-1 rounded-full text-xs font-bold text-emergency animate-pulse">
-                <Flame size={14} />
-                <span>{stats.activeEmergencies} Active Emergencies</span>
+              <div className="flex items-center gap-1.5 bg-emergency/10 border border-emergency/30 px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold text-emergency animate-pulse">
+                <Flame size={12} className="sm:size-[14px]" />
+                <span className="hidden sm:inline">{stats.activeEmergencies} Active Emergencies</span>
+                <span className="sm:hidden">{stats.activeEmergencies} 🚨</span>
               </div>
             )}
 
             {/* Pending Dispatchers */}
-            <div className="flex items-center gap-1.5 text-xs text-foreground/50 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/5">
-              <span className="w-2 h-2 rounded-full bg-warning animate-ping" />
-              <span>{stats.pendingRequests} Bookings Waiting</span>
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-foreground/50 font-bold bg-white/5 px-2 sm:px-3 py-1 rounded-full border border-white/5">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-warning animate-ping" />
+              <span className="hidden sm:inline">{stats.pendingRequests} Bookings Waiting</span>
+              <span className="sm:hidden">{stats.pendingRequests} ⏳</span>
             </div>
 
             {/* Notification Drawer Trigger */}
-            <button className="relative p-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 text-foreground/60 hover:text-white transition-all cursor-pointer">
-              <Bell size={16} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
+            <button className="relative p-1.5 sm:p-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 text-foreground/60 hover:text-white transition-all cursor-pointer">
+              <Bell size={14} className="sm:size-[16px]" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full" />
             </button>
           </div>
         </header>
 
         {/* Content Body Grid */}
-        <main className={`flex-1 overflow-y-auto p-8 relative ${activeAlertMessage ? 'pt-16' : ''}`}>
+        <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${activeAlertMessage ? 'pt-16' : ''}`}>
           {children}
         </main>
       </div>
