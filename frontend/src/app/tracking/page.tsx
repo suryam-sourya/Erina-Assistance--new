@@ -203,9 +203,32 @@ function TrackingContent() {
     );
   }
 
-  const status = booking.status || 'pending';
-  const subStatus = booking.subStatus || null;
+  // Normalize status and subStatus to handle any hyphen/underscore mismatches between Firestore, MongoDB, and local components
+  const rawStatus = (booking.status || 'pending').toLowerCase();
+  const status = rawStatus === 'in_progress' ? 'in-progress' : rawStatus;
   
+  const rawSubStatus = booking.subStatus ? booking.subStatus.toLowerCase() : null;
+  const subStatus = rawSubStatus === 'collecting-tools' ? 'collecting_tools' : 
+                    rawSubStatus === 'leaving-hub' ? 'leaving_hub' : 
+                    rawSubStatus;
+
+  const getDisplayStatusHeader = () => {
+    if (status === 'completed') return 'Resolved';
+    if (status === 'cancelled') return 'Cancelled';
+    if (status === 'pending') return 'Searching...';
+    if (status === 'emergency') return 'Emergency Queue';
+    if (status === 'assigned') {
+      if (subStatus === 'collecting_tools') return 'Preparing Gear';
+      return 'Technician Assigned';
+    }
+    if (status === 'in-progress') {
+      if (subStatus === 'leaving_hub') return 'En Route';
+      if (subStatus === 'arrived') return 'Unit On-Scene';
+      return 'En Route';
+    }
+    return status;
+  };
+
   // Calculate dynamic steps based on Mongoose status
   const steps = [
     { title: 'Booking Confirmed', time: 'Received', completed: true },
@@ -261,7 +284,7 @@ function TrackingContent() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground/60">Case Status</p>
-              <p className="text-2xl font-black uppercase text-foreground">{status}</p>
+              <p className="text-2xl font-black uppercase text-foreground">{getDisplayStatusHeader()}</p>
             </div>
           </div>
         </div>
