@@ -50,8 +50,9 @@ export async function PUT(
           const fsUpdate: Record<string, any> = {};
           if (body.status) fsUpdate.status = body.status.toLowerCase();
           if (body.subStatus !== undefined) fsUpdate.subStatus = body.subStatus ? body.subStatus.toLowerCase() : null;
-          if (body.technicianId) fsUpdate.technicianId = body.technicianId;
+           if (body.technicianId) fsUpdate.technicianId = body.technicianId;
           if (body.technicianName) fsUpdate.technicianName = body.technicianName;
+          if (body.technicianPhone) fsUpdate.technicianPhone = body.technicianPhone;
           if (body.paymentStatus) fsUpdate.paymentStatus = body.paymentStatus.toLowerCase();
           
           fsPromise = updateDoc(doc(db, "active_bookings", firestoreId), fsUpdate);
@@ -88,6 +89,7 @@ export async function PUT(
       id: obj._id.toString(),
       customerName: obj.customer?.name || obj.customerName || "Customer",
       phone: obj.customer?.phone || obj.phone || "",
+      technicianPhone: obj.technicianPhone || "",
       vehicleType: obj.vehicle?.type || obj.vehicleType || "Car (Hatchback/Sedan)",
       vehicleNumber: obj.vehicle?.plateNumber || obj.vehicleNumber || "",
       vehiclePlate: obj.vehicle?.plateNumber || obj.vehiclePlate || "",

@@ -41,6 +41,7 @@ export async function GET(
       id: obj._id.toString(),
       customerName: obj.customer?.name || obj.customerName || "Customer",
       phone: obj.customer?.phone || obj.phone || "",
+      technicianPhone: obj.technicianPhone || "",
       vehicleType: obj.vehicle?.type || obj.vehicleType || "Car (Hatchback/Sedan)",
       vehicleNumber: obj.vehicle?.plateNumber || obj.vehicleNumber || "",
       vehiclePlate: obj.vehicle?.plateNumber || obj.vehiclePlate || "",

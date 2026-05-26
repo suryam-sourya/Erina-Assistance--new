@@ -40,6 +40,7 @@ const BookingSchema = new mongoose.Schema(
     },
     technicianId: { type: String, default: null },
     technicianName: { type: String, default: null },
+    technicianPhone: { type: String, default: null },
     estimatedArrivalTime: { type: String, default: null },
     paymentStatus: { type: String, default: "PENDING" },
     paymentAmount: { type: Number, default: 0 },

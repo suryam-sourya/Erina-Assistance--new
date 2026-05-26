@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getAuthToken } from '@/frontend/lib/firebase';
 
 export interface Booking {
   id: string;
@@ -537,6 +538,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         body: JSON.stringify({
           technicianId,
           technicianName: assignedTech.name,
+          technicianPhone: assignedTech.phone,
           status: 'assigned',
           subStatus: 'collecting_tools',
         }),

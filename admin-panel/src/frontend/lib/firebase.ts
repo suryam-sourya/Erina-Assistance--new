@@ -18,4 +18,16 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+export async function getAuthToken(): Promise<string | null> {
+  try {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      return await currentUser.getIdToken();
+    }
+  } catch (err) {
+    console.error("Error getting Firebase ID token:", err);
+  }
+  return null;
+}
+
 export { app, auth, db };

@@ -191,6 +191,7 @@ export async function POST(req: Request) {
           paymentAmount: rawPaymentAmount,
           technicianId: null,
           technicianName: null,
+          technicianPhone: null,
           imageUrl: rawImageUrl || null,
           createdTime: new Date().toISOString()
         });

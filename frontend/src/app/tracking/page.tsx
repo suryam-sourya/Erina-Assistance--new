@@ -15,6 +15,15 @@ const TrackingLiveMap = dynamic(() => import('./TrackingLiveMap'), {
   )
 });
 
+const TECHNICIAN_PHONES: Record<string, string> = {
+  "Amit Singh": "+91 98888 11111",
+  "Ramesh Kumar": "+91 98888 22222",
+  "Vikram Rao": "+91 98888 33333",
+  "Nitesh Gowda": "+91 98888 44444",
+  "Suresh Patil": "+91 98888 55555",
+  "Karthik Raja": "+91 98888 66666",
+};
+
 function TrackingContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
@@ -81,7 +90,8 @@ function TrackingContent() {
                 serviceLabel: activeData.serviceLabel || 'Roadside Rescue',
                 vehiclePlate: activeData.vehiclePlate || '',
                 vehicleName: activeData.vehicleName || 'Vehicle',
-                phone: activeData.customerPhone || ''
+                phone: activeData.customerPhone || '',
+                technicianPhone: activeData.technicianPhone || null
               });
               setLoading(false);
               setError('');
@@ -321,21 +331,28 @@ function TrackingContent() {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 text-sm font-medium">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-foreground/60">Dispatched Vehicle</span>
-                      <span className="text-foreground">{booking.vehicleName} ({booking.vehiclePlate})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-foreground/60">Contact Operator</span>
-                      <span className="text-foreground">{booking.phone}</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <a href={`tel:${booking.phone}`} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors text-center shadow-md shadow-primary/20">
-                      <Phone size={18} /> Call Unit
-                    </a>
-                  </div>
+                  {(() => {
+                    const operatorPhone = booking.technicianPhone || (booking.technicianName ? TECHNICIAN_PHONES[booking.technicianName] : null) || "+91 73400 66655";
+                    return (
+                      <>
+                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 text-sm font-medium">
+                          <div className="flex justify-between mb-2">
+                            <span className="text-foreground/60">Dispatched Vehicle</span>
+                            <span className="text-foreground">{booking.vehicleName} ({booking.vehiclePlate})</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-foreground/60">Contact Operator</span>
+                            <span className="text-foreground">{operatorPhone}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <a href={`tel:${operatorPhone}`} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors text-center shadow-md shadow-primary/20">
+                            <Phone size={18} /> Call Unit
+                          </a>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </>
               ) : (
                 <div className="text-center py-8 space-y-4">
