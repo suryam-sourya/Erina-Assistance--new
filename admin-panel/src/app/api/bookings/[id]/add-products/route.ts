@@ -71,8 +71,8 @@ export async function POST(
           soldProducts: lineItems,
           invoiceNumber,
           invoiceGeneratedAt: new Date(),
-          // Add products total to payment amount
-          paymentAmount: productsTotal,
+          // Note: We do NOT overwrite paymentAmount here. paymentAmount represents the service charge.
+          // The invoice page calculates the combined subtotal as service charge (paymentAmount) + productsSubtotal.
         },
       },
       { new: true }
