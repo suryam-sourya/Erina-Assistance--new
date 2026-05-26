@@ -7,9 +7,22 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     await connectDB();
-    
-    const bookings = await Booking.find().sort({
-      createdAt: -1,
+
+    // Retrieve 100% of active/pending dispatches to guarantee operators never miss an active case
+    const activeBookings = await Booking.find({
+      status: { $nin: ["COMPLETED", "CANCELLED"] }
+    }).sort({ createdAt: -1 });
+
+    // Limit historical completed/cancelled cases to the most recent 50 to maintain high speed
+    const recentArchived = await Booking.find({
+      status: { $in: ["COMPLETED", "CANCELLED"] }
+    }).sort({ createdAt: -1 }).limit(50);
+
+    // Merge and sort by createdAt descending
+    const bookings = [...activeBookings, ...recentArchived].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
     });
 
     const serviceLabels: Record<string, string> = {
