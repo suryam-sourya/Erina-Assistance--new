@@ -29,7 +29,13 @@ import { motion } from 'framer-motion';
 import LiveTrackingMap from './LiveTrackingMap';
 
 export default function BookingsManagement() {
-  const { bookings, technicians, assignTechnician, updateBookingStatus } = useAdminStore();
+  const {
+  bookings,
+  technicians,
+  assignTechnician,
+  updateBookingStatus,
+  addBooking,
+} = useAdminStore();
   
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,87 +51,34 @@ export default function BookingsManagement() {
   // Expanded visual dispatch progress row
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
-  // Product Selector Modal State
-  const [selectedBookingForProducts, setSelectedBookingForProducts] = useState<Booking | null>(null);
-  const [availableProducts, setAvailableProducts] = useState<any[]>([]);
-  const [selectedProductQuantities, setSelectedProductQuantities] = useState<Record<string, number>>({});
-  const [isSubmittingProducts, setIsSubmittingProducts] = useState(false);
-  const [productSearch, setProductSearch] = useState('');
+  const [showNewTicketModal, setShowNewTicketModal] = useState(false);
+  const [ticketForm, setTicketForm] = useState({
+  customerName: "",
+  phone: "",
 
-  // Fetch products when modal opens
-  useEffect(() => {
-    if (!selectedBookingForProducts) return;
-    const loadProducts = async () => {
-      try {
-        const res = await fetch('/api/products');
-        const data = await res.json();
-        if (data.success) {
-          setAvailableProducts(data.products || []);
-        }
-      } catch (err) {
-        console.error('Failed to load products:', err);
-      }
-    };
-    loadProducts();
-    setSelectedProductQuantities({});
-    setProductSearch('');
-  }, [selectedBookingForProducts]);
+  vehicleType:
+    "Car (Hatchback/Sedan)",
 
-  const adjustProductQty = (productId: string, delta: number, maxStock: number) => {
-    setSelectedProductQuantities(prev => {
-      const current = prev[productId] || 0;
-      const next = current + delta;
-      if (next <= 0) {
-        const updated = { ...prev };
-        delete updated[productId];
-        return updated;
-      }
-      return { ...prev, [productId]: Math.min(next, maxStock) };
-    });
-  };
+  vehicleNumber: "",
 
-  const handleResolveWithProducts = async () => {
-    if (!selectedBookingForProducts) return;
-    const bookingId = selectedBookingForProducts.id;
+  serviceType:
+    "towing",
 
-    // Build soldProducts payload
-    const soldProducts = Object.entries(selectedProductQuantities)
-      .map(([productId, qty]) => ({ productId, qty }));
+  address: "",
+  landmark: "",
 
-    if (soldProducts.length === 0) {
-      alert("Please select at least one product or click 'Mark Complete' on the table for service-only resolution.");
-      return;
-    }
+  latitude: "",
+  longitude: "",
 
-    setIsSubmittingProducts(true);
-    try {
-      // 1. Attach products and generate invoice
-      const response = await fetch(`/api/bookings/${bookingId}/add-products`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ soldProducts }),
-      });
+  paymentMethod:
+    "cash",
 
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to attach products.");
-      }
+  paymentAmount: "",
 
-      // 2. Mark booking as completed
-      await updateBookingStatus(bookingId, 'completed');
+  description: "",
 
-      // 3. Open invoice in new tab
-      window.open(`/admin/invoice/${bookingId}`, '_blank');
-
-      // 4. Close modal
-      setSelectedBookingForProducts(null);
-    } catch (err: any) {
-      alert(`Error resolving booking: ${err.message}`);
-    } finally {
-      setIsSubmittingProducts(false);
-    }
-  };
-
+  isPriority: false,
+});
   // Filter Bookings
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = 
@@ -156,7 +109,149 @@ export default function BookingsManagement() {
     
     setSelectedBooking(null);
   };
+const handleCreateTicket =
+  async (
+    e: React.FormEvent
+  ) => {
 
+    e.preventDefault();
+
+    // Required fields validation
+    if (
+      !ticketForm.customerName ||
+      !ticketForm.phone ||
+      !ticketForm.vehicleNumber ||
+      !ticketForm.address
+    ) {
+      alert(
+        "Please fill all required fields"
+      );
+      return;
+    }
+
+    // Phone validation
+    const phone =
+      ticketForm.phone.replace(
+        /\D/g,
+        ""
+      );
+
+    if (
+      phone.length !== 10
+    ) {
+      alert(
+        "Enter valid 10 digit number"
+      );
+      return;
+    }
+
+    try {
+
+  const response =
+    await fetch(
+      "/api/bookings/create",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify({
+          customer: {
+            name:
+              ticketForm.customerName,
+            phone,
+          },
+
+          vehicle: {
+            type:
+              ticketForm.vehicleType,
+            plateNumber:
+              ticketForm.vehicleNumber,
+          },
+
+          serviceType:
+            ticketForm.serviceType
+              .toUpperCase(),
+
+          description:
+            ticketForm.description,
+
+          isPriority:
+            ticketForm.isPriority,
+
+          location: {
+            lat:
+              Number(
+                ticketForm.latitude
+              ) || 12.9716,
+
+            lng:
+              Number(
+                ticketForm.longitude
+              ) || 77.5946,
+
+            address:
+              ticketForm.address,
+          },
+
+          paymentMethod:
+            ticketForm.paymentMethod
+              .toUpperCase(),
+
+          paymentStatus:
+            "PENDING",
+
+          paymentAmount:
+            Number(
+              ticketForm.paymentAmount
+            ) || 0,
+        }),
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+  throw new Error(
+    data.error ||
+    "Booking creation failed"
+  );
+}
+
+// refresh UI instantly
+window.location.reload();
+
+setShowNewTicketModal(false);
+
+alert(
+  "Ticket Created Successfully"
+);
+  // refresh booking list
+  setShowNewTicketModal(false);
+  alert("Ticket Created Successfully");
+
+  setShowNewTicketModal(
+    false
+  );
+
+  alert(
+    "Ticket Created Successfully"
+  );
+
+} catch (error: any) {
+
+  console.error(error);
+
+  alert(
+    error.message ||
+    "Failed to create booking"
+  );
+}
+};
   const getStatusBadgeStyles = (status: Booking['status']) => {
     switch (status) {
       case 'emergency': return 'bg-emergency/15 text-emergency border-emergency/35 animate-pulse';
@@ -174,19 +269,60 @@ export default function BookingsManagement() {
       case 'battery': return 'bg-[#F59E0B]/15 text-[#FBBF24] border-[#F59E0B]/30';
       case 'ev': return 'bg-[#10B981]/15 text-[#34D399] border-[#10B981]/30';
       case 'lockout': return 'bg-[#8B5CF6]/15 text-[#A78BFA] border-[#8B5CF6]/30';
+      case 'fuel': return 'bg-[#F97316]/15 text-[#FDBA74] border-[#F97316]/30';
+      case 'flat_tyre': return 'bg-[#EF4444]/15 text-[#F87171] border-[#EF4444]/30';
+      case 'engine': return 'bg-[#6B7280]/15 text-[#9CA3AF] border-[#6B7280]/30';
+      case 'accident': return 'bg-[#DC2626]/15 text-[#F87171] border-[#DC2626]/30';
+      case 'other': return 'bg-[#6B7280]/15 text-[#9CA3AF] border-[#6B7280]/30';
+      default:
+ return
+ 'bg-white/10 text-white border-white/20';
     }
+    
   };
 
   return (
     <div className="space-y-6">
       
       {/* Header section */}
-      <div>
-        <h1 className="text-2xl font-black text-white uppercase tracking-wider">Bookings Queue</h1>
-        <p className="text-xs text-foreground/45 uppercase tracking-wider font-semibold mt-1">
-          Monitor dispatch metrics, track rescue cycles, and manage live technician deployments
-        </p>
-      </div>
+      <div className="flex items-center justify-between">
+  <div>
+    <h1 className="text-2xl font-black text-white uppercase tracking-wider">
+      Bookings Queue
+    </h1>
+
+    <p className="text-xs text-foreground/45 uppercase tracking-wider font-semibold mt-1">
+      Monitor dispatch metrics,
+      track rescue cycles,
+      and manage live
+      technician deployments
+    </p>
+  </div>
+
+  <button
+    onClick={() =>
+      setShowNewTicketModal(
+        true
+      )
+    }
+    className="
+      bg-cyan-400
+      hover:bg-cyan-300
+      text-black
+      font-black
+      px-5
+      py-3
+      rounded-2xl
+      uppercase
+      tracking-wider
+      shadow-lg
+      transition
+      hover:scale-105
+    "
+  >
+    + New Ticket
+  </button>
+</div>
 
       {/* Control Filters Area */}
       <div className="glass-panel p-5 rounded-2xl border border-white/5 space-y-4">
@@ -232,11 +368,45 @@ export default function BookingsManagement() {
                 onChange={(e) => setServiceFilter(e.target.value)}
                 className="bg-transparent border-none text-[10px] font-black uppercase tracking-wider text-foreground/80 outline-none cursor-pointer"
               >
-                <option value="all">All Services</option>
-                <option value="towing">Flatbed Towing</option>
-                <option value="battery">Battery jump</option>
-                <option value="ev">Mobile EV Charge</option>
-                <option value="lockout">Lockout help</option>
+                <option value="all">
+  All Services
+</option>
+
+<option value="towing">
+  Flatbed Towing
+</option>
+
+<option value="battery">
+  Battery Jumpstart
+</option>
+
+<option value="ev">
+  Mobile EV Charging
+</option>
+
+<option value="lockout">
+  Lockout Assistance
+</option>
+
+<option value="fuel">
+  Emergency Fuel Delivery
+</option>
+
+<option value="flat_tyre">
+  Flat Tyre Replacement
+</option>
+
+<option value="engine">
+  Engine Diagnostics
+</option>
+
+<option value="accident">
+  Accident Recovery
+</option>
+
+<option value="other">
+  Other Assistance
+</option>
               </select>
             </div>
 
@@ -730,7 +900,415 @@ export default function BookingsManagement() {
           </motion.div>
         </div>
       )}
+     {showNewTicketModal && (
+  <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 
+    <div className="bg-[#0B1220] border border-white/10 rounded-[32px] p-7 w-full max-w-6xl max-h-[92vh] overflow-y-auto">
+
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-5">
+        <div>
+          <h2 className="text-2xl font-black text-white uppercase tracking-wider">
+            Create New Ticket
+          </h2>
+
+          <p className="text-sm text-white/40 mt-1 uppercase tracking-wider font-semibold">
+            Admin Assisted Roadside Booking
+          </p>
+        </div>
+
+        <button
+          onClick={() =>
+            setShowNewTicketModal(false)
+          }
+          className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-white transition"
+        >
+          ✕
+        </button>
+      </div>
+
+      <form
+        onSubmit={handleCreateTicket}
+        className="space-y-8"
+      >
+
+        {/* CUSTOMER + VEHICLE */}
+        <div className="grid grid-cols-2 gap-6">
+
+          <div>
+            <label className="text-sm text-white font-bold mb-2 block">
+              Full Name
+            </label>
+
+            <input
+              placeholder="John Doe"
+              value={ticketForm.customerName}
+              onChange={(e)=>
+                setTicketForm({
+                  ...ticketForm,
+                  customerName:
+                    e.target.value
+                })
+              }
+              className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-white font-bold mb-2 block">
+              Mobile Number
+            </label>
+
+            <input
+  type="tel"
+  placeholder="9876543210"
+  value={ticketForm.phone}
+  maxLength={10}
+  onChange={(e) => {
+
+    // only numbers allowed
+    const value =
+      e.target.value.replace(
+        /\D/g,
+        ""
+      );
+
+    // limit to 10 digits
+    if (value.length <= 10) {
+      setTicketForm({
+        ...ticketForm,
+        phone: value,
+      });
+    }
+  }}
+  className="
+    w-full
+    p-4
+    rounded-2xl
+    bg-white/5
+    border border-white/10
+    text-white
+  "
+/>
+          </div>
+
+          <div>
+            <label className="text-sm text-white font-bold mb-2 block">
+              Vehicle Type
+            </label>
+
+            <select
+              value={
+                ticketForm.vehicleType
+              }
+              onChange={(e)=>
+                setTicketForm({
+                  ...ticketForm,
+                  vehicleType:
+                    e.target.value
+                })
+              }
+              className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white"
+            >
+              <option>
+                Car (Hatchback/Sedan)
+              </option>
+
+              <option>
+                SUV / MUV
+              </option>
+
+              <option>
+                Luxury
+              </option>
+
+              <option>
+                EV
+              </option>
+
+              <option>
+                Bike
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm text-white font-bold mb-2 block">
+              Vehicle Number
+            </label>
+
+            <input
+              placeholder="UP78AB1234"
+              value={
+                ticketForm.vehicleNumber
+              }
+              onChange={(e)=>
+                setTicketForm({
+                  ...ticketForm,
+                  vehicleNumber:
+                    e.target.value
+                })
+              }
+              className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white uppercase"
+            />
+          </div>
+        </div>
+
+        {/* SERVICE TYPE */}
+        <div>
+          <div className="flex justify-between mb-4">
+            <h3 className="text-white font-black text-lg">
+              Select Breakdown Issue
+            </h3>
+
+            <span className="text-white/30 text-sm font-bold uppercase">
+              Quick Select
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
+            {[
+              "towing",
+              "battery",
+                "ev",
+              "lockout",
+                "fuel",
+              "flat_tyre",
+              "engine",
+              "accident",
+               "other"
+].map((service) => (
+
+              <button
+                key={service}
+                type="button"
+                onClick={() =>
+                  setTicketForm({
+                    ...ticketForm,
+                    serviceType:
+                      service
+                  })
+                }
+                className={`
+                  rounded-3xl
+                  p-5
+                  border
+                  transition
+                  text-left
+                  ${
+                    ticketForm.serviceType
+                    === service
+                    ? "border-cyan-400 bg-cyan-500/10"
+                    : "border-white/10 bg-white/[0.02]"
+                  }
+                `}
+              >
+                <div className="text-white font-black capitalize">
+                  {service.replace(
+                    "_",
+                    " "
+                  )}
+                </div>
+              </button>
+            ))}
+
+          </div>
+        </div>
+
+        {/* LOCATION */}
+        <div className="space-y-5">
+
+          <h3 className="text-white font-black text-lg">
+            Pickup Location
+          </h3>
+
+          <textarea
+            placeholder="Add address or nearby landmark..."
+            value={
+              ticketForm.address
+            }
+            onChange={(e)=>
+              setTicketForm({
+                ...ticketForm,
+                address:
+                  e.target.value
+              })
+            }
+            className="w-full h-28 p-4 rounded-2xl bg-white/5 border border-white/10 text-white resize-none"
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+
+            <input
+              placeholder="Latitude (optional)"
+              value={
+                ticketForm.latitude
+              }
+              onChange={(e)=>
+                setTicketForm({
+                  ...ticketForm,
+                  latitude:
+                    e.target.value
+                })
+              }
+              className="p-4 rounded-2xl bg-white/5 border border-white/10 text-white"
+            />
+
+            <input
+              placeholder="Longitude (optional)"
+              value={
+                ticketForm.longitude
+              }
+              onChange={(e)=>
+                setTicketForm({
+                  ...ticketForm,
+                  longitude:
+                    e.target.value
+                })
+              }
+              className="p-4 rounded-2xl bg-white/5 border border-white/10 text-white"
+            />
+          </div>
+
+        </div>
+
+        {/* PAYMENT */}
+        <div className="grid grid-cols-2 gap-6">
+
+          <div>
+            <label className="text-white font-bold block mb-3">
+              Payment Method
+            </label>
+
+            <select
+              value={
+                ticketForm.paymentMethod
+              }
+              onChange={(e)=>
+                setTicketForm({
+                  ...ticketForm,
+                  paymentMethod:
+                    e.target.value
+                })
+              }
+              className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white"
+            >
+              <option value="cash">
+                Cash
+              </option>
+
+              <option value="upi">
+                UPI
+              </option>
+
+              <option value="online">
+                Paid Online
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-white font-bold block mb-3">
+              Estimated Charge
+            </label>
+
+            <input
+              type="number"
+              placeholder="₹ 2500"
+              value={
+                ticketForm.paymentAmount
+              }
+              onChange={(e)=>
+                setTicketForm({
+                  ...ticketForm,
+                  paymentAmount:
+                    e.target.value
+                })
+              }
+              className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white"
+            />
+          </div>
+        </div>
+
+        {/* DESCRIPTION */}
+        <div>
+          <label className="text-white font-bold block mb-3">
+            Description
+          </label>
+
+          <textarea
+            placeholder="Customer issue details..."
+            value={
+              ticketForm.description
+            }
+            onChange={(e)=>
+              setTicketForm({
+                ...ticketForm,
+                description:
+                  e.target.value
+              })
+            }
+            className="w-full h-28 p-4 rounded-2xl bg-white/5 border border-white/10 text-white resize-none"
+          />
+        </div>
+
+        {/* EMERGENCY LAST */}
+        <div className="border border-red-500/20 bg-red-500/10 rounded-3xl p-6 flex justify-between items-center">
+
+          <div>
+            <h3 className="text-white font-black text-lg">
+              High Priority Emergency
+            </h3>
+
+            <p className="text-white/50 text-sm">
+              Emergency dispatch increases charges
+            </p>
+          </div>
+
+          <input
+            type="checkbox"
+            checked={
+              ticketForm.isPriority
+            }
+            onChange={(e)=>
+              setTicketForm({
+                ...ticketForm,
+                isPriority:
+                  e.target.checked
+              })
+            }
+            className="w-7 h-7"
+          />
+        </div>
+
+        {/* BUTTON */}
+        <button
+          type="submit"
+          className="
+            w-full
+            bg-cyan-400
+            hover:bg-cyan-300
+            text-black
+            py-5
+            rounded-3xl
+            font-black
+            uppercase
+            tracking-wider
+            transition
+          "
+        >
+          {
+        ticketForm.isPriority
+          ? "Create Emergency Ticket"
+        : "Create Ticket"
+}
+        </button>
+
+      </form>
+    </div>
+  </div>
+)}
       {/* INCIDENT IMAGE FULL PREVIEW MODAL */}
       {previewImage && (
         <div 

@@ -38,28 +38,165 @@ export async function GET() {
     };
     
     // Normalize MongoDB documents for compatibility with the admin/Zustand store
-    const normalizedBookings = bookings.map(b => {
-      const obj = b.toObject();
-      
-      return {
-        ...obj,
-        id: obj._id.toString(),
-        customerName: obj.customer?.name || obj.customerName || "Customer",
-        phone: obj.customer?.phone || obj.phone || "",
-        vehicleType: obj.vehicle?.type || obj.vehicleType || "Car (Hatchback/Sedan)",
-        vehicleNumber: obj.vehicle?.plateNumber || obj.vehicleNumber || "",
-        vehiclePlate: obj.vehicle?.plateNumber || obj.vehiclePlate || "",
-        imageUrl: (obj.images && obj.images.length > 0) ? obj.images[0] : obj.imageUrl,
-        status: (obj.status || "pending").toLowerCase(),
-        subStatus: obj.subStatus ? obj.subStatus.toLowerCase() : null,
-        address: obj.location?.address || obj.address || "",
-        serviceLabel: serviceLabels[obj.serviceType || ""] || obj.serviceLabel || "Roadside Help",
-        location: obj.location?.address || obj.address || "Bengaluru", // Fallback text location
-        coordinates: obj.location?.coordinates && Array.isArray(obj.location.coordinates) && obj.location.coordinates.length >= 2
-          ? { lat: obj.location.coordinates[1], lng: obj.location.coordinates[0] }
-          : { lat: 12.9716, lng: 77.5946 },
-      };
-    });
+    const normalizedBookings =
+  bookings.map((b) => {
+
+    const obj =
+      b.toObject();
+
+    return {
+      ...obj,
+
+      id:
+        obj.ticketId ||
+        obj._id.toString(),
+
+      customerName:
+        obj.customer?.name ||
+        obj.customerName ||
+        "Customer",
+
+      customerPhone:
+        obj.customer?.phone ||
+        obj.phone ||
+        "",
+
+      phone:
+        obj.customer?.phone ||
+        obj.phone ||
+        "",
+
+      vehicleType:
+        obj.vehicle?.type ||
+        obj.vehicleType ||
+        "Car",
+
+      vehicleName:
+        obj.vehicleType ||
+        obj.vehicleName ||
+        "Vehicle",
+
+      vehicleNumber:
+        obj.vehicle?.plateNumber ||
+        obj.vehicleNumber ||
+        "",
+
+      vehiclePlate:
+        obj.vehicle?.plateNumber ||
+        obj.vehiclePlate ||
+        "",
+
+      imageUrl:
+        obj.images?.[0] ||
+        obj.imageUrl ||
+        null,
+
+      status:
+        (
+          obj.status ||
+          "PENDING"
+        ).toLowerCase(),
+
+      subStatus:
+        obj.subStatus
+          ? obj.subStatus.toLowerCase()
+          : null,
+
+      location:
+        obj.location
+          ?.address ||
+        obj.addressString ||
+        "Unknown Location",
+
+      address:
+        obj.location
+          ?.address ||
+        obj.addressString ||
+        "",
+
+      serviceType:
+        (
+          obj.serviceType ||
+          "OTHER"
+        ).toLowerCase(),
+
+      serviceLabel:
+        ({
+          towing:
+            "Flatbed Towing",
+
+          battery:
+            "Battery Jumpstart",
+
+          ev:
+            "Mobile EV Charging",
+
+          lockout:
+            "Lockout Assistance",
+
+          fuel:
+            "Emergency Fuel Delivery",
+
+          flat_tyre:
+            "Flat Tyre Replacement",
+
+          engine:
+            "Engine Diagnostics",
+
+          accident:
+            "Accident Recovery",
+
+          other:
+            "Other Assistance",
+        } as any)[
+          (
+            obj.serviceType ||
+            "OTHER"
+          ).toLowerCase()
+        ] ||
+        "Roadside Help",
+
+      paymentAmount:
+        obj.paymentAmount ||
+        0,
+
+      paymentStatus:
+        (
+          obj.paymentStatus ||
+          "PENDING"
+        ).toLowerCase(),
+
+      technicianId:
+        obj.technicianId,
+
+      technicianName:
+        obj.technicianName,
+
+      coordinates:
+        obj.location
+          ?.coordinates
+          ?.length === 2
+          ? {
+              lat:
+                obj.location
+                  .coordinates[1],
+
+              lng:
+                obj.location
+                  .coordinates[0],
+            }
+          : {
+              lat:
+                12.9716,
+
+              lng:
+                77.5946,
+            },
+
+      createdTime:
+        "Just Now",
+    };
+});
 
     return NextResponse.json(normalizedBookings, {
       headers: {

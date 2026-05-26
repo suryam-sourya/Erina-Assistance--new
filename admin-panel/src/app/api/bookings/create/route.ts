@@ -47,13 +47,35 @@ export async function POST(req: Request) {
       return isNaN(num) ? undefined : num;
     };
 
-    const rawPhone = sanitizeString(phone || customerPhone);
-    const rawCustomerName = sanitizeString(customerName || "Customer");
-    const rawVehicleNumber = sanitizeString(vehicleNumber || vehiclePlate || "KA01AB1234");
-    const rawVehicleType = sanitizeString(vehicleType || vehicleName || "Car (Hatchback/Sedan)");
-    const rawServiceType = sanitizeString(serviceType || "other");
+    const rawPhone =
+  sanitizeString(
+    body?.customer?.phone ||
+    customerPhone ||
+    phone
+  );
+    const rawCustomerName =
+  sanitizeString(
+    body?.customer?.name ||
+    customerName ||
+    "Customer"
+  );
+    const rawVehicleNumber =
+sanitizeString(
+  body?.vehicle?.plateNumber ||
+  vehicleNumber ||
+  vehiclePlate ||
+  "KA01AB1234"
+);
+    const rawVehicleType =
+sanitizeString(
+  body?.vehicle?.type ||
+  vehicleType ||
+  vehicleName ||
+  "Car (Hatchback/Sedan)"
+);
+const rawServiceType = sanitizeString(serviceType || "other");
     const rawStatus = sanitizeString(status || "pending");
-    const rawAddress = sanitizeString(address || "Bengaluru, Karnataka");
+    const rawAddress = sanitizeString(location?.address||address|| "Bengaluru, Karnataka");
     const rawPaymentAmount = sanitizeNumber(paymentAmount) || 0;
     const rawPaymentStatus = sanitizeString(paymentStatus || "pending");
     const rawImageUrl = sanitizeString(imageUrl);
@@ -63,14 +85,30 @@ export async function POST(req: Request) {
     // ── Strict Input Sanitization & Validation ───────────────────────────
     
     // 1. Phone number validation: digits only, must contain 10 digits
-    const cleanedPhone = rawPhone ? rawPhone.replace(/\D/g, "") : "";
-    if (!cleanedPhone || cleanedPhone.length < 10) {
-      return NextResponse.json({
-        success: false,
-        error: "Invalid phone number. Must be a valid 10-digit mobile number.",
-      }, { status: 400 });
-    }
-    const finalPhone = cleanedPhone.substring(cleanedPhone.length - 10); // Standardize to last 10 digits
+    const cleanedPhone =
+  rawPhone
+    ? rawPhone.replace(
+        /\D/g,
+        ""
+      )
+    : "";
+
+if (
+  !cleanedPhone ||
+  cleanedPhone.length !== 10
+) {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        "Phone number must contain exactly 10 digits.",
+    },
+    { status: 400 }
+  );
+}
+
+const finalPhone =
+  cleanedPhone;
 
     // 2. Vehicle license plate validation: uppercase, clean spaces/hyphens
     const cleanedPlate = rawVehicleNumber ? rawVehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase() : "";
@@ -84,28 +122,58 @@ export async function POST(req: Request) {
     // ── Mapping schemas for Nested DB Format ─────────────────────────────
     
     // Map vehicleType string values to official uppercase categories
-    const VEHICLE_MAP: Record<string, string> = {
-      "car (hatchback/sedan)": "CAR",
-      "suv / muv": "SUV",
-      "luxury vehicle": "LUXURY",
-      "two-wheeler": "TWO_WHEELER",
-      "commercial vehicle": "COMMERCIAL",
-      "electric vehicle (ev)": "EV",
-    };
+    const VEHICLE_MAP:
+Record<string, string> = {
+  "car (hatchback/sedan)":
+    "CAR",
+
+  "suv / muv":
+    "SUV",
+
+  luxury:
+    "LUXURY",
+
+  bike:
+    "TWO_WHEELER",
+
+  ev:
+    "EV",
+};
     const officialVehicleType = VEHICLE_MAP[rawVehicleType.toLowerCase()] || "CAR";
 
     // Map serviceType string to official uppercase categories
-    const SERVICE_MAP: Record<string, string> = {
-      towing: "TOWING",
-      "flat tyre": "FLAT_TYRE",
-      flattyre: "FLAT_TYRE",
-      battery: "BATTERY",
-      fuel: "FUEL",
-      lockout: "LOCKOUT",
-      engine: "ENGINE",
-      accident: "ACCIDENT",
-      other: "OTHER",
-    };
+    const SERVICE_MAP:
+Record<string, string> = {
+  towing:
+    "TOWING",
+
+  battery:
+    "BATTERY",
+
+  ev:
+    "EV",
+
+  lockout:
+    "LOCKOUT",
+
+  fuel:
+    "FUEL",
+
+  flat_tyre:
+    "FLAT_TYRE",
+
+  "flat tyre":
+    "FLAT_TYRE",
+
+  engine:
+    "ENGINE",
+
+  accident:
+    "ACCIDENT",
+
+  other:
+    "OTHER",
+};
     const officialServiceType = SERVICE_MAP[rawServiceType.toLowerCase()] || "OTHER";
 
     // Map location coordinates {lat, lng} or text address to GeoJSON Point coordinates: [longitude, latitude]

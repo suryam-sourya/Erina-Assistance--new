@@ -5,7 +5,16 @@ export interface Booking {
   id: string;
   customerName: string;
   customerPhone: string;
-  serviceType: 'towing' | 'battery' | 'ev' | 'lockout';
+  serviceType:
+| 'towing'
+| 'battery'
+| 'ev'
+| 'lockout'
+| 'fuel'
+| 'flat_tyre'
+| 'engine'
+| 'accident'
+| 'other';
   serviceLabel: string;
   vehicleName: string;
   vehiclePlate: string;
@@ -423,8 +432,14 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   fetchBookings: async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiUrl}/api/bookings`);
+     const response =
+await fetch(
+"/api/bookings",
+{
+ cache:
+ "no-store",
+}
+);
       if (!response.ok) throw new Error("Failed to fetch bookings");
       const data: any[] = await response.json();
       
@@ -432,7 +447,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         id: b.id || b._id,
         customerName: b.customerName || "Customer",
         customerPhone: b.phone || "",
-        serviceType: b.serviceType || "towing",
+        serviceType:(b.serviceType ||"other").toLowerCase() as Booking['serviceType'],
         serviceLabel: b.serviceLabel || "Roadside Service",
         vehicleName: b.vehicleName || b.vehicleType || "Vehicle",
         vehiclePlate: b.vehiclePlate || b.vehicleNumber || "",
