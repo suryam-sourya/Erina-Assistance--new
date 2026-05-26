@@ -18,7 +18,9 @@ import {
   ChevronRight,
   Truck,
   Wrench,
-  Activity
+  Activity,
+  Package,
+  FileText
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import LiveTrackingMap from './LiveTrackingMap';
@@ -288,10 +290,20 @@ export default function BookingsManagement() {
                         <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex justify-end items-center gap-2">
                             {booking.status === 'completed' ? (
-                              <span className="text-[10px] text-success flex items-center gap-1 justify-end font-bold uppercase tracking-wider">
-                                <CheckCircle2 size={12} />
-                                <span>Archived Case</span>
-                              </span>
+                              <div className="flex items-center gap-2 justify-end">
+                                <a
+                                  href={`/admin/invoice/${booking.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all"
+                                >
+                                  <FileText size={11} /> Invoice
+                                </a>
+                                <span className="text-[10px] text-success flex items-center gap-1 font-bold uppercase tracking-wider">
+                                  <CheckCircle2 size={12} />
+                                  <span>Resolved</span>
+                                </span>
+                              </div>
                             ) : (
                               <>
                                 {/* If unassigned, show Assign Technician */}
