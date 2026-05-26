@@ -485,7 +485,7 @@ export default function MyBookingsPage() {
 
                           <div className="flex items-center gap-1.5 sm:justify-end">
                             <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                            <span className="text-emerald-400 font-bold">Archived Safely in DB</span>
+                            <span className="text-emerald-400 font-bold">Incident Resolved</span>
                           </div>
                         </div>
                       </div>
