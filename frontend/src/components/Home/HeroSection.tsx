@@ -116,12 +116,8 @@ export default function HeroSection() {
             className="mt-8 flex items-center gap-4 flex-wrap"
           >
             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Trusted Parts:</span>
-            <div className="relative h-6 w-16 opacity-50 hover:opacity-100 transition-opacity">
-              <Image src="/partner-bosch.png" alt="Bosch" fill className="object-contain brightness-0 invert" />
-            </div>
-            <div className="relative h-6 w-20 opacity-50 hover:opacity-100 transition-opacity">
-              <Image src="/partner-luminous.png" alt="Luminous" fill className="object-contain brightness-0 invert" />
-            </div>
+            
+            
             {['CASTROL', 'MRF', 'AMARON'].map((b) => (
               <span key={b} className="text-xs font-black text-white/15 hover:text-white/40 transition-colors tracking-widest">{b}</span>
             ))}

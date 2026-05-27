@@ -154,12 +154,12 @@ export default function ServicesSection() {
         >
           <p className="text-sm font-semibold text-foreground/40 uppercase tracking-widest mb-6">Trusted Parts & Service Partners</p>
           <div className="flex flex-wrap items-center justify-center gap-10">
-            <div className="relative h-10 w-28 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
+            {/* <div className="relative h-10 w-28 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
               <Image src="/partner-bosch.png" alt="Bosch" fill className="object-contain" />
             </div>
             <div className="relative h-10 w-28 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
               <Image src="/partner-luminous.png" alt="Luminous" fill className="object-contain" />
-            </div>
+            </div> */}
             {['CASTROL', 'MRF', 'AMARON', 'EXIDE'].map((brand) => (
               <span key={brand} className="text-lg font-black text-foreground/15 hover:text-foreground/40 transition-colors tracking-widest">
                 {brand}
