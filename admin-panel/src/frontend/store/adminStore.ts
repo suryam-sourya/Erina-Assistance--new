@@ -724,11 +724,16 @@ await fetch(
   },
 
   triggerEmergencyDispatch: async (serviceType, location, customerName) => {
-    const serviceLabels = {
+    const serviceLabels: Record<Booking['serviceType'], string> = {
       towing: 'Accident Flatbed Towing',
       battery: 'Emergency Battery Assistance',
       ev: 'Rapid Mobile EV Charging',
       lockout: 'Emergency Lockout Assistance',
+      fuel: 'Emergency Fuel Delivery',
+      flat_tyre: 'Flat Tyre Replacement',
+      engine: 'Engine Diagnostics',
+      accident: 'Accident Recovery',
+      other: 'Other Assistance',
     };
 
     const newBookingData = {
