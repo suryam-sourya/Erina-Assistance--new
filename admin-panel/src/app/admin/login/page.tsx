@@ -13,6 +13,7 @@ const ALLOWED_ADMIN_EMAILS = [
   'amanjoshi2518@gmail.com',
   'siraj@erinaassistance.com',
   'sheikhsiraj999@gmail.com',
+  'suryamsourya8@gmail.com',
   'ops@erina-assistance.com',
   'ops@erinaassistance.com'
 ];
