@@ -19,12 +19,12 @@ export async function PUT(
       updateData.status = updateData.status.toUpperCase();
     }
 
-    // Find and update the booking. We accept both MongoDB ObjectId and string representation.
-    const booking = await Booking.findByIdAndUpdate(
-      resolvedParams.id,
-      updateData,
-      { new: true }
-    );
+    // Find and update the booking. We accept both MongoDB ObjectId and custom ticketId (e.g. RSA-3690).
+    const id = resolvedParams.id;
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    const booking = isValidMongoId
+      ? await Booking.findByIdAndUpdate(id, updateData, { new: true })
+      : await Booking.findOneAndUpdate({ ticketId: id }, updateData, { new: true });
 
     if (!booking) {
       return NextResponse.json({
@@ -121,7 +121,11 @@ export async function GET(
   try {
     await connectDB();
     const resolvedParams = await params;
-    const booking = await Booking.findById(resolvedParams.id);
+    const id = resolvedParams.id;
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    const booking = isValidMongoId
+      ? await Booking.findById(id)
+      : await Booking.findOne({ ticketId: id });
 
     if (!booking) {
       return NextResponse.json({

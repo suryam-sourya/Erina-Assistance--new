@@ -63,20 +63,20 @@ export async function POST(
     const count = await Booking.countDocuments({ invoiceNumber: { $ne: null } });
     const invoiceNumber = `INV-${year}-${String(count + 1).padStart(4, "0")}`;
 
-    // Update the booking
-    const booking = await Booking.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          soldProducts: lineItems,
-          invoiceNumber,
-          invoiceGeneratedAt: new Date(),
-          // Note: We do NOT overwrite paymentAmount here. paymentAmount represents the service charge.
-          // The invoice page calculates the combined subtotal as service charge (paymentAmount) + productsSubtotal.
-        },
+    // Update the booking. We accept both MongoDB ObjectId and custom ticketId (e.g. RSA-3690).
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    const updatePayload = {
+      $set: {
+        soldProducts: lineItems,
+        invoiceNumber,
+        invoiceGeneratedAt: new Date(),
+        // Note: We do NOT overwrite paymentAmount here. paymentAmount represents the service charge.
+        // The invoice page calculates the combined subtotal as service charge (paymentAmount) + productsSubtotal.
       },
-      { new: true }
-    );
+    };
+    const booking = isValidMongoId
+      ? await Booking.findByIdAndUpdate(id, updatePayload, { new: true })
+      : await Booking.findOneAndUpdate({ ticketId: id }, updatePayload, { new: true });
 
     if (!booking) {
       return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
