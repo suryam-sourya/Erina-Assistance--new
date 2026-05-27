@@ -282,7 +282,7 @@ export default function InvoicePage() {
             {/* Footer */}
             <div className="border-t border-gray-100 pt-6 text-center space-y-1">
               <p className="text-gray-400 text-xs">Thank you for choosing Erina Assistance — India's trusted 24/7 roadside rescue service.</p>
-              <p className="text-gray-300 text-xs">www.erina-assistance.com | +91 73400 66655 | Bengaluru, Karnataka</p>
+              <p className="text-gray-300 text-xs">www.erinaassistance.in | +91 73400 66655 | Bengaluru, Karnataka</p>
               <p className="text-gray-200 text-xs italic">This is a computer-generated invoice. No signature required.</p>
             </div>
           </div>

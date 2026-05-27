@@ -59,7 +59,7 @@ const jsonLd = {
   "@type": "LocalBusiness",
   name: "Erina Assistance",
   description: "24/7 AI-powered roadside assistance in Bangalore",
-  url: "https://www.erina-assistance.com",
+  url: "https://www.erinaassistance.in",
   telephone: "+917340066655",
   address: {
     "@type": "PostalAddress",
