@@ -328,23 +328,7 @@ export default function BookingPage() {
           <div className="p-8 md:p-10">
             <form onSubmit={handleSubmit} className="space-y-8">
               
-              {/* Priority Toggle */}
-              <div className={`p-5 rounded-2xl border-2 transition-colors flex items-center justify-between cursor-pointer ${isPriority ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'}`} onClick={() => setIsPriority(!isPriority)}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center relative p-2.5 ${isPriority ? 'bg-primary/20 shadow-lg shadow-primary/10' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
-                    <div className="relative w-full h-full">
-                      <Image src="/warning.png" alt="Priority" fill className="object-contain" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-foreground">High Priority Emergency</h3>
-                    <p className="text-sm text-foreground/60">Move to the top of the queue for faster response</p>
-                  </div>
-                </div>
-                <div className={`w-14 h-8 rounded-full p-1 transition-colors ${isPriority ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}>
-                  <div className={`w-6 h-6 rounded-full bg-white transition-transform ${isPriority ? 'translate-x-6' : 'translate-x-0'}`} />
-                </div>
-              </div>
+              
 
               {submitStatus === 'error' && (
                 <div className="flex items-center gap-3 bg-emergency/10 border border-emergency/20 text-emergency p-4 rounded-xl text-sm font-semibold">
@@ -665,7 +649,23 @@ export default function BookingPage() {
                   <p className="text-[10px] text-foreground/40 font-semibold">Final amount confirmed by dispatcher. Estimate may vary with actual distance.</p>
                 </motion.div>
               )}
-
+              {/* Priority Toggle */}
+              <div className={`p-5 rounded-2xl border-2 transition-colors flex items-center justify-between cursor-pointer ${isPriority ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'}`} onClick={() => setIsPriority(!isPriority)}>
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center relative p-2.5 ${isPriority ? 'bg-primary/20 shadow-lg shadow-primary/10' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                    <div className="relative w-full h-full">
+                      <Image src="/warning.png" alt="Priority" fill className="object-contain" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-foreground">High Priority Emergency</h3>
+                    <p className="text-sm text-foreground/60">Move to the top of the queue for faster response</p>
+                  </div>
+                </div>
+                <div className={`w-14 h-8 rounded-full p-1 transition-colors ${isPriority ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                  <div className={`w-6 h-6 rounded-full bg-white transition-transform ${isPriority ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
               {/* Submit Button */}
               <button 
                 type="submit"
