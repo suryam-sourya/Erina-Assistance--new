@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { useAdminStore } from '@/frontend/store/adminStore';
 import { useAuth } from '@/frontend/contexts/AuthContext';
 import { useSettingsStore } from '@/frontend/store/settingsStore';
@@ -22,7 +23,9 @@ import {
   Wrench,
   Package,
   X,
-  Menu
+  Menu,
+  MessageSquare,
+  Bot
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -75,6 +78,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Chatbot State
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string; time: string }>>([
+    { sender: 'bot', text: 'Operational greeting, Dispatcher! I am your Erina Ops Copilot. Ask me about hub coordinates, standard pricing, stock levels, or copy dispatch notification templates.', time: 'Just Now' }
+  ]);
+  const [isBotTyping, setIsBotTyping] = useState(false);
+
+  const handleSendChatMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userMsg = chatInput.trim();
+    const newMsg = { sender: 'user' as const, text: userMsg, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+    setChatMessages(prev => [...prev, newMsg]);
+    setChatInput('');
+    setIsBotTyping(true);
+
+    setTimeout(() => {
+      let botResponse = "I am processing your operational request. Could you please specify a ticket ID, coordinate request, or pricing query?";
+      const msg = userMsg.toLowerCase();
+
+      if (msg.includes('coordinate') || msg.includes('hub') || msg.includes('kadugodi') || msg.includes('address')) {
+        botResponse = "📍 Erina Central Ops Hub:\nShop No. 02, Dinnur Main Road, Kadugodi Colony, Bengaluru - 560067.\nCoordinates: 12.9902° N, 77.7602° E.";
+      } else if (msg.includes('pricing') || msg.includes('fare') || msg.includes('charge') || msg.includes('cost') || msg.includes('gst')) {
+        botResponse = "💰 Standard SLA Fares:\n• Towing: Base ₹4,500 + ₹50/km (above 15km)\n• Battery: Base ₹1,800\n• Lockout: Base ₹1,500\n• standard GST (18%) is dynamically calculated on all services and products.";
+      } else if (msg.includes('template') || msg.includes('sms') || msg.includes('message') || msg.includes('notification')) {
+        botResponse = "📱 Dispatch SMS Templates:\n• Assigned: 'Dear [Customer], your responder is assigned and gathering tools at Kadugodi Central Hub.'\n• En Route: 'Your responder is en route. ETA: 15-20 mins. Live link: [URL]'\n• Arrived: 'Responder has arrived at your stranded coordinates.'";
+      } else if (msg.includes('stock') || msg.includes('inventory') || msg.includes('battery type')) {
+        botResponse = "📦 Inventory FAQs:\n• Stock is automatically decremented when you use the 'Add Products' resolution flow.\n• Batteries are categorized under 35Ah, 45Ah, and 65Ah (Amaron/Exide brands).";
+      } else if (msg.includes('hi') || msg.includes('hello') || msg.includes('hey') || msg.includes('help')) {
+        botResponse = "Greetings, Lead Dispatcher! How can I accelerate your emergency dispatch coordination today?";
+      }
+
+      setChatMessages(prev => [...prev, {
+        sender: 'bot',
+        text: botResponse,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+      setIsBotTyping(false);
+    }, 850);
+  };
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-foreground flex font-sans overflow-hidden relative">
@@ -248,6 +294,108 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${activeAlertMessage ? 'pt-16' : ''}`}>
           {children}
         </main>
+      </div>
+
+      {/* 4. Floating Ops Copilot AI Chatbot Widget */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
+        
+        {/* Glowing floating action button (FAB) */}
+        <button
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          className="w-12 h-12 bg-primary hover:bg-primary-hover text-background rounded-full flex items-center justify-center shadow-lg shadow-primary/30 transition-all cursor-pointer hover:scale-105 active:scale-95 duration-200 border border-primary/20 relative group"
+        >
+          {isChatOpen ? <X size={20} className="stroke-[2.5]" /> : <MessageSquare size={20} className="stroke-[2.5]" />}
+          
+          {/* Glowing pulse indicator */}
+          {!isChatOpen && (
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-secondary border border-background"></span>
+            </span>
+          )}
+        </button>
+
+        {/* Floating Glassmorphic Chat Window */}
+        {isChatOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="w-[340px] h-[450px] bg-card/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-4 glass-panel text-xs select-text"
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/30">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
+                  <Bot size={15} className="text-primary animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="font-black text-white uppercase tracking-wider text-left">Erina Ops Copilot</h4>
+                  <span className="text-[8px] text-success font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-success animate-pulse" /> Active Support Assistant
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsChatOpen(false)}
+                className="text-foreground/45 hover:text-white transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Message Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 bg-background/10">
+              {chatMessages.map((msg, index) => (
+                <div 
+                  key={index}
+                  className={`flex flex-col max-w-[80%] ${
+                    msg.sender === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'
+                  }`}
+                >
+                  <div 
+                    className={`p-3 rounded-xl leading-relaxed whitespace-pre-wrap text-left ${
+                      msg.sender === 'user'
+                        ? 'bg-primary text-background font-bold rounded-tr-none'
+                        : 'bg-white/5 text-white border border-white/5 rounded-tl-none font-medium'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                  <span className="text-[8px] text-foreground/30 mt-1 font-mono uppercase font-bold">{msg.time}</span>
+                </div>
+              ))}
+              
+              {/* Typing Ticker */}
+              {isBotTyping && (
+                <div className="flex flex-col mr-auto items-start max-w-[80%]">
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/5 rounded-tl-none flex items-center gap-1.5 py-4">
+                    <span className="w-1.5 h-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: '0.3s' }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input Form */}
+            <form onSubmit={handleSendChatMessage} className="p-3 border-t border-white/5 bg-black/20 flex gap-2">
+              <input
+                type="text"
+                placeholder="Ask coordinates, pricing, stock levels..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                className="flex-1 bg-background/50 border border-white/5 focus:border-primary/50 text-xs px-4 py-2.5 rounded-xl outline-none text-white font-semibold transition-all placeholder:text-foreground/20"
+              />
+              <button
+                type="submit"
+                className="px-3 py-2.5 bg-primary hover:bg-primary-hover text-background font-black rounded-xl text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/10 flex items-center justify-center shrink-0"
+              >
+                Send
+              </button>
+            </form>
+          </motion.div>
+        )}
+
       </div>
 
     </div>
