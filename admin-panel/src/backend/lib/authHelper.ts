@@ -6,6 +6,7 @@ export const ALLOWED_ADMIN_EMAILS = [
   "siraj@erinaassistance.com",
   "sheikhsiraj999@gmail.com",
   "suryamsourya8@gmail.com",
+  "vishakhaprasad985@gmail.com",
 ];
 
 /**

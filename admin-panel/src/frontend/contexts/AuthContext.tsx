@@ -27,7 +27,8 @@ const ALLOWED_ADMIN_EMAILS = [
   'sheikhsiraj999@gmail.com',
   'suryamsourya8@gmail.com',
   'ops@erina-assistance.com',
-  'ops@erinaassistance.com'
+  'ops@erinaassistance.com',
+  'vishakhaprasad985@gmail.com'
 ];
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
