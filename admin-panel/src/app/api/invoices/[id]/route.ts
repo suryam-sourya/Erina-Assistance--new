@@ -6,8 +6,9 @@
  *
  * Responsibilities:
  *  - Fetch the booking from MongoDB
- *  - Compute GST-exclusive subtotal, CGST (9%), SGST (9%), and grand total
- *  - Generate a deterministic invoice number
+ *  - Build service line item with 18% GST (SAC 9987)
+ *  - Build product line items with per-product GST rates (HSN-specific)
+ *  - Compute combined GST breakdown and grand total
  *  - Return a clean, typed InvoiceData object for the frontend to render
  *
  * This keeps all billing math on the server side — never trust the client for tax calculations.
@@ -17,7 +18,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/backend/lib/mongodb";
 import Booking from "@/backend/models/Booking";
 
-// ── Constants ──────────────────────────────────────────────────────────────
+// ── Company Constants ──────────────────────────────────────────────────────
 
 const COMPANY = {
   name: "Erina Roadside Assistance Services Pvt. Ltd.",
@@ -30,36 +31,34 @@ const COMPANY = {
   stateCode: "29",
 };
 
-const GST_RATE = 0.18; // 18% total GST
-const CGST_RATE = 0.09; // 9% CGST (Centre)
-const SGST_RATE = 0.09; // 9% SGST (State)
+// ── Service Reference Data ─────────────────────────────────────────────────
+
+const SERVICE_GST_RATE = 0.18;  // 18% on roadside services
+const SERVICE_SAC_CODE = "9987"; // Services Accounting Code for vehicle repair/maintenance
 
 const SERVICE_LABELS: Record<string, string> = {
-  TOWING: "Flatbed Towing",
-  BATTERY: "Battery Jumpstart",
-  EV: "Mobile EV Charging",
-  LOCKOUT: "Lockout Assistance",
-  FUEL: "Emergency Fuel Delivery",
+  TOWING:    "Flatbed Towing",
+  BATTERY:   "Battery Jumpstart",
+  EV:        "Mobile EV Charging",
+  LOCKOUT:   "Lockout Assistance",
+  FUEL:      "Emergency Fuel Delivery",
   FLAT_TYRE: "Flat Tyre Replacement",
-  ENGINE: "Engine Diagnostics",
-  ACCIDENT: "Accident Recovery",
-  OTHER: "Roadside Assistance",
+  ENGINE:    "Engine Diagnostics",
+  ACCIDENT:  "Accident Recovery",
+  OTHER:     "Roadside Assistance",
 };
 
 const SERVICE_DESCRIPTIONS: Record<string, string> = {
-  TOWING: "Flatbed Towing — Vehicle recovery and tow-to-hub transportation service.",
-  BATTERY: "Battery Jumpstart — On-site emergency battery jump-start and diagnostic service.",
-  EV: "Mobile EV Charging — Emergency mobile electric vehicle charging service.",
-  LOCKOUT: "Lockout Assistance — Professional car lockout opening without vehicle damage.",
-  FUEL: "Emergency Fuel Delivery — Fuel delivery to the breakdown location.",
+  TOWING:    "Flatbed Towing — Vehicle recovery and tow-to-hub transportation service.",
+  BATTERY:   "Battery Jumpstart — On-site emergency battery jump-start and diagnostic service.",
+  EV:        "Mobile EV Charging — Emergency mobile electric vehicle charging service.",
+  LOCKOUT:   "Lockout Assistance — Professional car lockout opening without vehicle damage.",
+  FUEL:      "Emergency Fuel Delivery — Fuel delivery to the breakdown location.",
   FLAT_TYRE: "Flat Tyre Replacement — On-site spare tyre fitting and wheel balancing.",
-  ENGINE: "Engine Diagnostics — On-site engine fault diagnosis and recovery consultation.",
-  ACCIDENT: "Accident Recovery — Post-accident vehicle recovery, towing and site clearance.",
-  OTHER: "General Roadside Assistance — Emergency roadside help as per the service request.",
+  ENGINE:    "Engine Diagnostics — On-site engine fault diagnosis and recovery consultation.",
+  ACCIDENT:  "Accident Recovery — Post-accident vehicle recovery, towing and site clearance.",
+  OTHER:     "General Roadside Assistance — Emergency roadside help as per the service request.",
 };
-
-// SAC (Services Accounting Code) for motor vehicle maintenance & repair services
-const SERVICE_SAC_CODE = "9987";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -73,6 +72,14 @@ function generateInvoiceNumber(bookingId: string, createdAt: string): string {
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+/**
+ * Extract pre-tax base price from a GST-inclusive price.
+ * Formula: basePrice = gstInclusivePrice / (1 + gstRate)
+ */
+function extractBase(gstInclusivePrice: number, gstRate: number): number {
+  return round2(gstInclusivePrice / (1 + gstRate));
 }
 
 // ── GET Handler ────────────────────────────────────────────────────────────
@@ -99,24 +106,87 @@ export async function GET(
     }
 
     const obj = booking.toObject();
+    const soldProducts = obj.soldProducts || [];
 
-    // ── Tax Calculation (GST-inclusive backward split) ──────────────────
-    // The paymentAmount stored in DB is GST-inclusive (18%)
-    // Backward formula: subtotal = total / 1.18
-    const gstInclusiveTotal = obj.paymentAmount ?? 0;
-    const subtotal          = round2(gstInclusiveTotal / (1 + GST_RATE));
-    const cgst              = round2(subtotal * CGST_RATE);
-    const sgst              = round2(subtotal * SGST_RATE);
-    const grandTotal        = round2(subtotal + cgst + sgst);
+    // ── Step 1: Compute Service Line ────────────────────────────────────
+
+    // The total paymentAmount stored is GST-inclusive for everything.
+    // Strip out product amounts first, then treat the remainder as service charge.
+    const totalProductsGstInclusive = soldProducts.reduce(
+      (sum: number, p: { unitPrice: number; quantity: number }) => sum + p.unitPrice * p.quantity,
+      0
+    );
+
+    const serviceGstInclusive = round2((obj.paymentAmount ?? 0) - totalProductsGstInclusive);
+    const serviceBase          = extractBase(serviceGstInclusive, SERVICE_GST_RATE);
+    const serviceCgst          = round2(serviceBase * (SERVICE_GST_RATE / 2));
+    const serviceSgst          = round2(serviceBase * (SERVICE_GST_RATE / 2));
 
     const serviceKey = (obj.serviceType || "OTHER").toUpperCase().replace(/-/g, "_");
 
-    // ── Assemble Invoice Object ─────────────────────────────────────────
+    // ── Step 2: Build Product Line Items ───────────────────────────────
+
+    interface SoldProductItem {
+      productId: string;
+      name: string;
+      brand?: string;
+      sku?: string;
+      hsnCode?: string;
+      gstRate?: number;
+      quantity: number;
+      unitPrice: number;
+    }
+
+    interface ProductLineItem {
+      type: "product";
+      description: string;
+      detail: string;
+      hsnCode: string;
+      quantity: number;
+      unitPrice: number;
+      base: number;
+      cgst: number;
+      sgst: number;
+      gstRate: number;
+      amount: number;
+    }
+
+    const productLineItems: ProductLineItem[] = soldProducts.map((p: SoldProductItem) => {
+      const gstRate   = p.gstRate ?? 0.28;
+      const lineTotal = round2(p.unitPrice * p.quantity); // GST-inclusive
+      const base      = extractBase(lineTotal, gstRate);
+      const cgst      = round2(base * (gstRate / 2));
+      const sgst      = round2(base * (gstRate / 2));
+
+      return {
+        type:        "product",
+        description: p.brand ? `${p.brand} — ${p.name}` : p.name,
+        detail:      `SKU: ${p.sku || "N/A"} | HSN: ${p.hsnCode || "8507"}`,
+        hsnCode:     p.hsnCode || "8507",
+        quantity:    p.quantity,
+        unitPrice:   p.unitPrice,
+        base,
+        cgst,
+        sgst,
+        gstRate,
+        amount:      lineTotal,
+      };
+    });
+
+    // ── Step 3: Combined Tax Summary ────────────────────────────────────
+
+    const totalBase  = round2(serviceBase + productLineItems.reduce((s, l) => s + l.base, 0));
+    const totalCgst  = round2(serviceCgst  + productLineItems.reduce((s, l) => s + l.cgst, 0));
+    const totalSgst  = round2(serviceSgst  + productLineItems.reduce((s, l) => s + l.sgst, 0));
+    const grandTotal = round2(totalBase + totalCgst + totalSgst);
+
+    // ── Step 4: Assemble Final Invoice Object ───────────────────────────
+
     const invoice = {
       // Meta
       invoiceNumber: generateInvoiceNumber(obj._id.toString(), obj.createdAt),
       invoiceDate:   obj.createdAt,
-      dueDate:       null, // Paid on-site; null means no outstanding due
+      dueDate:       null,
 
       // Company (biller)
       company: COMPANY,
@@ -144,46 +214,52 @@ export async function GET(
 
       // Vehicle
       vehicle: {
-        type:   (obj.vehicle?.type  || obj.vehicleType  || "").toUpperCase(),
-        plate:  obj.vehicle?.plateNumber || obj.vehiclePlate || "",
-        name:   obj.vehicleName || "",
+        type:  (obj.vehicle?.type  || obj.vehicleType  || "").toUpperCase(),
+        plate: obj.vehicle?.plateNumber || obj.vehiclePlate || "",
+        name:  obj.vehicleName || "",
       },
 
-      // Line items (single service line)
+      // Line items: service first, then products
       lineItems: [
         {
+          type:        "service",
           description: SERVICE_LABELS[serviceKey] || "Roadside Assistance",
           detail:      SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER,
-          sacCode:     SERVICE_SAC_CODE,
+          hsnCode:     SERVICE_SAC_CODE,
           quantity:    1,
-          unitPrice:   subtotal,
-          amount:      subtotal,
+          unitPrice:   serviceGstInclusive,
+          base:        serviceBase,
+          cgst:        serviceCgst,
+          sgst:        serviceSgst,
+          gstRate:     SERVICE_GST_RATE,
+          amount:      serviceGstInclusive,
         },
+        ...productLineItems,
       ],
 
-      // GST breakdown
+      // Combined GST breakdown
       tax: {
-        subtotal,
-        cgstRate:  CGST_RATE,
-        cgst,
-        sgstRate:  SGST_RATE,
-        sgst,
-        totalGst:  round2(cgst + sgst),
-        gstRate:   GST_RATE,
+        serviceSubtotal:  serviceBase,
+        productsSubtotal: round2(productLineItems.reduce((s, l) => s + l.base, 0)),
+        subtotal:         totalBase,
+        cgst:             totalCgst,
+        sgst:             totalSgst,
+        totalGst:         round2(totalCgst + totalSgst),
         grandTotal,
+        hasProducts:      soldProducts.length > 0,
       },
 
       // Payment
       payment: {
-        status:        (obj.paymentStatus || "pending").toLowerCase(),
-        paidAmount:    gstInclusiveTotal,
-        method:        "Cash / UPI",   // Extend later when payment gateway is integrated
-        currency:      "INR",
+        status:     (obj.paymentStatus || "pending").toLowerCase(),
+        paidAmount: obj.paymentAmount ?? 0,
+        method:     "Cash / UPI",
+        currency:   "INR",
       },
 
-      // Terms & notes
+      // Terms
       terms: [
-        "All prices are inclusive of 18% GST (CGST 9% + SGST 9%) under the GST Act, 2017.",
+        "Service charges attract 18% GST (SAC 9987). Product charges attract GST as per applicable HSN code.",
         "This is a computer-generated invoice and is legally valid without a physical signature.",
         `For disputes or support, contact: ${COMPANY.support} or ${COMPANY.phone}.`,
         "Payment is due within 7 days of invoice date. Late payments may incur a 2% monthly surcharge.",

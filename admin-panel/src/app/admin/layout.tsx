@@ -24,7 +24,8 @@ import {
   X,
   Menu,
   MessageSquare,
-  Bot
+  Bot,
+  Package
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -59,6 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Technicians', href: '/admin/technicians', icon: UserCheck, badge: stats.availableTechnicians, badgeColor: 'bg-success/20 text-success border border-success/35' },
     { name: 'Customers', href: '/admin/customers', icon: Users },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+    { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Support', href: '/admin/support', icon: Headphones, badge: 3, badgeColor: 'bg-secondary/20 text-secondary border border-secondary/35' },
     { name: 'Analytics', href: '/admin/analytics', icon: LineChart },
     { name: 'Settings', href: '/admin/settings', icon: SettingsIcon },

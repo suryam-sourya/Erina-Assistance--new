@@ -46,7 +46,21 @@ const BookingSchema = new mongoose.Schema(
     paymentAmount: { type: Number, default: 0 },
     createdBy: { type: String, default: null },
 
-
+    // ── Products Sold On-Site ─────────────────────────────────────────────
+    // Populated when a technician sells a physical product (e.g. battery, tyre)
+    // during the service call. Each entry is a snapshot at time of sale.
+    soldProducts: [
+      {
+        productId:  { type: String, required: true },  // Ref to Product._id
+        name:       { type: String, required: true },  // Snapshot for invoice history
+        brand:      { type: String, default: "" },
+        sku:        { type: String, default: "" },
+        hsnCode:    { type: String, default: "8507" }, // GST HSN code
+        gstRate:    { type: Number, default: 0.28 },   // Per-product GST rate at time of sale
+        quantity:   { type: Number, required: true, min: 1 },
+        unitPrice:  { type: Number, required: true, min: 0 }, // Selling price (GST inclusive)
+      },
+    ],
 
     // ── Backward Compatibility Flat Fallbacks (Optional) ──────────────────
     userId: String,

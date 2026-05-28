@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Fragment } from 'react';
-import { useAdminStore, Booking, Technician } from '@/frontend/store/adminStore';
+import { useAdminStore, Booking, Technician, Product } from '@/frontend/store/adminStore';
 import { 
   Search, 
   Filter, 
@@ -50,6 +50,68 @@ export default function BookingsManagement() {
 
   // Expanded visual dispatch progress row
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+
+  // ── Add Products Sold ────────────────────────────────────────────────
+  const [sellProductsBooking, setSellProductsBooking] = useState<Booking | null>(null);
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
+  const [selectedItems, setSelectedItems] = useState<{ product: Product; qty: number }[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [sellSaving, setSellSaving] = useState(false);
+  const [sellError, setSellError] = useState<string | null>(null);
+  const [sellSuccess, setSellSuccess] = useState(false);
+
+  const openSellModal = async (booking: Booking) => {
+    setSellProductsBooking(booking);
+    setSelectedItems([]);
+    setSellError(null);
+    setSellSuccess(false);
+    setCatalogLoading(true);
+    try {
+      const res = await fetch('/api/products?includeInactive=false');
+      const data = await res.json();
+      if (data.success) setCatalogProducts(data.products);
+    } catch { /* noop */ }
+    finally { setCatalogLoading(false); }
+  };
+
+  const adjustQty = (product: Product, delta: number) => {
+    setSelectedItems(prev => {
+      const existing = prev.find(i => i.product._id === product._id);
+      if (!existing) {
+        if (delta <= 0) return prev;
+        return [...prev, { product, qty: 1 }];
+      }
+      const newQty = existing.qty + delta;
+      if (newQty <= 0) return prev.filter(i => i.product._id !== product._id);
+      if (newQty > product.stockQty) return prev;
+      return prev.map(i => i.product._id === product._id ? { ...i, qty: newQty } : i);
+    });
+  };
+
+  const handleSellProducts = async () => {
+    if (!sellProductsBooking || selectedItems.length === 0) return;
+    setSellSaving(true);
+    setSellError(null);
+    try {
+      const res = await fetch(`/api/bookings/${sellProductsBooking.id}/add-products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: selectedItems.map(i => ({ productId: i.product._id, quantity: i.qty }))
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setSellSuccess(true);
+      setTimeout(() => setSellProductsBooking(null), 2000);
+    } catch (err) {
+      setSellError(err instanceof Error ? err.message : 'Failed to save sold products.');
+    } finally {
+      setSellSaving(false);
+    }
+  };
+
+  const sellTotal = selectedItems.reduce((s, i) => s + i.product.sellingPrice * i.qty, 0);
 
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const [ticketForm, setTicketForm] = useState({
@@ -545,7 +607,13 @@ alert(
                         <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex justify-end items-center gap-2">
                             {booking.status === 'completed' ? (
-                              <div className="flex items-center gap-2 justify-end">
+                              <div className="flex items-center gap-2 justify-end flex-wrap">
+                                <button
+                                  onClick={() => openSellModal(booking)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all"
+                                >
+                                  <Package size={11} /> + Sell Products
+                                </button>
                                 <a
                                   href={`/admin/invoice/${booking.id}`}
                                   target="_blank"
@@ -1321,6 +1389,151 @@ alert(
               />
             </div>
           </motion.div>
+        </div>
+      )}
+
+
+
+      {/* ── Add Products Sold Modal ────────────────────────────────────────── */}
+      {sellProductsBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-card border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/8">
+              <div>
+                <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <Package size={16} className="text-primary" /> Add Products Sold
+                </h2>
+                <p className="text-[10px] text-foreground/40 mt-1">
+                  Ticket: <span className="text-primary font-mono">{sellProductsBooking.id.slice(-8).toUpperCase()}</span>
+                  {' — '}{sellProductsBooking.customerName}
+                </p>
+              </div>
+              <button onClick={() => setSellProductsBooking(null)} className="text-foreground/40 hover:text-white transition-colors cursor-pointer">
+                <Minus size={0} className="hidden" />
+                <span className="text-lg leading-none">✕</span>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+
+              {/* Success */}
+              {sellSuccess && (
+                <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/20 rounded-xl text-success text-xs font-bold">
+                  <CheckCircle2 size={14} /> Products saved! Invoice will reflect the updated totals.
+                </div>
+              )}
+
+              {/* Error */}
+              {sellError && (
+                <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+                  <span className="mt-0.5">⚠</span> {sellError}
+                </div>
+              )}
+
+              {/* Catalog */}
+              {catalogLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                </div>
+              ) : catalogProducts.length === 0 ? (
+                <div className="text-center py-10">
+                  <Package size={28} className="text-foreground/15 mx-auto mb-2" />
+                  <p className="text-xs text-foreground/40">No active products in catalog.</p>
+                  <a href="/admin/products" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 block">
+                    Go to Products Catalog →
+                  </a>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {catalogProducts.map((product) => {
+                    const selected = selectedItems.find(i => i.product._id === product._id);
+                    const isOutOfStock = product.stockQty === 0;
+                    return (
+                      <div
+                        key={product._id}
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                          selected
+                            ? 'bg-primary/8 border-primary/30'
+                            : isOutOfStock
+                            ? 'bg-white/2 border-white/4 opacity-40'
+                            : 'bg-white/2 border-white/6 hover:border-white/12'
+                        }`}
+                      >
+                        {/* Product info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-white truncate">{product.name}</p>
+                          <p className="text-[10px] text-foreground/40 mt-0.5">
+                            {product.brand} · Stock: <span className={product.stockQty <= 2 ? 'text-warning' : 'text-foreground/60'}>{product.stockQty}</span>
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xs font-black text-white">₹{product.sellingPrice.toLocaleString('en-IN')}</p>
+                          <p className="text-[9px] text-foreground/35">{(product.gstRate * 100).toFixed(0)}% GST</p>
+                        </div>
+                        {/* Qty controls */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            disabled={isOutOfStock || !selected}
+                            onClick={() => adjustQty(product, -1)}
+                            className="w-7 h-7 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-foreground/60 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Minus size={11} />
+                          </button>
+                          <span className="w-6 text-center text-xs font-black text-white">
+                            {selected ? selected.qty : 0}
+                          </span>
+                          <button
+                            disabled={isOutOfStock}
+                            onClick={() => adjustQty(product, 1)}
+                            className="w-7 h-7 flex items-center justify-center bg-primary/15 hover:bg-primary/25 disabled:opacity-30 disabled:cursor-not-allowed text-primary rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Plus size={11} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Order Summary */}
+              {selectedItems.length > 0 && (
+                <div className="mt-4 p-3 bg-white/3 border border-white/6 rounded-xl space-y-1.5">
+                  <p className="text-[9px] font-black text-foreground/35 uppercase tracking-wider">Selected Products</p>
+                  {selectedItems.map(item => (
+                    <div key={item.product._id} className="flex justify-between text-xs">
+                      <span className="text-foreground/60">{item.product.name} × {item.qty}</span>
+                      <span className="font-bold text-white">₹{(item.product.sellingPrice * item.qty).toLocaleString('en-IN')}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-xs border-t border-white/8 pt-1.5 mt-1.5">
+                    <span className="font-black text-foreground/60 uppercase tracking-wider">Products Total</span>
+                    <span className="font-black text-primary">₹{sellTotal.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setSellProductsBooking(null)}
+                  className="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-foreground/60 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSellProducts}
+                  disabled={sellSaving || selectedItems.length === 0 || sellSuccess}
+                  className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed text-background font-black rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  {sellSaving ? 'Saving...' : `Confirm Sale · ₹${sellTotal.toLocaleString('en-IN')}`}
+                </button>
+              </div>
+
+            </div>
+          </div>
         </div>
       )}
 

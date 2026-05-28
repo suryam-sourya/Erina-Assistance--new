@@ -49,6 +49,19 @@ export interface Customer {
   vehicle: string;
 }
 
+export interface Product {
+  _id: string;
+  name: string;
+  brand: string;
+  category: string;
+  sku: string;
+  hsnCode: string;
+  gstRate: number;
+  sellingPrice: number;
+  stockQty: number;
+  isActive: boolean;
+}
+
 export interface PaymentRecord {
   id: string;
   bookingId: string;
