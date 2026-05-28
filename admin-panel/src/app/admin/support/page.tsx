@@ -1,7 +1,7 @@
 "use client";
 
 import { useAdminStore } from '@/frontend/store/adminStore';
-import { Headphones, Search, Plus, AlertCircle, CheckCircle2, User, HelpCircle } from 'lucide-react';
+import { Search, Plus, CheckCircle2, User, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 

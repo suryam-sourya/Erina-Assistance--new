@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { getAuthToken } from '@/frontend/lib/firebase';
 
 export interface Booking {
   id: string;

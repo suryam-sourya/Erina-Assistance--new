@@ -1,7 +1,7 @@
 "use client";
 
 import { useAdminStore } from '@/frontend/store/adminStore';
-import { CreditCard, Search, ArrowUpRight, DollarSign, Wallet, FileText, CheckCircle2 } from 'lucide-react';
+import { CreditCard, Search, Wallet, FileText } from 'lucide-react';
 import { useState } from 'react';
 
 export default function PaymentsDesk() {

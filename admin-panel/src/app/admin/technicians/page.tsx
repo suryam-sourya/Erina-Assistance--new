@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useAdminStore, Technician } from '@/frontend/store/adminStore';
 import { 
   UserCheck, 
-  UserX, 
   Star, 
   MapPin, 
   Phone, 
@@ -12,8 +11,6 @@ import {
   Plus, 
   User, 
   Search,
-  CheckCircle2,
-  XCircle,
   AlertCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';

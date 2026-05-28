@@ -21,7 +21,6 @@ import {
   Bell, 
   Flame, 
   Wrench,
-  Package,
   X,
   Menu,
   MessageSquare,
