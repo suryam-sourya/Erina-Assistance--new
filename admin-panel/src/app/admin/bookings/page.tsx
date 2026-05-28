@@ -93,7 +93,9 @@ export default function BookingsManagement() {
     setSellSaving(true);
     setSellError(null);
     try {
-      const res = await fetch(`/api/bookings/${sellProductsBooking.id}/add-products`, {
+      // Always prefer mongoId (real MongoDB _id) — booking.id may be a ticketId like RSA-4851
+      const apiId = sellProductsBooking.mongoId || sellProductsBooking.id;
+      const res = await fetch(`/api/bookings/${apiId}/add-products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

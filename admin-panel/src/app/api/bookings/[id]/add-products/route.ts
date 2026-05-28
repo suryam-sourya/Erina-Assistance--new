@@ -42,7 +42,12 @@ export async function POST(req: Request, { params }: Params) {
     }
 
     // ── 1. Find the booking ───────────────────────────────────────────────
-    const booking = await Booking.findById(id);
+    // Support both MongoDB ObjectId (24-char hex) and custom ticketId (RSA-XXXX)
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    const booking = isValidMongoId
+      ? await Booking.findById(id)
+      : await Booking.findOne({ ticketId: id });
+
     if (!booking) {
       return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
     }
