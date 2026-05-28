@@ -50,30 +50,7 @@ export default function BookingsManagement() {
 
   // Expanded visual dispatch progress row
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
-// Product Invoice Modal State
-const [
-  selectedBookingForProducts,
-  setSelectedBookingForProducts,
-] = useState<Booking | null>(
-  null
-);
 
-const [
-  productSearch,
-  setProductSearch,
-] = useState("");
-
-const [
-  selectedProductQuantities,
-  setSelectedProductQuantities,
-] = useState<
-  Record<string, number>
->({});
-
-const [
-  isSubmittingProducts,
-  setIsSubmittingProducts,
-] = useState(false);
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const [ticketForm, setTicketForm] = useState({
   customerName: "",
@@ -132,106 +109,7 @@ const [
     
     setSelectedBooking(null);
   };
-  // temporary MVP products
-const availableProducts = [
-  {
-    _id: "1",
-    name: "Tyre Inflator",
-    category: "Tyre",
-    stock: 10,
-    sku: "TY-101",
-    sellingPrice: 1500,
-  },
-  {
-    _id: "2",
-    name: "Jump Start Battery",
-    category: "Battery",
-    stock: 6,
-    sku: "BT-201",
-    sellingPrice: 3500,
-  },
-  {
-    _id: "3",
-    name: "Engine Oil",
-    category: "Engine",
-    stock: 12,
-    sku: "EN-301",
-    sellingPrice: 1200,
-  },
-];
 
-// quantity control
-const adjustProductQty = (
-  productId: string,
-  change: number,
-  stock: number
-) => {
-  setSelectedProductQuantities(
-    (prev) => {
-      const current =
-        prev[productId] || 0;
-
-      const nextQty =
-        Math.max(
-          0,
-          Math.min(
-            stock,
-            current + change
-          )
-        );
-
-      const updated =
-        { ...prev };
-
-      if (nextQty === 0) {
-        delete updated[
-          productId
-        ];
-      } else {
-        updated[
-          productId
-        ] = nextQty;
-      }
-
-      return updated;
-    }
-  );
-};
-
-// temp resolve
-const handleResolveWithProducts =
-  async () => {
-    setIsSubmittingProducts(
-      true
-    );
-
-    setTimeout(() => {
-      if (
-        selectedBookingForProducts
-      ) {
-        updateBookingStatus(
-          selectedBookingForProducts.id,
-          "completed"
-        );
-      }
-
-      setSelectedBookingForProducts(
-        null
-      );
-
-      setSelectedProductQuantities(
-        {}
-      );
-
-      setIsSubmittingProducts(
-        false
-      );
-
-      alert(
-        "Invoice Generated Successfully"
-      );
-    }, 1500);
-  };
 const handleCreateTicket =
   async (
     e: React.FormEvent
@@ -717,7 +595,6 @@ alert(
 
                                     {/* Arrived (arrived) -> Resolved (completed) */}
                                     {booking.status === 'in-progress' && booking.subStatus === 'arrived' && (
-                                      <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateBookingStatus(booking.id, 'completed')}
                                           className="px-2.5 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-success/15"
@@ -725,33 +602,17 @@ alert(
                                         >
                                           Mark Complete
                                         </button>
-                                        <button
-                                          onClick={() => setSelectedBookingForProducts(booking)}
-                                          className="px-2.5 py-1.5 bg-[#FF6B35] hover:bg-[#FF6B35]/80 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-[#FF6B35]/15 flex items-center gap-1"
-                                          title="Suggest parts/products, compile live invoice & close ticket"
-                                        >
-                                          <Package size={11} /> Add Products
-                                        </button>
-                                      </div>
-                                    )}
+                                      )}
 
-                                    {/* Fallback for other en-route / in-progress states */}
-                                    {booking.status === 'in-progress' && !booking.subStatus && (
-                                      <div className="flex items-center gap-1.5">
+                                      {/* Fallback for other en-route / in-progress states */}
+                                      {booking.status === 'in-progress' && !booking.subStatus && (
                                         <button
                                           onClick={() => updateBookingStatus(booking.id, 'completed')}
                                           className="px-2.5 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
                                         >
                                           Mark Complete
                                         </button>
-                                        <button
-                                          onClick={() => setSelectedBookingForProducts(booking)}
-                                          className="px-2.5 py-1.5 bg-[#FF6B35] hover:bg-[#FF6B35]/80 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1"
-                                        >
-                                          <Package size={11} /> Add Products
-                                        </button>
-                                      </div>
-                                    )}
+                                      )}
 
                                     {/* Emergency with Tech -> Progress */}
                                     {booking.status === 'emergency' && (
@@ -1463,253 +1324,7 @@ alert(
         </div>
       )}
 
-      {/* PRODUCT SELECTOR & COMBINED INVOICE GENERATOR MODAL */}
-      {selectedBookingForProducts && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-4xl glass-panel rounded-3xl border border-white/10 overflow-hidden flex flex-col md:flex-row max-h-[85vh]"
-          >
-            {/* LEFT SIDE: PRODUCT INVENTORY SELECTOR */}
-            <div className="flex-1 p-6 flex flex-col min-h-0 border-b md:border-b-0 md:border-r border-white/5">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-1.5">
-                    <Package className="text-primary" size={16} /> Hub Parts Inventory
-                  </h3>
-                  <p className="text-[9px] text-foreground/45 uppercase tracking-wider font-semibold mt-1">
-                    Select suggested products to add to booking {selectedBookingForProducts.id}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSelectedBookingForProducts(null)}
-                  className="md:hidden text-foreground/45 hover:text-white p-1 cursor-pointer font-bold text-sm"
-                >
-                  ✕
-                </button>
-              </div>
 
-              {/* Search Bar */}
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/35" size={14} />
-                <input
-                  type="text"
-                  placeholder="Search parts, battery, tyres..."
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                  className="w-full bg-background/50 border border-white/5 focus:border-primary/50 text-xs px-9 py-2.5 rounded-xl outline-none text-white font-semibold transition-all"
-                />
-              </div>
-
-              {/* Products List */}
-              <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 min-h-[200px] md:min-h-0">
-                {availableProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).length > 0 ? (
-                  availableProducts
-                    .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
-                    .map((product) => {
-                      const selectedQty = selectedProductQuantities[product._id] || 0;
-                      const hasLowStock = product.stock > 0 && product.stock <= 3;
-                      const isOutOfStock = product.stock <= 0;
-
-                      return (
-                        <div
-                          key={product._id}
-                          className={`p-3.5 rounded-xl border transition-all flex items-center justify-between gap-4 ${
-                            selectedQty > 0
-                              ? 'bg-primary/5 border-primary/45 shadow-sm shadow-primary/5'
-                              : 'bg-background/30 border-white/5 hover:border-white/10'
-                          }`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-black text-white">{product.name}</span>
-                              {isOutOfStock ? (
-                                <span className="text-[8px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.2 rounded-full font-black uppercase">
-                                  Out of Stock
-                                </span>
-                              ) : hasLowStock ? (
-                                <span className="text-[8px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.2 rounded-full font-black uppercase animate-pulse">
-                                  Only {product.stock} Left
-                                </span>
-                              ) : null}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[9px] text-foreground/45 mt-1 font-semibold uppercase tracking-wider">
-                              <span>{product.category}</span>
-                              {product.sku && (
-                                <>
-                                  <span>•</span>
-                                  <span className="font-mono text-foreground/35">{product.sku}</span>
-                                </>
-                              )}
-                            </div>
-                            <div className="text-[11px] font-black text-white mt-1">
-                              ₹{product.sellingPrice.toLocaleString('en-IN')}
-                            </div>
-                          </div>
-
-                          {/* Controls */}
-                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            {selectedQty > 0 ? (
-                              <div className="flex items-center bg-black/40 border border-white/5 rounded-lg overflow-hidden">
-                                <button
-                                  onClick={() => adjustProductQty(product._id, -1, product.stock)}
-                                  className="p-1.5 text-foreground/50 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                                >
-                                  <Minus size={12} />
-                                </button>
-                                <span className="px-3 text-xs font-black text-white font-mono">
-                                  {selectedQty}
-                                </span>
-                                <button
-                                  disabled={selectedQty >= product.stock}
-                                  onClick={() => adjustProductQty(product._id, 1, product.stock)}
-                                  className={`p-1.5 text-foreground/50 hover:text-white hover:bg-white/5 transition-colors cursor-pointer ${
-                                    selectedQty >= product.stock ? 'opacity-30 cursor-not-allowed' : ''
-                                  }`}
-                                >
-                                  <Plus size={12} />
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                disabled={isOutOfStock}
-                                onClick={() => adjustProductQty(product._id, 1, product.stock)}
-                                className={`px-3 py-1.5 bg-white/5 hover:bg-primary hover:text-background border border-white/10 hover:border-transparent font-black rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer ${
-                                  isOutOfStock ? 'opacity-30 cursor-not-allowed bg-transparent border-white/5 text-foreground/20' : ''
-                                }`}
-                              >
-                                {isOutOfStock ? 'Sold Out' : 'Select'}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                ) : (
-                  <div className="border border-white/5 rounded-xl py-8 text-center text-foreground/30 font-bold uppercase tracking-widest text-[9px]">
-                    No items in inventory match search
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* RIGHT SIDE: LIVE ESTIMATE BILL & INVOICE SUMMARY */}
-            <div className="w-full md:w-[350px] bg-black/40 p-6 flex flex-col min-h-0 justify-between">
-              <div className="flex-1 flex flex-col min-h-0">
-                <div className="flex justify-between items-start mb-5 pb-3 border-b border-white/5">
-                  <div>
-                    <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-1.5">
-                      <FileText className="text-[#FF6B35]" size={14} /> Estimate Bill
-                    </h3>
-                    <p className="text-[8px] text-foreground/45 uppercase tracking-wider font-semibold mt-0.5">
-                      Combined Fare Breakdown & Tax
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedBookingForProducts(null)}
-                    className="hidden md:block text-foreground/45 hover:text-white p-1 cursor-pointer font-bold text-sm"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Items Breakdown list */}
-                <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 text-xs mb-4">
-                  {/* Service Fare Item */}
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="text-[11px] font-black text-white">{selectedBookingForProducts.serviceLabel}</div>
-                      <div className="text-[8px] text-foreground/45 uppercase font-bold tracking-wider mt-0.5">Stranded On-Scene Assistance Fare</div>
-                    </div>
-                    <div className="font-bold text-white font-mono">₹{selectedBookingForProducts.paymentAmount.toLocaleString('en-IN')}</div>
-                  </div>
-
-                  {/* Products Fare Items */}
-                  {Object.entries(selectedProductQuantities).map(([productId, qty]) => {
-                    const product = availableProducts.find(p => p._id === productId);
-                    if (!product) return null;
-                    return (
-                      <div key={productId} className="flex justify-between items-start pt-3 border-t border-white/5">
-                        <div>
-                          <div className="text-[11px] font-black text-white">{product.name}</div>
-                          <div className="text-[8px] text-foreground/45 uppercase font-bold tracking-wider mt-0.5">
-                            Qty: {qty} × ₹{product.sellingPrice.toLocaleString('en-IN')}
-                          </div>
-                        </div>
-                        <div className="font-bold text-white font-mono">₹{(product.sellingPrice * qty).toLocaleString('en-IN')}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Summary calculations */}
-              <div className="border-t border-white/5 pt-4 space-y-2.5">
-                {/* Math */}
-                {(() => {
-                  const serviceFare = selectedBookingForProducts.paymentAmount || 0;
-                  const productsFare = Object.entries(selectedProductQuantities).reduce((acc, [id, qty]) => {
-                    const p = availableProducts.find(item => item._id === id);
-                    return acc + (p ? p.sellingPrice * qty : 0);
-                  }, 0);
-                  const subtotal = serviceFare + productsFare;
-                  const gst = Math.round(subtotal * 0.18);
-                  const grandTotal = subtotal + gst;
-
-                  return (
-                    <>
-                      <div className="flex justify-between text-[10px] text-foreground/45 uppercase tracking-wider font-bold">
-                        <span>Items Subtotal</span>
-                        <span className="font-mono text-white">₹{subtotal.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className="flex justify-between text-[10px] text-foreground/45 uppercase tracking-wider font-bold">
-                        <span>GST (18% standard)</span>
-                        <span className="font-mono text-white">₹{gst.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className="flex justify-between items-center border-t border-white/5 pt-3">
-                        <span className="text-[10px] text-white uppercase tracking-widest font-black">Grand Total Bill</span>
-                        <span className="text-sm font-black text-primary font-mono">₹{grandTotal.toLocaleString('en-IN')}</span>
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="mt-4 space-y-2">
-                        <button
-                          disabled={isSubmittingProducts || Object.keys(selectedProductQuantities).length === 0}
-                          onClick={handleResolveWithProducts}
-                          className={`w-full py-2.5 bg-[#FF6B35] hover:bg-[#FF6B35]/80 text-white font-black rounded-xl text-[10px] uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-orange-500/10 flex items-center justify-center gap-2 ${
-                            (isSubmittingProducts || Object.keys(selectedProductQuantities).length === 0) ? 'opacity-40 cursor-not-allowed' : ''
-                          }`}
-                        >
-                          {isSubmittingProducts ? (
-                            <>
-                              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              <span>Compiling...</span>
-                            </>
-                          ) : (
-                            <>
-                              <FileText size={12} />
-                              <span>Generate Invoice & Resolve</span>
-                            </>
-                          )}
-                        </button>
-
-                        <button
-                          disabled={isSubmittingProducts}
-                          onClick={() => setSelectedBookingForProducts(null)}
-                          className="w-full py-2 bg-transparent hover:bg-white/5 text-foreground/45 hover:text-white border border-white/5 font-black rounded-xl text-[9px] uppercase tracking-widest transition-all cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
 
     </div>
   );

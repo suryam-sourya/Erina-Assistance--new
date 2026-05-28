@@ -59,7 +59,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarRange, badge: stats.pendingRequests > 0 ? stats.pendingRequests : undefined, badgeColor: stats.activeEmergencies > 0 ? 'bg-emergency animate-pulse text-white' : 'bg-warning text-background' },
     { name: 'Technicians', href: '/admin/technicians', icon: UserCheck, badge: stats.availableTechnicians, badgeColor: 'bg-success/20 text-success border border-success/35' },
     { name: 'Customers', href: '/admin/customers', icon: Users },
-    { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Support', href: '/admin/support', icon: Headphones, badge: 3, badgeColor: 'bg-secondary/20 text-secondary border border-secondary/35' },
     { name: 'Analytics', href: '/admin/analytics', icon: LineChart },

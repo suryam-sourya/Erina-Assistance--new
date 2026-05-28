@@ -46,22 +46,7 @@ const BookingSchema = new mongoose.Schema(
     paymentAmount: { type: Number, default: 0 },
     createdBy: { type: String, default: null },
 
-    // ── Products Sold During Service ──────────────────────────────────────
-    soldProducts: {
-      type: [
-        {
-          productId: { type: String },
-          name: { type: String, required: true },
-          sku: { type: String, default: null },
-          qty: { type: Number, required: true, min: 1 },
-          unitPrice: { type: Number, required: true },
-          totalPrice: { type: Number, required: true },
-        },
-      ],
-      default: [],
-    },
-    invoiceNumber: { type: String, default: null }, // e.g. "INV-2025-0001"
-    invoiceGeneratedAt: { type: Date, default: null },
+
 
     // ── Backward Compatibility Flat Fallbacks (Optional) ──────────────────
     userId: String,
