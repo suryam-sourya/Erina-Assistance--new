@@ -82,7 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string; time: string }>>([
-    { sender: 'bot', text: 'Operational greeting, Dispatcher! I am your Erina Ops Copilot. Ask me about hub coordinates, standard pricing, stock levels, or copy dispatch notification templates.', time: 'Just Now' }
+    { sender: 'bot', text: 'Operational greeting, Dispatcher! I am your Erina Ops Copilot. Ask me about hub coordinates, standard pricing, or copy dispatch notification templates.', time: 'Just Now' }
   ]);
   const [isBotTyping, setIsBotTyping] = useState(false);
 
@@ -103,11 +103,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       if (msg.includes('coordinate') || msg.includes('hub') || msg.includes('kadugodi') || msg.includes('address')) {
         botResponse = "📍 Erina Central Ops Hub:\nShop No. 02, Dinnur Main Road, Kadugodi Colony, Bengaluru - 560067.\nCoordinates: 12.9902° N, 77.7602° E.";
       } else if (msg.includes('pricing') || msg.includes('fare') || msg.includes('charge') || msg.includes('cost') || msg.includes('gst')) {
-        botResponse = "💰 Standard SLA Fares:\n• Towing: Base ₹4,500 + ₹50/km (above 15km)\n• Battery: Base ₹1,800\n• Lockout: Base ₹1,500\n• standard GST (18%) is dynamically calculated on all services and products.";
+        botResponse = "💰 Standard SLA Fares:\n• Towing: Base ₹4,500 + ₹50/km (above 15km)\n• Battery Service: Base ₹1,800\n• Lockout: Base ₹1,500\n• standard GST (18%) is dynamically calculated on all services.";
       } else if (msg.includes('template') || msg.includes('sms') || msg.includes('message') || msg.includes('notification')) {
         botResponse = "📱 Dispatch SMS Templates:\n• Assigned: 'Dear [Customer], your responder is assigned and gathering tools at Kadugodi Central Hub.'\n• En Route: 'Your responder is en route. ETA: 15-20 mins. Live link: [URL]'\n• Arrived: 'Responder has arrived at your stranded coordinates.'";
-      } else if (msg.includes('stock') || msg.includes('inventory') || msg.includes('battery type')) {
-        botResponse = "📦 Inventory FAQs:\n• Stock is automatically decremented when you use the 'Add Products' resolution flow.\n• Batteries are categorized under 35Ah, 45Ah, and 65Ah (Amaron/Exide brands).";
       } else if (msg.includes('hi') || msg.includes('hello') || msg.includes('hey') || msg.includes('help')) {
         botResponse = "Greetings, Lead Dispatcher! How can I accelerate your emergency dispatch coordination today?";
       }
