@@ -1,6 +1,6 @@
 # Erina Roadside Assistance (RSA) Ecosystem
 
-Welcome to the **Erina Roadside Assistance** application ecosystem! This repository is organized as a high-performance, modular monorepo containing two main web applications that coordinate seamlessly to deliver rapid, secure, and intuitive roadside dispatch services.
+Welcome to the **Erina Roadside Assistance (RSA)** application ecosystem! This repository is organized as a high-performance, modular monorepo containing two main web applications that coordinate seamlessly to deliver rapid, secure, and intuitive roadside dispatch services, physical parts sales, and automated tax compliant invoicing.
 
 ---
 
@@ -8,7 +8,7 @@ Welcome to the **Erina Roadside Assistance** application ecosystem! This reposit
 
 The repository is divided into two primary Next.js workspaces:
 1. **`/frontend` (Customer Portal):** A customer-facing landing and booking platform where stranded motorists can request emergency assistance, upload vehicle/incident photos, and track their rescue timeline in real time.
-2. **`/admin-panel` (Dispatcher Dashboard):** A back-office dispatcher board where operators monitor real-time aggregates, coordinate incoming rescues, assign available technicians, and review incident case details.
+2. **`/admin-panel` (Dispatcher Dashboard & ERP):** A back-office dispatcher board where operators monitor real-time aggregates, coordinate incoming rescues, assign available technicians, manage the **parts catalog inventory**, and review/process on-site parts sales and combined invoices.
 
 ```
 Erina-Assistance/
@@ -21,11 +21,11 @@ Erina-Assistance/
 │   │   └── store/             # Zustand state managers for session tracking
 │   └── package.json
 │
-└── admin-panel/               # Next.js dispatcher board
+└── admin-panel/               # Next.js dispatcher board & ERP
     ├── src/
-    │   ├── app/               # Dispatcher dashboards, analytics, and booking grids
+    │   ├── app/               # Dispatcher dashboards, booking grids, product catalog, invoice views
     │   ├── frontend/          # Client-side stores, React Contexts, and Firebase hooks
-    │   └── backend/           # Server-side Mongoose schemas and database clients
+    │   └── backend/           # Server-side Mongoose schemas (Booking, Product, Pricing) and database clients
     └── package.json
 ```
 
@@ -38,17 +38,24 @@ Erina-Assistance/
 * **Polled Timeline Integration:** Automatically polls the database every 8 seconds via client-side `setInterval` to advance the customer's timeline through four distinct states (`pending` ➔ `assigned` ➔ `in-progress` ➔ `completed`).
 * **Active GPS Tracking:** Displays dispatch assignments including technician names, vehicle details, and active ratings in real time.
 
+### 🔋 On-Site Parts Sales & Inventory Management
+* **Interactive Catalog (`/admin/products`):** Full parts inventory panel allowing dispatchers to register products (batteries, tyres, engine oil), monitor stock levels, set low-stock thresholds, and soft-toggle product availability.
+* **Atomic Stock Checkout (`POST /api/bookings/[id]/add-products`):** Allows dispatchers to sell battery/tyre replacements directly to the booking. Stock levels are decremented atomically using MongoDB `$inc` operations to eliminate double-selling race conditions.
+* **Historical Pricing Snapshots:** Products sold are stored as an embedded snapshot array inside the Booking document, guaranteeing invoice pricing history is locked regardless of future price changes in the active catalog.
+
+### 🧾 Server-Side Blended Tax Invoicing Engine
+* **Automated Blended GST: ** Services are calculated at **18% GST (SAC 9987)** while physical items are calculated at their custom HSN-specific rates (e.g. **28% GST for HSN 8507 batteries**).
+* **Robust Reverse Tax Formulas:** All mathematical operations are performed on the server side using raw reverse tax extractions:
+  $$\text{Base Cost} = \frac{\text{GST-inclusive Price}}{1 + \text{GST Rate}}$$
+* **Tax Invoices (`/admin/invoice/[id]`):** Renders beautiful, print-ready, professional A4 invoices containing comprehensive line-item descriptions, HSN/SAC numbers, subtotal base costs, detailed CGST/SGST breakdowns, and exact grand totals.
+
 ### ☁️ Serverless Cloudinary Media Uploads
 * **Buffer Streaming API (`POST /api/upload`):** Bypasses read-only serverless filesystem constraints by accepting `FormData` streams and converting them directly into in-memory binary buffers before piping to Cloudinary.
 * **Micro-Animated Console:** A drop-in vehicle incident photo console with fluid loaders, image size boundaries, and direct JSON syncing with the database request.
 
-### 🚨 Production Hotline Quicklinks (+91 73400 66655)
-* **Emergency Widget:** A globally integrated, pulsing glassmorphic calling dialer fixed on all pages linking directly to the official Hotline hotline `+91 73400 66655`.
+### 🚨 Production Hotline Quicklinks (+91 90358 18604)
+* **Emergency Widget:** A globally integrated, pulsing glassmorphic calling dialer fixed on all pages linking directly to the official Hotline hotline `+91 90358 18604`.
 * **WhatsApp Quicklinks:** Seamless one-tap mobile anchors that initialize instant chat support logs directly with operations.
-
-### 📊 Dispatcher Control Panel
-* **Live Aggregate Counters:** Computes metrics dynamically including revenue today, active emergency alerts, available technicians, and pending dispatch queues.
-* **Immersive Zoom Overlay:** Backdrop-blurred (`backdrop-blur-md`) photo zoom modals let dispatchers inspect incident snapshots next to the license plates with escape-key support.
 
 ---
 
@@ -56,7 +63,7 @@ Erina-Assistance/
 
 To protect this application against modern threat vectors, parameter pollution, or database breaches, we have implemented the following production-grade security safeguards:
 
-1. **Strict Payload Whitelisting & Destructuring:** Both booking creation API routes strictly destructure and whitelist incoming JSON variables, completely mitigating mass-assignment and prototype pollution vulnerabilities.
+1. **Strict Payload Whitelisting & Destructuring:** All creation and editing API routes strictly destructure and whitelist incoming JSON variables, completely mitigating mass-assignment and prototype pollution vulnerabilities.
 2. **Proactive Type-Sanitization (NoSQL Injection Blocker):** Custom type-sanitizers convert all incoming strings, numbers, and lat/lng values to safe flat types. Any malicious MongoDB query operators (e.g. `{ phone: { $gt: "" } }`) are neutralized and saved as literal text strings, making NoSQL bypass attempts useless.
 3. **Environment Isolation & Git Protection:** All `.env` and `.env.local` files containing database connection strings, Cloudinary secret keys, or Firebase credentials are 100% untracked by Git. Sensitive parameters do not use the `NEXT_PUBLIC_` prefix to guarantee they are never bundled into client-side browser files.
 
@@ -148,10 +155,10 @@ npm test
 
 ---
 
-## 🚀 Deployment
+## 🚀 Deployment & Production URLs
 
-Both applications are configured for deployment on **Vercel**:
-* **Frontend Production URL:** [https://www.erinaassistance.in](https://www.erinaassistance.in)
+Both applications are configured for production deployment on **Vercel**:
+* **Frontend Customer Production URL:** [https://frontend-zeta-cyan-18.vercel.app](https://frontend-zeta-cyan-18.vercel.app)
 * **Admin Panel Production URL:** [https://admin-panel-psi-pearl.vercel.app](https://admin-panel-psi-pearl.vercel.app)
 
 Deploy updates by running the following command in either folder:
