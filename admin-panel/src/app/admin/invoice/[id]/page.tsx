@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * Invoice Page — /admin/invoice/[id]
+ *
+ * Pure UI renderer. All invoice data, tax math, and company metadata
+ * is fetched from the backend API at GET /api/invoices/[id].
+ *
+ * This component has zero business logic — it just renders what the backend returns.
+ */
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -18,47 +27,73 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-interface BookingData {
-  id: string;
-  ticketId?: string;
-  customerName: string;
-  phone: string;
-  vehicleType: string;
-  vehiclePlate: string;
-  vehicleName?: string;
-  serviceType: string;
-  serviceLabel: string;
-  status: string;
-  paymentStatus: string;
-  paymentAmount: number;
-  technicianName: string | null;
-  technicianPhone?: string;
-  address: string;
-  location: string;
-  createdAt: string;
-  updatedAt?: string;
-  isPriority?: boolean;
+// ── Types (mirrors the API response shape) ────────────────────────────────
+
+interface InvoiceTax {
+  subtotal: number;
+  cgstRate: number;
+  cgst: number;
+  sgstRate: number;
+  sgst: number;
+  totalGst: number;
+  gstRate: number;
+  grandTotal: number;
 }
 
-const SERVICE_DESCRIPTIONS: Record<string, string> = {
-  TOWING: "Flatbed Towing — Vehicle recovery and tow-to-hub transportation service.",
-  BATTERY: "Battery Jumpstart — On-site emergency battery jump-start and diagnostic service.",
-  EV: "Mobile EV Charging — Emergency mobile electric vehicle charging service.",
-  LOCKOUT: "Lockout Assistance — Professional car lockout opening without vehicle damage.",
-  FUEL: "Emergency Fuel Delivery — Fuel delivery to the breakdown location.",
-  FLAT_TYRE: "Flat Tyre Replacement — On-site spare tyre fitting and wheel balancing.",
-  ENGINE: "Engine Diagnostics — On-site engine fault diagnosis and recovery consultation.",
-  ACCIDENT: "Accident Recovery — Post-accident vehicle recovery, towing and site clearance.",
-  OTHER: "Roadside Assistance — General roadside emergency assistance service.",
-};
-
-function generateInvoiceNumber(bookingId: string, createdAt: string): string {
-  const date = new Date(createdAt);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const idSuffix = bookingId.slice(-5).toUpperCase();
-  return `INV/${year}-${month}/ERA-${idSuffix}`;
+interface InvoiceLineItem {
+  description: string;
+  detail: string;
+  sacCode: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
 }
+
+interface InvoiceData {
+  invoiceNumber: string;
+  invoiceDate: string;
+  company: {
+    name: string;
+    shortName: string;
+    address: string;
+    gstin: string;
+    support: string;
+    phone: string;
+  };
+  customer: {
+    name: string;
+    phone: string;
+    address: string;
+  };
+  booking: {
+    id: string;
+    ticketId: string | null;
+    status: string;
+    serviceType: string;
+    serviceLabel: string;
+    description: string;
+    sacCode: string;
+    isPriority: boolean;
+    technicianName: string | null;
+    technicianPhone: string | null;
+  };
+  vehicle: {
+    type: string;
+    plate: string;
+    name: string;
+  };
+  lineItems: InvoiceLineItem[];
+  tax: InvoiceTax;
+  payment: {
+    status: string;
+    paidAmount: number;
+    method: string;
+    currency: string;
+  };
+  terms: string[];
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -76,33 +111,45 @@ function formatTime(dateStr: string): string {
   });
 }
 
+function fmt(amount: number): string {
+  return amount.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+// ── Component ─────────────────────────────────────────────────────────────
+
 export default function InvoicePage() {
   const params = useParams();
   const id = params?.id as string;
 
-  const [booking, setBooking] = useState<BookingData | null>(null);
+  const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
-    const fetchBooking = async () => {
+    const fetchInvoice = async () => {
       try {
-        const res = await fetch(`/api/bookings/${id}`);
-        if (!res.ok) throw new Error("Booking not found");
+        // 👇 Calls the dedicated backend invoice API — no math done here
+        const res = await fetch(`/api/invoices/${id}`);
+        if (!res.ok) throw new Error("Invoice not found");
         const data = await res.json();
-        setBooking(data);
+        if (!data.success) throw new Error(data.error || "Failed to load invoice");
+        setInvoice(data.invoice);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load booking");
+        setError(err instanceof Error ? err.message : "Failed to load invoice");
       } finally {
         setLoading(false);
       }
     };
-    fetchBooking();
+    fetchInvoice();
   }, [id]);
 
   const handlePrint = () => window.print();
 
+  // ── Loading state ──────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
@@ -114,14 +161,18 @@ export default function InvoicePage() {
     );
   }
 
-  if (error || !booking) {
+  // ── Error state ────────────────────────────────────────────────────────
+  if (error || !invoice) {
     return (
       <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
         <div className="text-center space-y-4">
           <FileText size={40} className="text-foreground/20 mx-auto" />
           <h2 className="text-white font-black text-xl uppercase tracking-wider">Invoice Not Found</h2>
           <p className="text-foreground/40 text-sm">{error || "This invoice does not exist."}</p>
-          <Link href="/admin/bookings" className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary/20 transition-all">
+          <Link
+            href="/admin/bookings"
+            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary/20 transition-all"
+          >
             <ArrowLeft size={14} /> Return to Bookings
           </Link>
         </div>
@@ -129,21 +180,13 @@ export default function InvoicePage() {
     );
   }
 
-  // ── Tax Calculations (Backward from GST-inclusive total) ─────────────────
-  const gstInclusiveTotal = booking.paymentAmount || 0;
-  const subtotal = Math.round((gstInclusiveTotal / 1.18) * 100) / 100;
-  const cgst = Math.round((subtotal * 0.09) * 100) / 100;
-  const sgst = Math.round((subtotal * 0.09) * 100) / 100;
-  const grandTotal = Math.round((subtotal + cgst + sgst) * 100) / 100;
+  const isCompleted = invoice.booking.status === "completed";
+  const { tax, payment, company, customer, booking, vehicle, lineItems, terms } = invoice;
 
-  const invoiceNumber = generateInvoiceNumber(booking.id, booking.createdAt);
-  const serviceKey = (booking.serviceType || "OTHER").toUpperCase().replace("-", "_");
-  const serviceDescription = SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER;
-  const isCompleted = booking.status === "completed";
-
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <>
-      {/* ── Screen-only Controls (hidden on print) ─── */}
+      {/* ── Screen-only Controls (hidden on print) ─────────────────────── */}
       <div className="print:hidden mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
@@ -156,7 +199,7 @@ export default function InvoicePage() {
           <span className="text-foreground/20">/</span>
           <span className="text-foreground/50 text-xs font-bold uppercase tracking-wider">Invoice</span>
           <span className="text-foreground/20">/</span>
-          <span className="text-primary text-xs font-bold font-mono">{invoiceNumber}</span>
+          <span className="text-primary text-xs font-bold font-mono">{invoice.invoiceNumber}</span>
         </div>
         <div className="flex items-center gap-3">
           {isCompleted && (
@@ -174,7 +217,7 @@ export default function InvoicePage() {
         </div>
       </div>
 
-      {/* ── Main Invoice Paper ──────────────────────────────── */}
+      {/* ── Main Invoice Paper ─────────────────────────────────────────── */}
       <div
         id="invoice-paper"
         className="
@@ -184,8 +227,7 @@ export default function InvoicePage() {
           print:bg-white print:border-0 print:rounded-none print:shadow-none print:max-w-none print:mx-0
         "
       >
-
-        {/* ── Header Band ──────────────────────────────────── */}
+        {/* ── Header Band ──────────────────────────────────────────────── */}
         <div className="
           bg-gradient-to-r from-primary/15 via-primary/8 to-transparent
           border-b border-white/8 px-8 py-7
@@ -195,24 +237,21 @@ export default function InvoicePage() {
 
             {/* Company Branding */}
             <div className="space-y-1">
-              <div className="flex items-center gap-2 print:gap-1">
+              <div className="flex items-center gap-2">
                 <Shield size={20} className="text-primary print:hidden" />
                 <h1 className="text-xl font-black text-white uppercase tracking-widest print:text-black print:text-2xl">
-                  Erina Assistance
+                  {company.shortName}
                 </h1>
               </div>
               <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-600 print:text-xs">
                 Roadside Assistance Services Pvt. Ltd.
               </p>
               <div className="mt-3 space-y-0.5">
-                <p className="text-[10px] text-foreground/50 print:text-gray-600 print:text-xs">
-                  Shop No. 02, Dinnur Main Road, Kadugodi Colony
-                </p>
-                <p className="text-[10px] text-foreground/50 print:text-gray-600 print:text-xs">
-                  Bengaluru — 560067, Karnataka, India
-                </p>
+                {company.address.split(",").slice(0, 2).map((line, i) => (
+                  <p key={i} className="text-[10px] text-foreground/50 print:text-gray-600 print:text-xs">{line.trim()}</p>
+                ))}
                 <p className="text-[10px] text-primary/80 font-bold print:text-gray-700 print:text-xs">
-                  GSTIN: 29AAFCE8436B1Z3
+                  GSTIN: {company.gstin}
                 </p>
               </div>
             </div>
@@ -223,14 +262,14 @@ export default function InvoicePage() {
                 Tax Invoice
               </p>
               <p className="text-lg font-black text-white font-mono print:text-black print:text-xl">
-                {invoiceNumber}
+                {invoice.invoiceNumber}
               </p>
               <div className="mt-2 space-y-0.5">
                 <p className="text-[10px] text-foreground/45 print:text-gray-600 print:text-xs">
-                  <span className="font-bold text-foreground/60">Date:</span> {formatDate(booking.createdAt)}
+                  <span className="font-bold text-foreground/60">Date:</span> {formatDate(invoice.invoiceDate)}
                 </p>
                 <p className="text-[10px] text-foreground/45 print:text-gray-600 print:text-xs">
-                  <span className="font-bold text-foreground/60">Time:</span> {formatTime(booking.createdAt)}
+                  <span className="font-bold text-foreground/60">Time:</span> {formatTime(invoice.invoiceDate)}
                 </p>
                 {booking.ticketId && (
                   <p className="text-[10px] text-primary/80 font-bold font-mono print:text-gray-700 print:text-xs">
@@ -243,7 +282,7 @@ export default function InvoicePage() {
           </div>
         </div>
 
-        {/* ── Billing Details Grid ─────────────────────────── */}
+        {/* ── Billing Details Grid ──────────────────────────────────────── */}
         <div className="px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6 border-b border-white/5 print:border-b print:border-gray-200">
 
           {/* Bill To */}
@@ -253,31 +292,31 @@ export default function InvoicePage() {
             </p>
             <div className="space-y-1.5">
               <p className="text-sm font-black text-white uppercase tracking-wide print:text-black print:text-base">
-                {booking.customerName}
+                {customer.name}
               </p>
               <div className="flex items-center gap-2 text-foreground/50 text-xs print:text-gray-600">
                 <Phone size={11} className="shrink-0" />
-                <span className="font-semibold">{booking.phone || "—"}</span>
+                <span className="font-semibold">{customer.phone || "—"}</span>
               </div>
               <div className="flex items-start gap-2 text-foreground/50 text-xs print:text-gray-600">
                 <MapPin size={11} className="shrink-0 mt-0.5" />
-                <span className="font-semibold">{booking.address || booking.location || "Bengaluru"}</span>
+                <span className="font-semibold">{customer.address || "Bengaluru"}</span>
               </div>
             </div>
           </div>
 
-          {/* Vehicle & Service Details */}
+          {/* Vehicle & Service */}
           <div className="space-y-3">
             <p className="text-[9px] text-foreground/35 font-black uppercase tracking-widest print:text-gray-500 print:text-[10px]">
-              Vehicle & Service
+              Vehicle &amp; Service
             </p>
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-foreground/55 text-xs print:text-gray-600">
                 <Car size={11} className="shrink-0" />
-                <span className="font-semibold">{booking.vehicleName || booking.vehicleType || "Vehicle"}</span>
-                {booking.vehiclePlate && (
+                <span className="font-semibold">{vehicle.name || vehicle.type || "Vehicle"}</span>
+                {vehicle.plate && (
                   <span className="px-1.5 py-0.5 bg-white/5 border border-white/8 rounded font-mono text-[9px] text-foreground/40 uppercase print:border print:border-gray-300 print:text-gray-500">
-                    {booking.vehiclePlate}
+                    {vehicle.plate}
                   </span>
                 )}
               </div>
@@ -296,7 +335,7 @@ export default function InvoicePage() {
               )}
               <div className="flex items-center gap-2 text-foreground/50 text-xs print:text-gray-600">
                 <Calendar size={11} className="shrink-0" />
-                <span className="font-semibold">Dispatched: {formatDate(booking.createdAt)}</span>
+                <span className="font-semibold">Dispatched: {formatDate(invoice.invoiceDate)}</span>
               </div>
               <div className="flex items-center gap-2 text-foreground/50 text-xs print:text-gray-600">
                 <Hash size={11} className="shrink-0" />
@@ -308,134 +347,85 @@ export default function InvoicePage() {
 
         </div>
 
-        {/* ── Service Line Item Table ────────────────────────── */}
+        {/* ── Service Line Item Table ───────────────────────────────────── */}
         <div className="px-8 py-6 print:py-4">
-
           <table className="w-full text-xs print:text-sm">
             <thead>
               <tr className="border-b border-white/8 print:border-b print:border-gray-300">
-                <th className="py-3 text-left text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">
-                  # Description
-                </th>
-                <th className="py-3 text-center text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">
-                  HSN/SAC
-                </th>
-                <th className="py-3 text-center text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">
-                  Qty
-                </th>
-                <th className="py-3 text-right text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">
-                  Rate (₹)
-                </th>
-                <th className="py-3 text-right text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">
-                  Amount (₹)
-                </th>
+                <th className="py-3 text-left text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]"># Description</th>
+                <th className="py-3 text-center text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">HSN/SAC</th>
+                <th className="py-3 text-center text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">Qty</th>
+                <th className="py-3 text-right text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">Rate (₹)</th>
+                <th className="py-3 text-right text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">Amount (₹)</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-white/5 print:border-b print:border-gray-100">
-                <td className="py-5 pr-4">
-                  <p className="font-bold text-white text-xs print:text-black print:text-sm">{booking.serviceLabel}</p>
-                  <p className="text-foreground/40 text-[10px] mt-1 leading-relaxed print:text-gray-500 print:text-xs">
-                    {serviceDescription}
-                  </p>
-                  {booking.isPriority && (
-                    <span className="inline-flex mt-1.5 items-center gap-1 px-2 py-0.5 bg-emergency/10 text-emergency border border-emergency/20 rounded-full text-[9px] font-black uppercase tracking-wider print:border print:border-red-300 print:text-red-600">
-                      🚨 Priority / Emergency Call
-                    </span>
-                  )}
-                </td>
-                <td className="py-5 text-center text-foreground/40 font-mono text-[10px] print:text-gray-500">
-                  9987
-                </td>
-                <td className="py-5 text-center text-foreground/50 font-bold print:text-gray-600">
-                  1
-                </td>
-                <td className="py-5 text-right text-foreground/60 font-semibold print:text-gray-600">
-                  ₹{subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-                <td className="py-5 text-right text-white font-black print:text-black">
-                  ₹{subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-              </tr>
+              {lineItems.map((item, i) => (
+                <tr key={i} className="border-b border-white/5 print:border-b print:border-gray-100">
+                  <td className="py-5 pr-4">
+                    <p className="font-bold text-white text-xs print:text-black print:text-sm">{item.description}</p>
+                    <p className="text-foreground/40 text-[10px] mt-1 leading-relaxed print:text-gray-500 print:text-xs">
+                      {item.detail}
+                    </p>
+                    {booking.isPriority && (
+                      <span className="inline-flex mt-1.5 items-center gap-1 px-2 py-0.5 bg-emergency/10 text-emergency border border-emergency/20 rounded-full text-[9px] font-black uppercase tracking-wider print:border print:border-red-300 print:text-red-600">
+                        🚨 Priority / Emergency Call
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-5 text-center text-foreground/40 font-mono text-[10px] print:text-gray-500">{item.sacCode}</td>
+                  <td className="py-5 text-center text-foreground/50 font-bold print:text-gray-600">{item.quantity}</td>
+                  <td className="py-5 text-right text-foreground/60 font-semibold print:text-gray-600">₹{fmt(item.unitPrice)}</td>
+                  <td className="py-5 text-right text-white font-black print:text-black">₹{fmt(item.amount)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
-
         </div>
 
-        {/* ── Tax & Total Summary ───────────────────────────── */}
+        {/* ── Tax & Total Summary ──────────────────────────────────────── */}
         <div className="px-8 pb-6 print:pb-4">
           <div className="flex justify-end">
             <div className="w-full max-w-xs space-y-0">
-
               <div className="flex justify-between items-center py-2 border-b border-white/5 print:border-b print:border-gray-100">
-                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
-                  Subtotal (excl. GST)
-                </span>
-                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">
-                  ₹{subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">Subtotal (excl. GST)</span>
+                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(tax.subtotal)}</span>
               </div>
-
               <div className="flex justify-between items-center py-2 border-b border-white/5 print:border-b print:border-gray-100">
-                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
-                  CGST @ 9%
-                </span>
-                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">
-                  ₹{cgst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">CGST @ {(tax.cgstRate * 100).toFixed(0)}%</span>
+                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(tax.cgst)}</span>
               </div>
-
               <div className="flex justify-between items-center py-2 border-b border-white/8 print:border-b print:border-gray-200">
-                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
-                  SGST @ 9%
-                </span>
-                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">
-                  ₹{sgst.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">SGST @ {(tax.sgstRate * 100).toFixed(0)}%</span>
+                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(tax.sgst)}</span>
               </div>
-
               <div className="flex justify-between items-center py-4 mt-1">
-                <span className="text-sm font-black text-white uppercase tracking-wider print:text-black print:text-base">
-                  Grand Total
-                </span>
-                <span className="text-xl font-black text-primary print:text-black print:text-2xl">
-                  ₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
+                <span className="text-sm font-black text-white uppercase tracking-wider print:text-black print:text-base">Grand Total</span>
+                <span className="text-xl font-black text-primary print:text-black print:text-2xl">₹{fmt(tax.grandTotal)}</span>
               </div>
-
-              {/* Payment Status Badge */}
               <div className={`flex items-center justify-between p-3 rounded-xl border print:border print:rounded-none ${
-                booking.paymentStatus === "completed"
+                payment.status === "completed"
                   ? "bg-success/8 border-success/20 print:border-green-300"
                   : "bg-warning/8 border-warning/20 print:border-yellow-300"
               }`}>
-                <span className="text-[9px] font-black uppercase tracking-widest text-foreground/45 print:text-gray-500">
-                  Payment Status
-                </span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-foreground/45 print:text-gray-500">Payment Status</span>
                 <span className={`text-[10px] font-black uppercase tracking-wider ${
-                  booking.paymentStatus === "completed" ? "text-success print:text-green-600" : "text-warning print:text-yellow-600"
+                  payment.status === "completed" ? "text-success print:text-green-600" : "text-warning print:text-yellow-600"
                 }`}>
-                  {booking.paymentStatus === "completed" ? "✓ Paid" : "⏳ Pending"}
+                  {payment.status === "completed" ? "✓ Paid" : "⏳ Pending"}
                 </span>
               </div>
-
             </div>
           </div>
         </div>
 
-        {/* ── Notes & Terms ─────────────────────────────────── */}
+        {/* ── Notes & Terms ─────────────────────────────────────────────── */}
         <div className="mx-8 mb-6 p-5 bg-white/2 border border-white/5 rounded-xl print:border print:border-gray-200 print:bg-gray-50 print:rounded-none">
           <p className="text-[9px] text-foreground/35 font-black uppercase tracking-widest mb-2 print:text-gray-500">
-            Notes & Terms
+            Notes &amp; Terms
           </p>
           <ul className="space-y-1">
-            {[
-              "All prices are inclusive of 18% GST (CGST 9% + SGST 9%) as applicable under the Goods & Services Tax Act, 2017.",
-              "This is a computer-generated invoice and is legally valid without a physical signature.",
-              "For disputes or support, contact: support@erinaassistance.in or call +91-90358 18604.",
-              "Payment is due within 7 days of invoice date. Late payments may incur a 2% monthly surcharge.",
-              "Erina Assistance is not liable for pre-existing vehicle damage not caused during service delivery.",
-            ].map((note, i) => (
+            {terms.map((note, i) => (
               <li key={i} className="text-[9px] text-foreground/40 print:text-gray-500 print:text-[10px] leading-relaxed">
                 {i + 1}. {note}
               </li>
@@ -443,7 +433,7 @@ export default function InvoicePage() {
           </ul>
         </div>
 
-        {/* ── Footer ───────────────────────────────────────── */}
+        {/* ── Footer ────────────────────────────────────────────────────── */}
         <div className="
           px-8 py-5 border-t border-white/5
           bg-gradient-to-r from-white/2 to-transparent
@@ -453,17 +443,17 @@ export default function InvoicePage() {
           <div className="flex items-center gap-2">
             <Shield size={14} className="text-primary/50 print:hidden" />
             <p className="text-[9px] text-foreground/30 font-bold uppercase tracking-wider print:text-gray-400 print:text-[10px]">
-              Erina Roadside Assistance Services Pvt. Ltd. — Bengaluru
+              {company.name} — Bengaluru
             </p>
           </div>
           <p className="text-[9px] text-foreground/25 font-mono print:text-gray-400 print:text-[10px]">
-            {invoiceNumber} • {formatDate(booking.createdAt)}
+            {invoice.invoiceNumber} • {formatDate(invoice.invoiceDate)}
           </p>
         </div>
 
       </div>
 
-      {/* ── Print-only global styles ───────────────────────── */}
+      {/* ── Print-only global styles ─────────────────────────────────────── */}
       <style>{`
         @media print {
           body { background: white !important; color: black !important; }
