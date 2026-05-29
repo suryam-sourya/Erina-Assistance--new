@@ -14,6 +14,7 @@ export interface Booking {
 | 'flat_tyre'
 | 'engine'
 | 'accident'
+| 'urgent_battery'
 | 'other';
   serviceLabel: string;
   vehicleName: string;
@@ -741,6 +742,7 @@ await fetch(
     const serviceLabels: Record<Booking['serviceType'], string> = {
       towing: 'Accident Flatbed Towing',
       battery: 'Emergency Battery Assistance',
+      urgent_battery: 'Urgent Battery Replacement',
       ev: 'Rapid Mobile EV Charging',
       lockout: 'Emergency Lockout Assistance',
       fuel: 'Emergency Fuel Delivery',

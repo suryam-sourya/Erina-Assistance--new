@@ -338,6 +338,7 @@ alert(
       case 'flat_tyre': return 'bg-[#EF4444]/15 text-[#F87171] border-[#EF4444]/30';
       case 'engine': return 'bg-[#6B7280]/15 text-[#9CA3AF] border-[#6B7280]/30';
       case 'accident': return 'bg-[#DC2626]/15 text-[#F87171] border-[#DC2626]/30';
+      case 'urgent_battery': return 'bg-orange-500/15 text-orange-400 border-orange-500/30';
       case 'other': return 'bg-[#6B7280]/15 text-[#9CA3AF] border-[#6B7280]/30';
       default:
  return
@@ -422,6 +423,7 @@ alert(
                 <option value="assigned">👤 Assigned</option>
                 <option value="in-progress">⚙️ In Progress</option>
                 <option value="completed">✅ Completed</option>
+                
               </select>
             </div>
 
@@ -443,6 +445,10 @@ alert(
 
 <option value="battery">
   Battery Jumpstart
+</option>
+
+<option value="urgent_battery">
+  Urgent Battery
 </option>
 
 <option value="ev">
@@ -1125,6 +1131,7 @@ alert(
             {[
               "towing",
               "battery",
+              "urgent_battery",
                 "ev",
               "lockout",
                 "fuel",

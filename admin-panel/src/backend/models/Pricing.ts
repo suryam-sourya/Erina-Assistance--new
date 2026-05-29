@@ -11,6 +11,7 @@ const PricingSchema = new mongoose.Schema(
     serviceBaseFees: {
       towing: { type: Number, default: 1800 },
       battery: { type: Number, default: 900 },
+      urgentBattery: {type: Number,default: 5000},
       flatTyre: { type: Number, default: 700 },
       fuel: { type: Number, default: 600 },
       lockout: { type: Number, default: 800 },
