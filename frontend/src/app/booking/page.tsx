@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { Camera, ShieldCheck, CheckCircle2, XCircle, TrendingUp, Zap, Truck, Wrench, BatteryCharging, Fuel, Key, Activity, ShieldAlert, Sparkles, CreditCard, Wallet } from 'lucide-react';
 import { calculatePrice, DEFAULT_PRICING, PricingConfig } from '@/lib/pricingEngine';
 import dynamic from 'next/dynamic';
+import { useUserStore } from '@/store/userStore';
 
 const MapSelector = dynamic(() => import('@/components/Booking/MapSelector'), {
   ssr: false,
@@ -76,6 +77,7 @@ export default function BookingPage() {
     handleSubmit(null as any, true);
   };
 
+  const { user } = useUserStore();
   const [isPriority, setIsPriority] = useState(false);
 
   // Form states
@@ -89,6 +91,29 @@ export default function BookingPage() {
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [distanceKm, setDistanceKm] = useState(10);
 
+  // Auto-fetch customer profile and populate form
+  useEffect(() => {
+    // 1. Pre-fill from localStorage if available
+    if (typeof window !== 'undefined') {
+      const savedPhone = localStorage.getItem('erina_user_phone');
+      if (savedPhone && !phone) {
+        setPhone(savedPhone);
+      }
+    }
+
+    // 2. Pre-fill from Firebase User Auth Profile if available
+    if (user) {
+      if (user.displayName && !customerName) {
+        setCustomerName(user.displayName);
+      }
+      if (user.phoneNumber) {
+        const cleanAuthPhone = user.phoneNumber.replace(/\D/g, "").substring(0, 10);
+        if (cleanAuthPhone && !phone) {
+          setPhone(cleanAuthPhone);
+        }
+      }
+    }
+  }, [user, customerName, phone]);
   // Pricing
   const [pricingConfig, setPricingConfig] = useState<PricingConfig>(DEFAULT_PRICING);
   useEffect(() => {
