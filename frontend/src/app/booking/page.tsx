@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Camera, ShieldCheck, CheckCircle2, XCircle, TrendingUp, Zap, Truck, Wrench, BatteryCharging, Fuel, Key, Activity, ShieldAlert, Sparkles, CreditCard, Wallet } from 'lucide-react';
@@ -16,8 +16,7 @@ const MapSelector = dynamic(() => import('@/components/Booking/MapSelector'), {
 
 export default function BookingPage() {
   const [isOutOfService, setIsOutOfService] = useState(false);
-   const searchParams =
-  useSearchParams();
+
   // Payment states
   const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'PAY_ON_DELIVERY'>('PAY_ON_DELIVERY');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
