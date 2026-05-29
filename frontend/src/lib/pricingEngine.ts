@@ -14,6 +14,7 @@ export interface PricingConfig {
   serviceBaseFees: {
     towing: number;
     battery: number;
+    urgentBattery: number;
     flatTyre: number;
     fuel: number;
     lockout: number;
@@ -48,15 +49,43 @@ export interface PriceBreakdown {
 
 // Map service type string values from booking form to config keys
 const SERVICE_KEY_MAP: Record<string, keyof PricingConfig['serviceBaseFees']> = {
-  towing:    'towing',
-  'flat tyre': 'flatTyre',
-  flattyre:  'flatTyre',
-  battery:   'battery',
-  fuel:      'fuel',
-  lockout:   'lockout',
-  engine:    'engine',
-  accident:  'accident',
-  other:     'other',
+  towing: 'towing',
+
+  'flat tyre':
+    'flatTyre',
+
+  flattyre:
+    'flatTyre',
+
+  battery:
+    'battery',
+
+  'urgent battery':
+    'urgentBattery',
+
+  'urgent-battery':
+    'urgentBattery',
+
+  urgentbattery:
+    'urgentBattery',
+
+  urgent_battery:
+    'urgentBattery',
+
+  fuel:
+    'fuel',
+
+  lockout:
+    'lockout',
+
+  engine:
+    'engine',
+
+  accident:
+    'accident',
+
+  other:
+    'other',
 };
 
 // Map vehicle type string values from booking form to config keys
@@ -83,6 +112,7 @@ export function calculatePrice(params: {
   const hour = params.hourOfDay ?? new Date().getHours();
 
   // 1. Resolve service base fee
+  
   const serviceKey = SERVICE_KEY_MAP[serviceType.toLowerCase().replace(/\s+/g, ' ')] ?? 'other';
   const baseFee = config.serviceBaseFees[serviceKey] ?? config.serviceBaseFees.other;
 
@@ -124,6 +154,7 @@ export const DEFAULT_PRICING: PricingConfig = {
   serviceBaseFees: {
     towing:   1800,
     battery:   900,
+    urgentBattery: 5000,
     flatTyre:  700,
     fuel:      600,
     lockout:   800,

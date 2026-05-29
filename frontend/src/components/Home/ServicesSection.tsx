@@ -60,6 +60,15 @@ const services = [
     price: '₹1,400',
     delay: 0.35,
   },
+  {
+  id: 'urgent-battery',
+  title: 'Urgent Battery',
+  description: 'Emergency battery replacement & jumpstart at your location',
+  icon: { type: 'lucide', component: <Zap size={28} />,color:'from-orange-500 to-red-500'},
+  eta: '~25 min',
+  price: '₹5000',
+  delay: 0.3,
+}
 ];
 
 export default function ServicesSection() {

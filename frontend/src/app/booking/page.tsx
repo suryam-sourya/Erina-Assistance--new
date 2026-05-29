@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Camera, ShieldCheck, CheckCircle2, XCircle, TrendingUp, Zap, Truck, Wrench, BatteryCharging, Fuel, Key, Activity, ShieldAlert, Sparkles, CreditCard, Wallet } from 'lucide-react';
@@ -14,7 +15,8 @@ const MapSelector = dynamic(() => import('@/components/Booking/MapSelector'), {
 
 export default function BookingPage() {
   const [isOutOfService, setIsOutOfService] = useState(false);
-
+   const searchParams =
+  useSearchParams();
   // Payment states
   const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'PAY_ON_DELIVERY'>('PAY_ON_DELIVERY');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -82,6 +84,7 @@ export default function BookingPage() {
   const [vehicleType, setVehicleType] = useState('Car (Hatchback/Sedan)');
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [selectedIssue, setSelectedIssue] = useState('');
+
   const [locationName, setLocationName] = useState('');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [distanceKm, setDistanceKm] = useState(10);
@@ -418,6 +421,7 @@ export default function BookingPage() {
                     { id: 'Lockout', label: 'Lockout', desc: 'Unlock keys', icon: Key, hoverAnim: { rotate: [0, -20, 20, 0] }, activeColor: 'border-blue-500 bg-blue-500/5 text-blue-400' },
                     { id: 'Engine', label: 'Engine Failure', desc: 'Overheating & noise', icon: Activity, hoverAnim: { scale: [1, 1.08, 0.95, 1.05, 1] }, activeColor: 'border-red-500 bg-red-500/5 text-red-400' },
                     { id: 'Accident', label: 'Accident Help', desc: 'Towing & support', icon: ShieldAlert, hoverAnim: { x: [-2, 2, -2, 2, 0] }, activeColor: 'border-rose-500 bg-rose-500/5 text-rose-400' },
+                    {id: 'Urgent Battery',label: 'Urgent Battery',desc: 'Fast battery replacement',icon: BatteryCharging,hoverAnim: { scale: [1, 1.12, 1] },activeColor:'border-orange-500 bg-orange-500/5 text-orange-500'},
                     { id: 'Other', label: 'Other Support', desc: 'General checks', icon: Sparkles, hoverAnim: { rotate: [0, 180] }, activeColor: 'border-purple-500 bg-purple-500/5 text-purple-400' }
                   ].map((option) => {
                     const IconComponent = option.icon;
