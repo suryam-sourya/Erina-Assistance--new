@@ -35,6 +35,82 @@ function TrackingContent() {
   // Search input
   const [searchId, setSearchId] = useState('');
 
+  // Cancellation Option States (30-second window)
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+  const [cancelSuccess, setCancelSuccess] = useState(false);
+
+  // Monitor cancellation window eligibility
+  useEffect(() => {
+    if (!booking) return;
+
+    const rawStatus = (booking.status || 'pending').toLowerCase();
+    const canCancel = (rawStatus === 'pending' || rawStatus === 'emergency');
+
+    if (!canCancel || !booking.createdAt) {
+      setSecondsRemaining(null);
+      return;
+    }
+
+    const calculateRemaining = () => {
+      const createdTime = new Date(booking.createdAt).getTime();
+      const elapsed = (Date.now() - createdTime) / 1000;
+      const remaining = Math.max(0, Math.ceil(30 - elapsed));
+      return remaining;
+    };
+
+    const initialRemaining = calculateRemaining();
+    if (initialRemaining <= 0) {
+      setSecondsRemaining(null);
+      return;
+    }
+
+    setSecondsRemaining(initialRemaining);
+
+    const interval = setInterval(() => {
+      const rem = calculateRemaining();
+      if (rem <= 0) {
+        setSecondsRemaining(null);
+        clearInterval(interval);
+      } else {
+        setSecondsRemaining(rem);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [booking]);
+
+  const handleCancelBooking = async () => {
+    if (!id) return;
+    setIsCancelling(true);
+    setCancelError('');
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setCancelSuccess(true);
+        // Force state status to cancelled so view components update instantly
+        setBooking((prev: any) => ({
+          ...prev,
+          status: 'cancelled',
+          paymentStatus: 'cancelled',
+        }));
+        setSecondsRemaining(null);
+      } else {
+        setCancelError(data.error || 'Failed to cancel the booking request.');
+      }
+    } catch (err) {
+      console.error(err);
+      setCancelError('Network error occurred. Unable to cancel request.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   // Realtime Firestore WebSocket Active Listener with REST fallback
   useEffect(() => {
     if (!id) return;
@@ -299,6 +375,17 @@ function TrackingContent() {
           </div>
         </div>
 
+        {status === 'cancelled' && (
+          <div className="mb-8 p-6 bg-[#FF3366]/10 border border-[#FF3366]/20 text-[#FF3366] rounded-3xl flex items-center gap-4 shadow-sm animate-pulse">
+            <XCircle size={32} className="shrink-0" />
+            <div>
+              <h3 className="font-extrabold text-lg uppercase tracking-wide">Request Cancelled</h3>
+              <p className="text-sm text-foreground/60 mt-1">This roadside assistance booking has been successfully cancelled. If you still need help, please submit a new request or call our hotline.</p>
+            </div>
+          </div>
+        )}
+
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Map Section */}
@@ -313,8 +400,62 @@ function TrackingContent() {
           </div>
 
           <div className="space-y-8">
+            {/* Cancellation option */}
+            {secondsRemaining !== null && secondsRemaining > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-[#FF3366]/20 bg-[#FF3366]/5 space-y-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#FF3366]/10 text-[#FF3366] flex items-center justify-center font-bold">
+                    <Clock size={20} className="animate-spin-slow" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-foreground text-sm tracking-tight">Need to Cancel?</h3>
+                    <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
+                      You can cancel this request within the first 30 seconds.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-bold text-foreground">
+                  <span>Time Remaining:</span>
+                  <span className="text-[#FF3366] font-black text-sm tracking-wider">{secondsRemaining}s</span>
+                </div>
+
+                {cancelError && (
+                  <p className="text-[10px] font-semibold text-[#FF3366]">{cancelError}</p>
+                )}
+
+                <button
+                  type="button"
+                  disabled={isCancelling}
+                  onClick={handleCancelBooking}
+                  className="w-full bg-[#FF3366] hover:bg-[#E02E5A] text-white py-3 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-2 shadow-md shadow-[#FF3366]/20 disabled:opacity-50 cursor-pointer"
+                >
+                  {isCancelling ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    "Cancel Service Request"
+                  )}
+                </button>
+              </motion.div>
+            )}
+
+            {cancelSuccess && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-success/20 bg-success/5 p-4 text-center text-xs font-bold text-success"
+              >
+                ✓ Request cancelled successfully.
+              </motion.div>
+            )}
+
             {/* Technician Card */}
             <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-800">
+
               <h3 className="font-bold text-lg mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">Assigned Technician</h3>
               {booking.technicianId ? (
                 <>
