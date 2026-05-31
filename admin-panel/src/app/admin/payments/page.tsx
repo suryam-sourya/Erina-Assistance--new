@@ -104,7 +104,13 @@ export default function PaymentsDesk() {
                       ₹{pay.amount.toLocaleString('en-IN')}
                     </td>
                     <td className="py-3.5 px-5">
-                      <span className="px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider bg-success/15 text-success border-success/35">
+                      <span className={`px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${
+                        pay.status?.toLowerCase() === 'completed'
+                          ? 'bg-success/15 text-success border-success/35'
+                          : pay.status?.toLowerCase() === 'cancelled'
+                            ? 'bg-emergency/15 text-emergency border-emergency/35'
+                            : 'bg-warning/15 text-warning border-warning/35'
+                      }`}>
                         {pay.status}
                       </span>
                     </td>

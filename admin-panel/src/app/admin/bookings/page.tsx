@@ -23,7 +23,9 @@ import {
   FileText,
   Plus,
   Minus,
-  Trash2
+  Trash2,
+  XCircle,
+  AlertOctagon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import LiveTrackingMap from './LiveTrackingMap';
@@ -318,12 +320,14 @@ alert(
 }
 };
   const getStatusBadgeStyles = (status: Booking['status']) => {
-    switch (status) {
+    const s = status ? status.toLowerCase() : '';
+    switch (s) {
       case 'emergency': return 'bg-emergency/15 text-emergency border-emergency/35 animate-pulse';
       case 'pending': return 'bg-warning/15 text-warning border-warning/35';
       case 'assigned': return 'bg-blue-500/15 text-blue-400 border-blue-500/35';
       case 'in-progress': return 'bg-orange-500/15 text-orange-400 border-orange-500/35';
       case 'completed': return 'bg-success/15 text-success border-success/35';
+      case 'cancelled': return 'bg-emergency/15 text-emergency border-emergency/35';
       default: return 'bg-muted/15 text-muted border-muted/35';
     }
   };
@@ -585,28 +589,36 @@ alert(
                         {/* Status */}
                         <td className="py-4 px-5">
                           <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
-                            booking.status === 'assigned'
+                            booking.status?.toLowerCase() === 'assigned'
                               ? 'bg-blue-500/15 text-blue-400 border-blue-500/35'
-                              : booking.status === 'in-progress' && booking.subStatus === 'leaving_hub'
+                              : booking.status?.toLowerCase() === 'in-progress' && booking.subStatus === 'leaving_hub'
                                 ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/35 animate-pulse'
-                                : booking.status === 'in-progress' && booking.subStatus === 'arrived'
+                                : booking.status?.toLowerCase() === 'in-progress' && booking.subStatus === 'arrived'
                                   ? 'bg-orange-500/15 text-orange-400 border-orange-500/35'
                                   : getStatusBadgeStyles(booking.status)
                           }`}>
-                            {booking.status === 'assigned'
+                            {booking.status?.toLowerCase() === 'assigned'
                               ? 'Assigned (Preparing)'
-                              : booking.status === 'in-progress' && booking.subStatus === 'leaving_hub'
+                              : booking.status?.toLowerCase() === 'in-progress' && booking.subStatus === 'leaving_hub'
                                 ? 'En Route (Left Hub)'
-                                : booking.status === 'in-progress' && booking.subStatus === 'arrived'
+                                : booking.status?.toLowerCase() === 'in-progress' && booking.subStatus === 'arrived'
                                   ? 'Unit On-Scene'
-                                  : booking.status}
+                                  : booking.status?.toLowerCase() === 'cancelled'
+                                    ? 'Booking Cancelled'
+                                    : booking.status}
                           </span>
                         </td>
 
                         {/* Payment */}
                         <td className="py-4 px-5">
                           <div className="text-white font-bold">₹{booking.paymentAmount.toLocaleString('en-IN')}</div>
-                          <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 block ${booking.paymentStatus === 'completed' ? 'text-success' : 'text-warning'}`}>
+                          <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 block ${
+                            booking.paymentStatus?.toLowerCase() === 'completed'
+                              ? 'text-success'
+                              : booking.paymentStatus?.toLowerCase() === 'cancelled'
+                                ? 'text-emergency font-bold'
+                                : 'text-warning'
+                          }`}>
                             {booking.paymentStatus}
                           </span>
                         </td>
@@ -614,7 +626,7 @@ alert(
                         {/* Actions */}
                         <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex justify-end items-center gap-2">
-                            {booking.status === 'completed' ? (
+                            {booking.status?.toLowerCase() === 'completed' ? (
                               <div className="flex items-center gap-2 justify-end flex-wrap">
                                 <button
                                   onClick={() => openSellModal(booking)}
@@ -635,6 +647,11 @@ alert(
                                   <span>Resolved</span>
                                 </span>
                               </div>
+                            ) : booking.status?.toLowerCase() === 'cancelled' ? (
+                              <span className="text-[10px] text-emergency flex items-center gap-1 font-bold uppercase tracking-wider">
+                                <XCircle size={12} />
+                                <span>Booking Cancelled</span>
+                              </span>
                             ) : (
                               <>
                                 {/* If unassigned, show Assign Technician */}
@@ -712,6 +729,15 @@ alert(
                       {expandedBookingId === booking.id && (
                         <tr className="bg-black/30 border-b border-border">
                           <td colSpan={8} className="p-6">
+                            {booking.status?.toLowerCase() === 'cancelled' && (
+                              <div className="mb-4 p-5 bg-emergency/15 border border-emergency/35 text-emergency rounded-2xl flex items-center gap-3.5 shadow-lg shadow-emergency/5">
+                                <AlertOctagon size={24} className="shrink-0 animate-pulse" />
+                                <div>
+                                  <h4 className="font-extrabold text-sm uppercase tracking-wider">Service Request Cancelled by Customer</h4>
+                                  <p className="text-[11px] text-foreground/60 mt-0.5 font-semibold">This dispatch request has been aborted. All assigned operations and technician dispatches are cancelled.</p>
+                                </div>
+                              </div>
+                            )}
                             <motion.div 
                               initial={{ opacity: 0, y: -10 }}
                               animate={{ opacity: 1, y: 0 }}

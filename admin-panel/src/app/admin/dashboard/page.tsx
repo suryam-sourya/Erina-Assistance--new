@@ -308,6 +308,7 @@ export default function Dashboard() {
                     case 'assigned': return 'bg-[#6366F1]/15 text-[#818CF8] border-[#6366F1]/35';
                     case 'in-progress': return 'bg-orange-500/15 text-orange-400 border-orange-500/35';
                     case 'completed': return 'bg-success/15 text-success border-success/35';
+                    case 'cancelled': return 'bg-emergency/15 text-emergency border-emergency/35';
                     default: return 'bg-muted/15 text-muted border-muted/35';
                   }
                 };
@@ -337,11 +338,11 @@ export default function Dashboard() {
                     </td>
                     <td className="py-3.5 px-4">
                       <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${getStatusColor(booking.status)}`}>
-                        {booking.status}
+                        {booking.status?.toLowerCase() === 'cancelled' ? 'booking cancelled' : booking.status}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      {booking.status === 'in-progress' && (
+                      {booking.status?.toLowerCase() === 'in-progress' && (
                         <button
                           onClick={() => updateBookingStatus(booking.id, 'completed')}
                           className="px-2.5 py-1 bg-success hover:bg-success/80 text-background font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
@@ -350,7 +351,7 @@ export default function Dashboard() {
                         </button>
                       )}
                       
-                      {booking.status === 'emergency' && (
+                      {booking.status?.toLowerCase() === 'emergency' && (
                         <button
                           onClick={() => updateBookingStatus(booking.id, 'assigned')}
                           className="px-2.5 py-1 bg-emergency hover:bg-emergency/80 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer animate-pulse"
@@ -359,18 +360,25 @@ export default function Dashboard() {
                         </button>
                       )}
 
-                      {booking.status === 'pending' && (
+                      {booking.status?.toLowerCase() === 'pending' && (
                         <span className="text-[10px] text-foreground/30">Needs Assignment</span>
                       )}
 
-                      {booking.status === 'completed' && (
+                      {booking.status?.toLowerCase() === 'completed' && (
                         <span className="text-[10px] text-success flex items-center gap-1 justify-end">
                           <CheckCircle2 size={12} />
                           <span>Archived</span>
                         </span>
                       )}
 
-                      {booking.status === 'assigned' && (
+                      {booking.status?.toLowerCase() === 'cancelled' && (
+                        <span className="text-[10px] text-emergency flex items-center gap-1 justify-end font-bold uppercase tracking-wider">
+                          <AlertOctagon size={12} className="shrink-0" />
+                          <span>Cancelled</span>
+                        </span>
+                      )}
+
+                      {booking.status?.toLowerCase() === 'assigned' && (
                         <button
                           onClick={() => updateBookingStatus(booking.id, 'in-progress')}
                           className="px-2.5 py-1 bg-primary hover:bg-primary-hover text-background font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"

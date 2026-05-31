@@ -21,9 +21,9 @@ export interface Booking {
   vehiclePlate: string;
   technicianId: string | null;
   technicianName: string | null;
-  status: 'pending' | 'assigned' | 'in-progress' | 'completed' | 'emergency';
+  status: 'pending' | 'assigned' | 'in-progress' | 'completed' | 'emergency' | 'cancelled';
   subStatus?: 'collecting_tools' | 'leaving_hub' | 'arrived' | null;
-  paymentStatus: 'completed' | 'pending' | 'failed';
+  paymentStatus: 'completed' | 'pending' | 'failed' | 'cancelled';
   paymentAmount: number;
   createdTime: string;
   location: string;
@@ -70,7 +70,7 @@ export interface PaymentRecord {
   customerName: string;
   serviceLabel: string;
   amount: number;
-  status: 'completed' | 'pending' | 'failed';
+  status: 'completed' | 'pending' | 'failed' | 'cancelled';
   date: string;
 }
 
