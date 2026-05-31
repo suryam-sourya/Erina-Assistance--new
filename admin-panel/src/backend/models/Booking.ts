@@ -43,6 +43,20 @@ const BookingSchema = new mongoose.Schema(
     technicianPhone: { type: String, default: null },
     estimatedArrivalTime: { type: String, default: null },
     paymentStatus: { type: String, default: "PENDING" },
+    zohoInvoiceId: {
+  type: String,
+  default: null,
+},
+
+zohoInvoiceNumber: {
+  type: String,
+  default: null,
+},
+
+zohoInvoiceUrl: {
+  type: String,
+  default: null,
+},
     paymentAmount: { type: Number, default: 0 },
     createdBy: { type: String, default: null },
 
