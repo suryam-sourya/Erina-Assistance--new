@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, MessageSquare, Star, Clock, CheckCircle2, CircleDashed, Search, Navigation, XCircle } from 'lucide-react';
+import { MapPin, Phone, MessageSquare, Star, Clock, CheckCircle2, CircleDashed, Search, Navigation, XCircle, Heart, ThumbsUp } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const TrackingLiveMap = dynamic(() => import('./TrackingLiveMap'), {
@@ -40,6 +40,14 @@ function TrackingContent() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState('');
   const [cancelSuccess, setCancelSuccess] = useState(false);
+
+  // Feedback System States
+  const [feedbackRating, setFeedbackRating] = useState<number>(0);
+  const [feedbackHoverRating, setFeedbackHoverRating] = useState<number>(0);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [feedbackComment, setFeedbackComment] = useState<string>('');
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState<boolean>(false);
+  const [feedbackError, setFeedbackError] = useState<string>('');
 
   // Monitor cancellation window eligibility
   useEffect(() => {
@@ -108,6 +116,39 @@ function TrackingContent() {
       setCancelError('Network error occurred. Unable to cancel request.');
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (feedbackRating < 1 || !id) return;
+    setIsSubmittingFeedback(true);
+    setFeedbackError('');
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings/${id}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: feedbackRating,
+          tags: selectedTags,
+          comment: feedbackComment,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        // Update local booking document state instantly to show the submitted state
+        setBooking((prev: any) => ({
+          ...prev,
+          feedback: data.feedback,
+        }));
+      } else {
+        setFeedbackError(data.error || 'Failed to submit your feedback.');
+      }
+    } catch (err) {
+      console.error(err);
+      setFeedbackError('Network error occurred. Unable to submit review.');
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   };
 
@@ -450,6 +491,174 @@ function TrackingContent() {
                 className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-success/20 bg-success/5 p-4 text-center text-xs font-bold text-success"
               >
                 ✓ Request cancelled successfully.
+              </motion.div>
+            )}
+
+            {/* Zomato-style Premium Feedback Card */}
+            {status?.toLowerCase() === 'completed' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-yellow-500/20 bg-yellow-500/5 space-y-6 text-left"
+              >
+                {booking.feedback && booking.feedback.rating ? (
+                  // Submitted State (Show Review Summary)
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-yellow-500/10 text-yellow-500 flex items-center justify-center font-bold">
+                        <Heart size={20} className="fill-yellow-500 animate-pulse" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-foreground text-sm tracking-tight">Thank You!</h3>
+                        <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
+                          Your feedback has been recorded successfully.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/50 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-white/5 space-y-3">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={18}
+                            className={star <= booking.feedback.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300 dark:text-gray-700"}
+                          />
+                        ))}
+                        <span className="text-[11px] font-bold text-foreground/60 ml-2">({booking.feedback.rating}/5)</span>
+                      </div>
+
+                      {booking.feedback.tags && booking.feedback.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {booking.feedback.tags.map((tag: string) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/25 text-[9px] font-black uppercase tracking-wider"
+                            >
+                              {tag.replace('_', ' ')}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {booking.feedback.comment && (
+                        <p className="text-[11px] text-foreground/75 leading-relaxed font-semibold italic border-l-2 border-yellow-500 pl-2.5">
+                          "{booking.feedback.comment}"
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  // Active Rating/Feedback Form State
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-yellow-500/10 text-yellow-500 flex items-center justify-center">
+                        <ThumbsUp size={20} className="fill-yellow-500" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-foreground text-sm tracking-tight">Rate Your Rescue</h3>
+                        <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
+                          {booking.technicianName ? `How was your experience with ${booking.technicianName}?` : "Help us improve our roadside assistance standard"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Star Rating Row */}
+                    <div className="flex items-center gap-2.5 py-1 justify-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onMouseEnter={() => setFeedbackHoverRating(star)}
+                          onMouseLeave={() => setFeedbackHoverRating(0)}
+                          onClick={() => {
+                            setFeedbackRating(star);
+                            setSelectedTags([]); // Reset tags on rating change to load dynamic ones
+                          }}
+                          className="transition-transform duration-150 hover:scale-125 focus:outline-none"
+                        >
+                          <Star
+                            size={32}
+                            className={`transition-colors duration-150 cursor-pointer ${
+                              star <= (feedbackHoverRating || feedbackRating)
+                                ? "text-yellow-500 fill-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]"
+                                : "text-gray-300 dark:text-gray-700"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Dynamic Zomato-style Tags */}
+                    {feedbackRating > 0 && (
+                      <div className="space-y-3.5 pt-1">
+                        <label className="block text-[10px] text-foreground/60 font-black uppercase tracking-wider">
+                          What went {feedbackRating >= 4 ? "great" : "wrong"}?
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {(feedbackRating >= 4
+                            ? ["Super Fast", "Polite & Expert", "Clean Rig", "Highly Recommend", "Fair Price"]
+                            : ["Delayed Arrival", "Unprofessional", "Lack of Tools", "Poor Comms", "Overcharged"]
+                          ).map((tag) => {
+                            const isSelected = selectedTags.includes(tag);
+                            return (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setSelectedTags(prev => prev.filter(t => t !== tag));
+                                  } else {
+                                    setSelectedTags(prev => [...prev, tag]);
+                                  }
+                                }}
+                                className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                                  isSelected
+                                    ? "bg-yellow-500 border-yellow-500 text-black shadow-md shadow-yellow-500/10 scale-105"
+                                    : "bg-transparent border-gray-200 dark:border-gray-800 text-foreground/50 hover:text-foreground hover:border-foreground/30"
+                                }`}
+                              >
+                                {tag}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Optional Comments */}
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] text-foreground/60 font-black uppercase tracking-wider">
+                            Share additional details (Optional)
+                          </label>
+                          <textarea
+                            rows={2}
+                            placeholder="Tell us more about the service rescue..."
+                            value={feedbackComment}
+                            onChange={(e) => setFeedbackComment(e.target.value)}
+                            className="w-full text-[11px] p-3 rounded-2xl bg-gray-50 dark:bg-[#0B0F19] border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 text-foreground"
+                          />
+                        </div>
+
+                        {feedbackError && (
+                          <p className="text-[10px] font-semibold text-emergency">{feedbackError}</p>
+                        )}
+
+                        {/* Submit Button */}
+                        <button
+                          type="button"
+                          disabled={isSubmittingFeedback}
+                          onClick={handleFeedbackSubmit}
+                          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black py-3 rounded-xl font-black transition-all text-xs flex items-center justify-center gap-2 shadow-md shadow-yellow-500/10 disabled:opacity-50 cursor-pointer uppercase tracking-wider"
+                        >
+                          {isSubmittingFeedback ? (
+                            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            "Submit Review"
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </motion.div>
             )}
 

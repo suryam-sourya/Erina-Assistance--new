@@ -46,6 +46,13 @@ const BookingSchema = new mongoose.Schema(
     paymentAmount: { type: Number, default: 0 },
     createdBy: { type: String, default: null },
 
+    feedback: {
+      rating: { type: Number, min: 1, max: 5 },
+      tags: { type: [String], default: [] },
+      comment: { type: String, default: "" },
+      submittedAt: { type: Date, default: Date.now },
+    },
+
     // ── Products Sold On-Site ─────────────────────────────────────────────
     // Populated when a technician sells a physical product (e.g. battery, tyre)
     // during the service call. Each entry is a snapshot at time of sale.

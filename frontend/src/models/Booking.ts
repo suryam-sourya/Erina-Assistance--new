@@ -41,6 +41,13 @@ const BookingSchema = new mongoose.Schema(
     paymentAmount: { type: Number, default: 0 },
     createdBy: { type: String, default: null },
 
+    feedback: {
+      rating: { type: Number, min: 1, max: 5 },
+      tags: { type: [String], default: [] },
+      comment: { type: String, default: "" },
+      submittedAt: { type: Date, default: Date.now },
+    },
+
     // ── Backward Compatibility Flat Fallbacks (Optional) ──────────────────
     userId: String,
     customerName: String,
