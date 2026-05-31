@@ -441,11 +441,12 @@ export default function BookingPage() {
                     { id: 'Towing', label: 'Car Towing', desc: 'Flatbed dispatch', icon: Truck, hoverAnim: { x: [0, 4, 0] }, activeColor: 'border-primary bg-primary/5 text-primary' },
                     { id: 'Flat Tyre', label: 'Flat Tyre', desc: 'Puncture rescue', icon: Wrench, hoverAnim: { rotate: [0, 35, 0] }, activeColor: 'border-secondary bg-secondary/5 text-secondary' },
                     { id: 'Battery', label: 'Battery Check', desc: 'Jumpstart & swap', icon: BatteryCharging, hoverAnim: { scale: [1, 1.12, 1] }, activeColor: 'border-yellow-500 bg-yellow-500/5 text-yellow-500' },
+                    {id: 'Urgent Battery',label: 'Urgent Battery',desc: 'Fast battery replacement',icon: BatteryCharging,hoverAnim: { scale: [1, 1.12, 1] },activeColor:'border-orange-500 bg-orange-500/5 text-orange-500'},
                     { id: 'Fuel', label: 'Fuel Delivery', desc: 'Emergency fuel', icon: Fuel, hoverAnim: { y: [0, -3, 0] }, activeColor: 'border-emerald-500 bg-emerald-500/5 text-emerald-400' },
                     { id: 'Lockout', label: 'Lockout', desc: 'Unlock keys', icon: Key, hoverAnim: { rotate: [0, -20, 20, 0] }, activeColor: 'border-blue-500 bg-blue-500/5 text-blue-400' },
-                    { id: 'Engine', label: 'Engine Failure', desc: 'Overheating & noise', icon: Activity, hoverAnim: { scale: [1, 1.08, 0.95, 1.05, 1] }, activeColor: 'border-red-500 bg-red-500/5 text-red-400' },
+                    // { id: 'Engine', label: 'Engine Failure', desc: 'Overheating & noise', icon: Activity, hoverAnim: { scale: [1, 1.08, 0.95, 1.05, 1] }, activeColor: 'border-red-500 bg-red-500/5 text-red-400' },
                     { id: 'Accident', label: 'Accident Help', desc: 'Towing & support', icon: ShieldAlert, hoverAnim: { x: [-2, 2, -2, 2, 0] }, activeColor: 'border-rose-500 bg-rose-500/5 text-rose-400' },
-                    {id: 'Urgent Battery',label: 'Urgent Battery',desc: 'Fast battery replacement',icon: BatteryCharging,hoverAnim: { scale: [1, 1.12, 1] },activeColor:'border-orange-500 bg-orange-500/5 text-orange-500'},
+                    
                     { id: 'Other', label: 'Other Support', desc: 'General checks', icon: Sparkles, hoverAnim: { rotate: [0, 180] }, activeColor: 'border-purple-500 bg-purple-500/5 text-purple-400' }
                   ].map((option) => {
                     const IconComponent = option.icon;
@@ -567,16 +568,16 @@ export default function BookingPage() {
                 <label className="block text-sm font-semibold text-foreground mb-2">
                   Estimated Distance: <span className="text-primary">{distanceKm} km</span>
                 </label>
-                <input
+                {/* <input
                   type="range"
                   min={1}
                   max={100}
                   value={distanceKm}
                   onChange={(e) => setDistanceKm(Number(e.target.value))}
                   className="w-full accent-primary"
-                />
+                /> */}
                 <div className="flex justify-between text-xs text-foreground/40 font-semibold mt-1">
-                  <span>1 km</span><span>100 km</span>
+                  {/* <span>1 km</span><span>100 km</span> */}
                 </div>
               </div>
 
