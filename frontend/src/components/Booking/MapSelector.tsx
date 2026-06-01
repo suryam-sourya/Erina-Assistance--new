@@ -208,7 +208,7 @@ export default function MapSelector({
           ) : (
             <>
               <Navigation size={16} />
-              <span>Detect</span>
+              <span>Location</span>
             </>
           )}
         </button>

@@ -445,8 +445,7 @@ export default function BookingPage() {
                     { id: 'Fuel', label: 'Fuel Delivery', desc: 'Emergency fuel', icon: Fuel, hoverAnim: { y: [0, -3, 0] }, activeColor: 'border-emerald-500 bg-emerald-500/5 text-emerald-400' },
                     { id: 'Lockout', label: 'Lockout', desc: 'Unlock keys', icon: Key, hoverAnim: { rotate: [0, -20, 20, 0] }, activeColor: 'border-blue-500 bg-blue-500/5 text-blue-400' },
                     // { id: 'Engine', label: 'Engine Failure', desc: 'Overheating & noise', icon: Activity, hoverAnim: { scale: [1, 1.08, 0.95, 1.05, 1] }, activeColor: 'border-red-500 bg-red-500/5 text-red-400' },
-                    { id: 'Accident', label: 'Accident Help', desc: 'Towing & support', icon: ShieldAlert, hoverAnim: { x: [-2, 2, -2, 2, 0] }, activeColor: 'border-rose-500 bg-rose-500/5 text-rose-400' },
-                    
+                    { id: 'Accident', label: 'Accident Help', desc: 'Towing & support', icon: ShieldAlert, hoverAnim: { x: [-2, 2, -2, 2, 0] }, activeColor: 'border-rose-500 bg-rose-500/5 text-rose-400' },                   
                     { id: 'Other', label: 'Other Support', desc: 'General checks', icon: Sparkles, hoverAnim: { rotate: [0, 180] }, activeColor: 'border-purple-500 bg-purple-500/5 text-purple-400' }
                   ].map((option) => {
                     const IconComponent = option.icon;
