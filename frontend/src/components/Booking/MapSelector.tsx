@@ -24,6 +24,26 @@ export default function MapSelector({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  const ignoreNextSearch = useRef(false);
+
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    if (ignoreNextSearch.current) {
+      ignoreNextSearch.current = false;
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(() => {
+      handleSearch(searchQuery);
+    }, 400); // 400ms debounce to prevent API rate-limits
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
   // Helper: OpenStreetMap Nominatim Reverse Geocoding
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
@@ -80,6 +100,7 @@ export default function MapSelector({
     const formattedAddress = result.display_name;
     
     setAddress(formattedAddress);
+    ignoreNextSearch.current = true;
     setSearchQuery(result.name || result.display_name.split(",")[0]);
     setSearchResults([]);
     
@@ -184,14 +205,17 @@ export default function MapSelector({
       {/* Smart Search Autocomplete Box */}
       <div className="flex gap-3 relative">
         <div className="relative flex-grow">
-          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          {isSearching ? (
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          ) : (
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          )}
           <input
             type="text"
             placeholder="Search address or type location..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              handleSearch(e.target.value);
             }}
             className="w-full pl-12 pr-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-semibold"
           />
@@ -227,6 +251,12 @@ export default function MapSelector({
                 <span className="truncate">{result.display_name}</span>
               </button>
             ))}
+          </div>
+        )}
+
+        {searchResults.length === 0 && searchQuery.length >= 3 && !isSearching && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-xl shadow-xl z-[999] p-4 text-center text-xs text-foreground/50 font-semibold">
+            No locations found. Try moving the map pin manually.
           </div>
         )}
       </div>
