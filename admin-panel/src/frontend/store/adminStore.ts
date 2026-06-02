@@ -117,7 +117,7 @@ interface AdminState {
   addBooking: (booking: Omit<Booking, 'id' | 'createdTime'>) => Promise<void>;
   assignTechnician: (bookingId: string, technicianId: string) => Promise<void>;
   updateBookingStatus: (bookingId: string, status: Booking['status'], subStatus?: Booking['subStatus']) => Promise<void>;
-  toggleTechnicianAvailability: (technicianId: string) => void;
+  toggleTechnicianAvailability: (technicianId: string) => Promise<void>;
   addActivity: (message: string, type: RecentActivity['type']) => void;
   triggerEmergencyDispatch: (serviceType: Booking['serviceType'], location: string, customerName: string) => Promise<void>;
   clearAlert: () => void;
@@ -787,23 +787,45 @@ await get().fetchTechnicians();
     }
   },
 
-  toggleTechnicianAvailability: (technicianId) => {
-    set((state) => ({
-      technicians: state.technicians.map(t => 
-        t.id === technicianId 
-          ? { 
-              ...t, 
-              availability: t.availability === 'available' ? 'offline' : 'available' 
-            } 
-          : t
-      ),
-    }));
+  toggleTechnicianAvailability: async (technicianId) => {
+  const tech = get().technicians.find(
+    (t) => t.id === technicianId
+  );
 
-    const tech = get().technicians.find(t => t.id === technicianId);
-    if (tech) {
-      get().addActivity(`Technician ${tech.name} status updated to ${tech.availability.toUpperCase()}.`, 'dispatch');
-    }
-  },
+  if (!tech) return;
+
+  const newStatus =
+    tech.availability === "available"
+      ? "offline"
+      : "available";
+
+  try {
+    await fetch(
+      `/api/technicians/${technicianId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          availability: newStatus,
+        }),
+      }
+    );
+
+    await get().fetchTechnicians();
+
+    get().addActivity(
+      `Technician ${tech.name} status updated to ${newStatus.toUpperCase()}.`,
+      "dispatch"
+    );
+  } catch (error) {
+    console.error(
+      "Failed to update technician status",
+      error
+    );
+  }
+},
 
   addActivity: (message, type) => {
     const newActivity: RecentActivity = {
