@@ -113,6 +113,7 @@ interface AdminState {
   
   // Interactive Simulator Operations
   fetchBookings: () => Promise<void>;
+  fetchTechnicians: () => Promise<void>;
   addBooking: (booking: Omit<Booking, 'id' | 'createdTime'>) => Promise<void>;
   assignTechnician: (bookingId: string, technicianId: string) => Promise<void>;
   updateBookingStatus: (bookingId: string, status: Booking['status'], subStatus?: Booking['subStatus']) => Promise<void>;
@@ -214,66 +215,66 @@ const initialBookings: Booking[] = [
 ];
 
 const initialTechnicians: Technician[] = [
-  {
-    id: 'TECH-01',
-    name: 'Amit Singh',
-    phone: '+91 98888 11111',
-    availability: 'busy',
-    currentJob: 'ER-4891',
-    rating: 4.8,
-    serviceArea: 'Electronic City / NICE Road',
-    vehicleType: 'Flatbed Tow Truck',
-  },
-  {
-    id: 'TECH-02',
-    name: 'Ramesh Kumar',
-    phone: '+91 98888 22222',
-    availability: 'busy',
-    currentJob: 'ER-4892',
-    rating: 4.9,
-    serviceArea: 'Yelahanka / Nandi Hills',
-    vehicleType: 'Heavy Duty Tow & Battery Rig',
-  },
-  {
-    id: 'TECH-03',
-    name: 'Vikram Rao',
-    phone: '+91 98888 33333',
-    availability: 'available',
-    currentJob: null,
-    rating: 4.7,
-    serviceArea: 'Marathahalli / ORR',
-    vehicleType: 'EV Mobile Charger Van',
-  },
-  {
-    id: 'TECH-04',
-    name: 'Nitesh Gowda',
-    phone: '+91 98888 44444',
-    availability: 'available',
-    currentJob: null,
-    rating: 4.6,
-    serviceArea: 'Whitefield / Indiranagar',
-    vehicleType: 'RSA Response Bike & Lockout Toolset',
-  },
-  {
-    id: 'TECH-05',
-    name: 'Suresh Patil',
-    phone: '+91 98888 55555',
-    availability: 'available',
-    currentJob: null,
-    rating: 4.5,
-    serviceArea: 'Koramangala / HSR Layout',
-    vehicleType: 'Battery Jumpstart & Fuel Van',
-  },
-  {
-    id: 'TECH-06',
-    name: 'Karthik Raja',
-    phone: '+91 98888 66666',
-    availability: 'offline',
-    currentJob: null,
-    rating: 4.9,
-    serviceArea: 'Jayanagar / JP Nagar',
-    vehicleType: 'Standard Tow Truck',
-  },
+  // {
+  //   id: 'TECH-01',
+  //   name: 'Amit Singh',
+  //   phone: '+91 98888 11111',
+  //   availability: 'busy',
+  //   currentJob: 'ER-4891',
+  //   rating: 4.8,
+  //   serviceArea: 'Electronic City / NICE Road',
+  //   vehicleType: 'Flatbed Tow Truck',
+  // },
+  // {
+  //   id: 'TECH-02',
+  //   name: 'Ramesh Kumar',
+  //   phone: '+91 98888 22222',
+  //   availability: 'busy',
+  //   currentJob: 'ER-4892',
+  //   rating: 4.9,
+  //   serviceArea: 'Yelahanka / Nandi Hills',
+  //   vehicleType: 'Heavy Duty Tow & Battery Rig',
+  // },
+  // {
+  //   id: 'TECH-03',
+  //   name: 'Vikram Rao',
+  //   phone: '+91 98888 33333',
+  //   availability: 'available',
+  //   currentJob: null,
+  //   rating: 4.7,
+  //   serviceArea: 'Marathahalli / ORR',
+  //   vehicleType: 'EV Mobile Charger Van',
+  // },
+  // {
+  //   id: 'TECH-04',
+  //   name: 'Nitesh Gowda',
+  //   phone: '+91 98888 44444',
+  //   availability: 'available',
+  //   currentJob: null,
+  //   rating: 4.6,
+  //   serviceArea: 'Whitefield / Indiranagar',
+  //   vehicleType: 'RSA Response Bike & Lockout Toolset',
+  // },
+  // {
+  //   id: 'TECH-05',
+  //   name: 'Suresh Patil',
+  //   phone: '+91 98888 55555',
+  //   availability: 'available',
+  //   currentJob: null,
+  //   rating: 4.5,
+  //   serviceArea: 'Koramangala / HSR Layout',
+  //   vehicleType: 'Battery Jumpstart & Fuel Van',
+  // },
+  // {
+  //   id: 'TECH-06',
+  //   name: 'Karthik Raja',
+  //   phone: '+91 98888 66666',
+  //   availability: 'offline',
+  //   currentJob: null,
+  //   rating: 4.9,
+  //   serviceArea: 'Jayanagar / JP Nagar',
+  //   vehicleType: 'Standard Tow Truck',
+  // },
 ];
 
 const initialCustomers: Customer[] = [
@@ -443,7 +444,62 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       pendingRequests,
     };
   },
+fetchTechnicians: async () => {
+  try {
+    const response = await fetch(
+      "/api/technicians",
+      {
+        cache: "no-store",
+      }
+    );
 
+    if (!response.ok) {
+      throw new Error(
+        "Failed to fetch technicians"
+      );
+    }
+
+    const data = await response.json();
+
+    const mappedTechs = data.map(
+      (t: any) => ({
+        id:
+          t.technicianId,
+
+        name:
+          t.name,
+
+        phone:
+          t.phone,
+
+        availability:
+          t.availability,
+
+        currentJob:
+          t.currentJob,
+
+        rating:
+          t.rating,
+
+        serviceArea:
+          t.serviceArea,
+
+        vehicleType:
+          t.vehicleType,
+      })
+    );
+
+    set({
+      technicians:
+        mappedTechs,
+    });
+  } catch (error) {
+    console.error(
+      "Failed loading technicians",
+      error
+    );
+  }
+},
   fetchBookings: async () => {
     try {
      const response =

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdminStore, Technician } from '@/frontend/store/adminStore';
 import { 
   UserCheck, 
@@ -16,7 +16,7 @@ import {
 import { motion } from 'framer-motion';
 
 export default function TechniciansManagement() {
-  const { technicians, toggleTechnicianAvailability, addActivity } = useAdminStore();
+  const { technicians, toggleTechnicianAvailability, addActivity,fetchTechnicians } = useAdminStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAvailability, setFilterAvailability] = useState<string>('all');
   
@@ -27,42 +27,106 @@ export default function TechniciansManagement() {
   const [newTechArea, setNewTechArea] = useState('');
   const [newTechVehicle, setNewTechVehicle] = useState('Flatbed Tow Truck');
 
+  useEffect(() => {
+  fetchTechnicians();
+}, []);
+
   const handleToggle = (id: string) => {
     toggleTechnicianAvailability(id);
   };
 
-  const handleAddTechnician = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTechName || !newTechPhone || !newTechArea) return;
+  const handleAddTechnician = async (
+  e: React.FormEvent
+) => {
+  e.preventDefault();
 
-    const newId = `TECH-0${technicians.length + 1}`;
-    
-    // Add to Zustand using a custom activity (simulate add)
-    const newTech: Technician = {
-      id: newId,
-      name: newTechName,
-      phone: newTechPhone,
-      availability: 'available',
-      currentJob: null,
-      rating: 5.0,
-      serviceArea: newTechArea,
-      vehicleType: newTechVehicle,
-    };
-    
-    // We can add it directly to store state!
-    useAdminStore.setState((state) => ({
-      technicians: [...state.technicians, newTech],
-    }));
+  if (
+    !newTechName ||
+    !newTechPhone ||
+    !newTechArea
+  )
+    return;
 
-    addActivity(`New technician ${newTechName} (${newTechVehicle}) successfully registered on duty.`, 'dispatch');
-    
-    // Reset & close
-    setNewTechName('');
-    setNewTechPhone('');
-    setNewTechArea('');
+  const phone =
+  newTechPhone.replace(
+    /\D/g,
+    ""
+  );
+
+if (phone.length !== 10) {
+  alert(
+    "Enter valid 10 digit mobile number"
+  );
+  return;
+}  
+
+  try {
+    const newId = `TECH-${Date.now()}`;
+
+    const response =
+      await fetch(
+        "/api/technicians",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            technicianId:
+              newId,
+
+            name:
+              newTechName,
+
+            phone:
+              newTechPhone,
+
+            availability:
+              "available",
+
+            currentJob:
+              null,
+
+            rating:
+              5,
+
+            serviceArea:
+              newTechArea,
+
+            vehicleType:
+              newTechVehicle,
+          }),
+        }
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        "Failed to save technician"
+      );
+    }
+
+    addActivity(
+      `New technician ${newTechName} (${newTechVehicle}) successfully registered on duty.`,
+      "dispatch"
+    );
+
+    setNewTechName("");
+    setNewTechPhone("");
+    setNewTechArea("");
     setShowAddModal(false);
-  };
 
+    window.location.reload();
+  } catch (error) {
+    console.error(error);
+
+    alert(
+      "Failed to add technician"
+    );
+  }
+};
   // Filter Technicians
   const filteredTechs = technicians.filter(tech => {
     const matchesSearch = 
@@ -302,9 +366,15 @@ export default function TechniciansManagement() {
                   <input
                     type="tel"
                     required
-                    placeholder="e.g. +91 99999 00000"
+                    placeholder="Enter 10 digit mobile number"
                     value={newTechPhone}
-                    onChange={(e) => setNewTechPhone(e.target.value)}
+                    onChange={(e) =>
+  setNewTechPhone(
+    e.target.value
+      .replace(/\D/g, "")
+      .slice(0, 10)
+  )
+}
                     className="w-full bg-background border border-white/10 focus:border-primary/50 text-xs px-9 py-2.5 rounded-lg outline-none text-white font-semibold"
                   />
                 </div>
