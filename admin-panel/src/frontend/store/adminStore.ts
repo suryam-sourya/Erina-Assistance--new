@@ -127,91 +127,91 @@ interface AdminState {
 
 // Seed Initial Mock Data
 const initialBookings: Booking[] = [
-  {
-    id: 'ER-4892',
-    customerName: 'Arjun Krishnan',
-    customerPhone: '+91 98450 12345',
-    serviceType: 'battery',
-    serviceLabel: 'Battery Jumpstart',
-    vehicleName: 'Tata Nexon EV',
-    vehiclePlate: 'KA-03-MY-7890',
-    technicianId: 'TECH-02',
-    technicianName: 'Ramesh Kumar',
-    status: 'in-progress',
-    paymentStatus: 'pending',
-    paymentAmount: 1800,
-    createdTime: '22 Mins Ago',
-    location: 'Nandi Hills Road, Bangalore',
-    coordinates: { lat: 13.3702, lng: 77.6835 },
-  },
-  {
-    id: 'ER-4891',
-    customerName: 'Sneha Reddy',
-    customerPhone: '+91 98450 54321',
-    serviceType: 'towing',
-    serviceLabel: 'Flatbed Towing',
-    vehicleName: 'Hyundai Creta',
-    vehiclePlate: 'KA-51-ND-2024',
-    technicianId: 'TECH-01',
-    technicianName: 'Amit Singh',
-    status: 'assigned',
-    paymentStatus: 'pending',
-    paymentAmount: 4500,
-    createdTime: '28 Mins Ago',
-    location: 'NICE Road Expressway, Bangalore',
-    coordinates: { lat: 12.8761, lng: 77.5011 },
-  },
-  {
-    id: 'ER-4890',
-    customerName: 'Dr. Vijay Shekhar',
-    customerPhone: '+91 97760 98765',
-    serviceType: 'ev',
-    serviceLabel: 'Mobile EV Charging',
-    vehicleName: 'MG ZS EV',
-    vehiclePlate: 'KA-01-EV-4455',
-    technicianId: 'TECH-03',
-    technicianName: 'Vikram Rao',
-    status: 'completed',
-    paymentStatus: 'completed',
-    paymentAmount: 2500,
-    createdTime: '1 Hour Ago',
-    location: 'Outer Ring Road, Marathahalli',
-    coordinates: { lat: 12.9562, lng: 77.7011 },
-  },
-  {
-    id: 'ER-4889',
-    customerName: 'Priya Mudaliar',
-    customerPhone: '+91 91234 56789',
-    serviceType: 'lockout',
-    serviceLabel: 'Lockout Assistance',
-    vehicleName: 'Maruti Baleno',
-    vehiclePlate: 'KA-04-PH-9911',
-    technicianId: 'TECH-04',
-    technicianName: 'Nitesh Gowda',
-    status: 'completed',
-    paymentStatus: 'completed',
-    paymentAmount: 1500,
-    createdTime: '2 Hours Ago',
-    location: 'Phoenix Marketcity, Whitefield',
-    coordinates: { lat: 12.9961, lng: 77.7291 },
-  },
-  {
-    id: 'ER-4893',
-    customerName: 'Rohit Sharma',
-    customerPhone: '+91 99887 76655',
-    serviceType: 'towing',
-    serviceLabel: 'Accident Flatbed Towing',
-    vehicleName: 'Mahindra XUV700',
-    vehiclePlate: 'KA-53-MS-0007',
-    technicianId: null,
-    technicianName: null,
-    status: 'emergency',
-    paymentStatus: 'pending',
-    paymentAmount: 5200,
-    createdTime: '2 Mins Ago',
-    location: 'Hebbal Flyover, Bangalore',
-    coordinates: { lat: 13.0358, lng: 77.5978 },
-  },
+  // {
+  //   id: 'ER-4892',
+  //   customerName: 'Arjun Krishnan',
+  //   customerPhone: '+91 98450 12345',
+  //   serviceType: 'battery',
+  //   serviceLabel: 'Battery Jumpstart',
+  //   vehicleName: 'Tata Nexon EV',
+  //   vehiclePlate: 'KA-03-MY-7890',
+  //   technicianId: 'TECH-02',
+  //   technicianName: 'Ramesh Kumar',
+  //   status: 'in-progress',
+  //   paymentStatus: 'pending',
+  //   paymentAmount: 1800,
+  //   createdTime: '22 Mins Ago',
+  //   location: 'Nandi Hills Road, Bangalore',
+  //   coordinates: { lat: 13.3702, lng: 77.6835 },
+  // },
+  // {
+  //   id: 'ER-4891',
+  //   customerName: 'Sneha Reddy',
+  //   customerPhone: '+91 98450 54321',
+  //   serviceType: 'towing',
+  //   serviceLabel: 'Flatbed Towing',
+  //   vehicleName: 'Hyundai Creta',
+  //   vehiclePlate: 'KA-51-ND-2024',
+  //   technicianId: 'TECH-01',
+  //   technicianName: 'Amit Singh',
+  //   status: 'assigned',
+  //   paymentStatus: 'pending',
+  //   paymentAmount: 4500,
+  //   createdTime: '28 Mins Ago',
+  //   location: 'NICE Road Expressway, Bangalore',
+  //   coordinates: { lat: 12.8761, lng: 77.5011 },
+  // },
+  // {
+  //   id: 'ER-4890',
+  //   customerName: 'Dr. Vijay Shekhar',
+  //   customerPhone: '+91 97760 98765',
+  //   serviceType: 'ev',
+  //   serviceLabel: 'Mobile EV Charging',
+  //   vehicleName: 'MG ZS EV',
+  //   vehiclePlate: 'KA-01-EV-4455',
+  //   technicianId: 'TECH-03',
+  //   technicianName: 'Vikram Rao',
+  //   status: 'completed',
+  //   paymentStatus: 'completed',
+  //   paymentAmount: 2500,
+  //   createdTime: '1 Hour Ago',
+  //   location: 'Outer Ring Road, Marathahalli',
+  //   coordinates: { lat: 12.9562, lng: 77.7011 },
+  // },
+  // {
+  //   id: 'ER-4889',
+  //   customerName: 'Priya Mudaliar',
+  //   customerPhone: '+91 91234 56789',
+  //   serviceType: 'lockout',
+  //   serviceLabel: 'Lockout Assistance',
+  //   vehicleName: 'Maruti Baleno',
+  //   vehiclePlate: 'KA-04-PH-9911',
+  //   technicianId: 'TECH-04',
+  //   technicianName: 'Nitesh Gowda',
+  //   status: 'completed',
+  //   paymentStatus: 'completed',
+  //   paymentAmount: 1500,
+  //   createdTime: '2 Hours Ago',
+  //   location: 'Phoenix Marketcity, Whitefield',
+  //   coordinates: { lat: 12.9961, lng: 77.7291 },
+  // },
+  // {
+  //   id: 'ER-4893',
+  //   customerName: 'Rohit Sharma',
+  //   customerPhone: '+91 99887 76655',
+  //   serviceType: 'towing',
+  //   serviceLabel: 'Accident Flatbed Towing',
+  //   vehicleName: 'Mahindra XUV700',
+  //   vehiclePlate: 'KA-53-MS-0007',
+  //   technicianId: null,
+  //   technicianName: null,
+  //   status: 'emergency',
+  //   paymentStatus: 'pending',
+  //   paymentAmount: 5200,
+  //   createdTime: '2 Mins Ago',
+  //   location: 'Hebbal Flyover, Bangalore',
+  //   coordinates: { lat: 13.0358, lng: 77.5978 },
+  // },
 ];
 
 const initialTechnicians: Technician[] = [
@@ -631,6 +631,22 @@ await fetch(
       });
       if (response.ok) {
         await get().fetchBookings();
+        await fetch(
+  `/api/technicians/${technicianId}`,
+  {
+    method: "PATCH",
+    headers: {
+      "Content-Type":
+        "application/json",
+    },
+    body: JSON.stringify({
+      availability: "busy",
+      currentJob: bookingId,
+    }),
+  }
+);
+
+await get().fetchTechnicians();
         // Also update technician state
         set((state) => ({
           technicians: state.technicians.map(t => 
@@ -692,15 +708,22 @@ await fetch(
       if (response.ok) {
         await get().fetchBookings();
         // Update technician local state if completed
-        if (status === 'completed' && targetBooking.technicianId) {
-          set((state) => ({
-            technicians: state.technicians.map(t => 
-              t.id === targetBooking.technicianId 
-                ? { ...t, availability: 'available', currentJob: null } 
-                : t
-            ),
-          }));
-        }
+        await fetch(
+  `/api/technicians/${targetBooking.technicianId}`,
+  {
+    method: "PATCH",
+    headers: {
+      "Content-Type":
+        "application/json",
+    },
+    body: JSON.stringify({
+      availability: "available",
+      currentJob: null,
+    }),
+  }
+);
+
+await get().fetchTechnicians();
         get().addActivity(`Booking ${bookingId} status updated to ${status}.`, 'dispatch');
         return;
       }

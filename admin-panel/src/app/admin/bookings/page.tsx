@@ -37,8 +37,11 @@ export default function BookingsManagement() {
   assignTechnician,
   updateBookingStatus,
   addBooking,
+  fetchTechnicians,
+  fetchBookings,
 } = useAdminStore();
   
+
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -145,7 +148,13 @@ export default function BookingsManagement() {
 
   isPriority: false,
 });
+
+useEffect(() => {
+  fetchBookings();
+  fetchTechnicians();
+}, []);
   // Filter Bookings
+  
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = 
       booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
