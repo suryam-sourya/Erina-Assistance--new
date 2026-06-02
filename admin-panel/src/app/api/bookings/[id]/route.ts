@@ -11,6 +11,21 @@ export async function PUT(
     const resolvedParams = await params;
     const body = await req.json();
 
+    const id = resolvedParams.id;
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+
+    // Fetch the existing booking to analyze status/subStatus transitions
+    const existingBooking = isValidMongoId
+      ? await Booking.findById(id)
+      : await Booking.findOne({ ticketId: id });
+
+    if (!existingBooking) {
+      return NextResponse.json({
+        success: false,
+        error: "Booking not found",
+      }, { status: 404 });
+    }
+
     // Clone request body to safely manipulate properties
     const updateData = { ...body };
 
@@ -19,19 +34,72 @@ export async function PUT(
       updateData.status = updateData.status.toUpperCase();
     }
 
-    // Find and update the booking. We accept both MongoDB ObjectId and custom ticketId (e.g. RSA-3690).
-    const id = resolvedParams.id;
-    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    // When en-route starts, ensure simulator metrics are reset to Ops Central Hub
+    if (updateData.status?.toUpperCase() === "IN_PROGRESS" && updateData.subStatus?.toUpperCase() === "LEAVING_HUB") {
+      updateData.progress = 0;
+      updateData.technicianLocation = { lat: 12.9902, lng: 77.7602 };
+    }
+
+    // Initialize timeline object from existing booking or default fallback
+    const timeline = existingBooking.timeline ? { ...existingBooking.timeline.toObject() } : {
+      confirmedAt: existingBooking.createdAt || new Date(),
+      assignedAt: null,
+      enRouteAt: null,
+      arrivedAt: null,
+      completedAt: null,
+      cancelledAt: null,
+    };
+
+    let timelineUpdated = false;
+
+    // Check status transitions
+    if (updateData.status) {
+      const newStatus = updateData.status.toUpperCase();
+      const oldStatus = existingBooking.status?.toUpperCase();
+
+      if (newStatus === "ASSIGNED" && oldStatus !== "ASSIGNED") {
+        timeline.assignedAt = new Date();
+        timelineUpdated = true;
+      }
+      if (newStatus === "COMPLETED" && oldStatus !== "COMPLETED") {
+        timeline.completedAt = new Date();
+        timelineUpdated = true;
+      }
+      if (newStatus === "CANCELLED" && oldStatus !== "CANCELLED") {
+        timeline.cancelledAt = new Date();
+        timelineUpdated = true;
+      }
+    }
+
+    // Check subStatus transitions
+    if (updateData.subStatus !== undefined) {
+      const newSubStatus = updateData.subStatus ? updateData.subStatus.toUpperCase() : null;
+      const oldSubStatus = existingBooking.subStatus?.toUpperCase();
+
+      if (newSubStatus === "LEAVING_HUB" && oldSubStatus !== "LEAVING_HUB") {
+        timeline.enRouteAt = new Date();
+        timelineUpdated = true;
+      }
+      if (newSubStatus === "ARRIVED" && oldSubStatus !== "ARRIVED") {
+        timeline.arrivedAt = new Date();
+        timelineUpdated = true;
+      }
+    }
+
+    // If technician is newly assigned, make sure assignedAt is captured
+    if (updateData.technicianId && !existingBooking.technicianId) {
+      timeline.assignedAt = new Date();
+      timelineUpdated = true;
+    }
+
+    if (timelineUpdated) {
+      updateData.timeline = timeline;
+    }
+
+    // Find and update the booking
     const booking = isValidMongoId
       ? await Booking.findByIdAndUpdate(id, updateData, { new: true })
       : await Booking.findOneAndUpdate({ ticketId: id }, updateData, { new: true });
-
-    if (!booking) {
-      return NextResponse.json({
-        success: false,
-        error: "Booking not found",
-      }, { status: 404 });
-    }
 
     // Sync dispatcher updates directly to Cloud Firestore Active Sessions channel
     try {
@@ -50,10 +118,32 @@ export async function PUT(
           const fsUpdate: Record<string, any> = {};
           if (body.status) fsUpdate.status = body.status.toLowerCase();
           if (body.subStatus !== undefined) fsUpdate.subStatus = body.subStatus ? body.subStatus.toLowerCase() : null;
-           if (body.technicianId) fsUpdate.technicianId = body.technicianId;
+          if (body.technicianId) fsUpdate.technicianId = body.technicianId;
           if (body.technicianName) fsUpdate.technicianName = body.technicianName;
           if (body.technicianPhone) fsUpdate.technicianPhone = body.technicianPhone;
           if (body.paymentStatus) fsUpdate.paymentStatus = body.paymentStatus.toLowerCase();
+          if (body.serviceType) fsUpdate.serviceType = body.serviceType.toLowerCase();
+          if (body.serviceLabel) fsUpdate.serviceLabel = body.serviceLabel;
+          if (body.paymentAmount !== undefined) fsUpdate.paymentAmount = body.paymentAmount;
+          
+          if (booking.timeline) {
+            fsUpdate.timeline = {
+              confirmedAt: booking.timeline.confirmedAt ? booking.timeline.confirmedAt.toISOString() : null,
+              assignedAt: booking.timeline.assignedAt ? booking.timeline.assignedAt.toISOString() : null,
+              enRouteAt: booking.timeline.enRouteAt ? booking.timeline.enRouteAt.toISOString() : null,
+              arrivedAt: booking.timeline.arrivedAt ? booking.timeline.arrivedAt.toISOString() : null,
+              completedAt: booking.timeline.completedAt ? booking.timeline.completedAt.toISOString() : null,
+              cancelledAt: booking.timeline.cancelledAt ? booking.timeline.cancelledAt.toISOString() : null,
+            };
+          }
+          
+          if (booking.progress !== undefined) fsUpdate.progress = booking.progress;
+          if (booking.technicianLocation) {
+            fsUpdate.technicianLocation = {
+              lat: booking.technicianLocation.lat,
+              lng: booking.technicianLocation.lng,
+            };
+          }
           
           fsPromise = updateDoc(doc(db, "active_bookings", firestoreId), fsUpdate);
         }
@@ -74,6 +164,7 @@ export async function PUT(
     const serviceLabels: Record<string, string> = {
       TOWING: "Flatbed Towing",
       BATTERY: "Battery Jumpstart",
+      URGENT_BATTERY: "Urgent Battery Replacement",
       EV: "Mobile EV Charging",
       LOCKOUT: "Lockout Assistance",
       FUEL: "Emergency Fuel Delivery",
@@ -102,6 +193,16 @@ export async function PUT(
       coordinates: obj.location?.coordinates && Array.isArray(obj.location.coordinates) && obj.location.coordinates.length >= 2
         ? { lat: obj.location.coordinates[1], lng: obj.location.coordinates[0] }
         : { lat: 12.9716, lng: 77.5946 },
+      timeline: obj.timeline || {
+        confirmedAt: obj.createdAt || new Date(),
+        assignedAt: obj.technicianId ? (obj.createdAt || new Date()) : null,
+        enRouteAt: (obj.status === "IN_PROGRESS" || obj.status === "COMPLETED") ? (obj.updatedAt || new Date()) : null,
+        arrivedAt: (obj.status === "IN_PROGRESS" && obj.subStatus === "ARRIVED" || obj.status === "COMPLETED") ? (obj.updatedAt || new Date()) : null,
+        completedAt: obj.status === "COMPLETED" ? (obj.updatedAt || new Date()) : null,
+        cancelledAt: obj.status === "CANCELLED" ? (obj.updatedAt || new Date()) : null,
+      },
+      progress: obj.progress !== undefined ? obj.progress : 0,
+      technicianLocation: obj.technicianLocation || null,
     };
 
     return NextResponse.json(normalizedBooking);
@@ -139,6 +240,7 @@ export async function GET(
     const serviceLabels: Record<string, string> = {
       TOWING: "Flatbed Towing",
       BATTERY: "Battery Jumpstart",
+      URGENT_BATTERY: "Urgent Battery Replacement",
       EV: "Mobile EV Charging",
       LOCKOUT: "Lockout Assistance",
       FUEL: "Emergency Fuel Delivery",
@@ -167,6 +269,16 @@ export async function GET(
       coordinates: obj.location?.coordinates && Array.isArray(obj.location.coordinates) && obj.location.coordinates.length >= 2
         ? { lat: obj.location.coordinates[1], lng: obj.location.coordinates[0] }
         : { lat: 12.9716, lng: 77.5946 },
+      timeline: obj.timeline || {
+        confirmedAt: obj.createdAt || new Date(),
+        assignedAt: obj.technicianId ? (obj.createdAt || new Date()) : null,
+        enRouteAt: (obj.status === "IN_PROGRESS" || obj.status === "COMPLETED") ? (obj.updatedAt || new Date()) : null,
+        arrivedAt: (obj.status === "IN_PROGRESS" && obj.subStatus === "ARRIVED" || obj.status === "COMPLETED") ? (obj.updatedAt || new Date()) : null,
+        completedAt: obj.status === "COMPLETED" ? (obj.updatedAt || new Date()) : null,
+        cancelledAt: obj.status === "CANCELLED" ? (obj.updatedAt || new Date()) : null,
+      },
+      progress: obj.progress !== undefined ? obj.progress : 0,
+      technicianLocation: obj.technicianLocation || null,
     };
 
     return NextResponse.json(normalizedBooking);

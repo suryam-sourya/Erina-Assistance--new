@@ -18,6 +18,7 @@ export interface PricingConfig {
     flatTyre: number;
     fuel: number;
     lockout: number;
+    ev: number;
     engine: number;
     accident: number;
     other: number;
@@ -77,6 +78,18 @@ const SERVICE_KEY_MAP: Record<string, keyof PricingConfig['serviceBaseFees']> = 
 
   lockout:
     'lockout',
+
+  ev:
+    'ev',
+
+  'ev assistance':
+    'ev',
+
+  'ev-assistance':
+    'ev',
+
+  evassistance:
+    'ev',
 
   engine:
     'engine',
@@ -154,10 +167,11 @@ export const DEFAULT_PRICING: PricingConfig = {
   serviceBaseFees: {
     towing:   1800,
     battery:   900,
-    urgentBattery: 5000,
+    urgentBattery: 3000,
     flatTyre:  700,
-    fuel:      600,
-    lockout:   800,
+    fuel:      200,
+    lockout:   500,
+    ev:        600,
     engine:   2000,
     accident: 2500,
     other:     750,

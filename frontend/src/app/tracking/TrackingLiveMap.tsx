@@ -10,6 +10,8 @@ interface TrackingLiveMapProps {
   status: string;
   subStatus: string | null;
   technicianName: string | null;
+  progress: number;
+  technicianLocation: { lat: number; lng: number } | null;
 }
 
 // 🏢 Erina Ops Central Hub (Kadugodi, Bangalore)
@@ -37,6 +39,8 @@ export default function TrackingLiveMap({
   status,
   subStatus,
   technicianName,
+  progress,
+  technicianLocation,
 }: TrackingLiveMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -48,7 +52,7 @@ export default function TrackingLiveMap({
   const routeLineRef = useRef<any>(null);
 
   const [distance, setDistance] = useState<number>(0);
-  const [progress, setProgress] = useState<number>(0); // Simulated en-route progress
+  const [smoothProgress, setSmoothProgress] = useState<number>(0); // Sleek linear interpolation (lerp) state
 
   // Calculate geodesic distance on coordinates update
   useEffect(() => {
@@ -56,22 +60,39 @@ export default function TrackingLiveMap({
     setDistance(dist);
   }, [customerLat, customerLng]);
 
-  // Simulated Real-Time Journey Animation (leaving_hub -> en-route)
+  // Smoothly interpolate progress en-route over the 4-second refresh cycle
   useEffect(() => {
-    if (status.toLowerCase() !== "in-progress" || subStatus !== "leaving_hub") {
-      setProgress(0);
+    const rawStatus = (status || '').toLowerCase();
+    const cleanStatus = rawStatus === 'in_progress' ? 'in-progress' : rawStatus;
+    const cleanSubStatus = subStatus ? subStatus.toLowerCase() : null;
+
+    if (cleanStatus !== "in-progress" || cleanSubStatus !== "leaving_hub") {
+      setSmoothProgress(0);
       return;
     }
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + 0.012; // Smooth incremental travel steps
-        return next >= 1 ? 0 : next;
-      });
-    }, 450);
+    let animationFrame: number;
+    const start = Date.now();
+    const duration = 4000; // 4-second simulation interval
+    const initialProgress = smoothProgress;
+    const targetProgress = progress;
 
-    return () => clearInterval(interval);
-  }, [status, subStatus]);
+    const animate = () => {
+      const elapsed = Date.now() - start;
+      const t = Math.min(1, elapsed / duration);
+      
+      // Linear progression slider
+      const nextProgress = initialProgress + t * (targetProgress - initialProgress);
+      setSmoothProgress(nextProgress);
+
+      if (t < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [progress, status, subStatus]);
 
   // Leaflet initialization and dynamic pin updates
   useEffect(() => {
@@ -153,8 +174,8 @@ export default function TrackingLiveMap({
 
         if (status === "in-progress") {
           if (subStatus === "leaving_hub") {
-            techLat = HUB_LAT + progress * (customerLat - HUB_LAT);
-            techLng = HUB_LNG + progress * (customerLng - HUB_LNG);
+            techLat = HUB_LAT + smoothProgress * (customerLat - HUB_LAT);
+            techLng = HUB_LNG + smoothProgress * (customerLng - HUB_LNG);
           } else if (subStatus === "arrived") {
             techLat = customerLat;
             techLng = customerLng;
@@ -206,7 +227,7 @@ export default function TrackingLiveMap({
         }
       }
     });
-  }, [customerLat, customerLng, status, subStatus, technicianName, progress]);
+  }, [customerLat, customerLng, status, subStatus, technicianName, smoothProgress]);
 
   // Component unmount map cleanup
   useEffect(() => {

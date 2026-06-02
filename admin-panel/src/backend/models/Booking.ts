@@ -67,6 +67,21 @@ zohoInvoiceUrl: {
       submittedAt: { type: Date, default: Date.now },
     },
 
+    timeline: {
+      confirmedAt: { type: Date, default: Date.now },
+      assignedAt: { type: Date },
+      enRouteAt: { type: Date },
+      arrivedAt: { type: Date },
+      completedAt: { type: Date },
+      cancelledAt: { type: Date },
+    },
+
+    progress: { type: Number, default: 0 },
+    technicianLocation: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
+
     // ── Products Sold On-Site ─────────────────────────────────────────────
     // Populated when a technician sells a physical product (e.g. battery, tyre)
     // during the service call. Each entry is a snapshot at time of sale.

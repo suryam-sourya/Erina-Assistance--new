@@ -2,6 +2,8 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { useAdminStore, Booking, Technician, Product } from '@/frontend/store/adminStore';
+import { useSettingsStore } from '@/frontend/store/settingsStore';
+import { calculatePrice } from '@/frontend/lib/pricingEngine';
 import { 
   Search, 
   Filter, 
@@ -39,7 +41,10 @@ export default function BookingsManagement() {
   addBooking,
   fetchTechnicians,
   fetchBookings,
+  updateBookingService,
 } = useAdminStore();
+
+  const { pricing } = useSettingsStore();
   
 
   // Search & Filter state
@@ -49,6 +54,16 @@ export default function BookingsManagement() {
 
   // Assign Tech Modal State
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isEditingService, setIsEditingService] = useState(false);
+  const [editingServiceType, setEditingServiceType] = useState<Booking['serviceType']>('other');
+
+  useEffect(() => {
+    if (selectedBooking) {
+      setEditingServiceType(selectedBooking.serviceType);
+    } else {
+      setIsEditingService(false);
+    }
+  }, [selectedBooking]);
 
   // Incident Image Preview State
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -556,9 +571,23 @@ alert(
 
                         {/* Service */}
                         <td className="py-4 px-5">
-                          <span className={`px-2.5 py-0.8 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}>
-                            {booking.serviceLabel}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-0.8 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}>
+                              {booking.serviceLabel}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedBooking(booking);
+                                setIsEditingService(true);
+                              }}
+                              className="p-1.5 bg-white/5 hover:bg-white/10 text-foreground/45 hover:text-white rounded-lg transition-all border border-white/5 cursor-pointer flex items-center justify-center"
+                              title="Modify Booking Service"
+                            >
+                              <Wrench size={10} />
+                            </button>
+                          </div>
                         </td>
 
                         {/* Vehicle */}
@@ -671,12 +700,21 @@ alert(
                               <>
                                 {/* If unassigned, show Assign Technician */}
                                 {!booking.technicianId ? (
-                                  <button
-                                    onClick={() => setSelectedBooking(booking)}
-                                    className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/20"
-                                  >
-                                    Dispatch Technician
-                                  </button>
+                                  <>
+                                    <button
+                                      onClick={() => setSelectedBooking(booking)}
+                                      className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/20"
+                                    >
+                                      Dispatch Technician
+                                    </button>
+                                    <button
+                                      onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                      className="px-3 py-1.5 bg-emergency/15 hover:bg-emergency/25 text-emergency border border-emergency/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                      title="Cancel and abort this roadside request"
+                                    >
+                                      Cancel Booking
+                                    </button>
+                                  </>
                                 ) : (
                                   <>
                                     {/* Assigned (collecting_tools) -> En Route (leaving_hub) */}
@@ -731,6 +769,15 @@ alert(
                                         Activate Case
                                       </button>
                                     )}
+
+                                    {/* Cancel Active Dispatch */}
+                                    <button
+                                      onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                      className="px-3 py-1.5 bg-emergency/15 hover:bg-emergency/25 text-emergency border border-emergency/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                      title="Abort dispatch and recall technician to hub"
+                                    >
+                                      Cancel
+                                    </button>
                                   </>
                                 )}
                               </>
@@ -796,9 +843,7 @@ alert(
 
                                   <div className="relative flex items-center justify-between w-full px-2">
                                     {/* Horizontal connector line */}
-                                    <div className="absolute left-8 right-8 top-5 h-[2px] bg-white/5 -z-10" />
-                                    
-                                    {/* Milestone Nodes */}
+                                                              {/* Milestone Nodes */}
                                     {/* Node 1: Setup */}
                                     <div className="flex flex-col items-center text-center max-w-[70px]">
                                       <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
@@ -812,6 +857,11 @@ alert(
                                       <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
                                         {booking.status === 'pending' || booking.status === 'emergency' ? 'Pending Queue' : 'Incident Logged'}
                                       </span>
+                                      {booking.timeline?.confirmedAt && (
+                                        <span className="text-[7.5px] text-success/75 mt-0.5 font-bold font-mono uppercase bg-success/5 border border-success/15 px-1.5 py-0.5 rounded">
+                                          {new Date(booking.timeline.confirmedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      )}
                                     </div>
 
                                     {/* Node 2: Collecting Tools */}
@@ -829,6 +879,11 @@ alert(
                                       <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
                                         {booking.status === 'assigned' && booking.subStatus === 'collecting_tools' ? 'Gathering Gear' : (booking.status === 'pending' || booking.status === 'emergency' ? 'Awaiting Dispatch' : 'Unit Loaded')}
                                       </span>
+                                      {booking.timeline?.assignedAt && (
+                                        <span className="text-[7.5px] text-success/75 mt-0.5 font-bold font-mono uppercase bg-success/5 border border-success/15 px-1.5 py-0.5 rounded">
+                                          {new Date(booking.timeline.assignedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      )}
                                     </div>
 
                                     {/* Node 3: Outbound */}
@@ -846,6 +901,11 @@ alert(
                                       <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
                                         {booking.status === 'in-progress' && booking.subStatus === 'leaving_hub' ? 'Leaving station' : (booking.status === 'completed' || (booking.status === 'in-progress' && booking.subStatus === 'arrived') ? 'Left Hub' : 'En-route')}
                                       </span>
+                                      {booking.timeline?.enRouteAt && (
+                                        <span className="text-[7.5px] text-success/75 mt-0.5 font-bold font-mono uppercase bg-success/5 border border-success/15 px-1.5 py-0.5 rounded">
+                                          {new Date(booking.timeline.enRouteAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      )}
                                     </div>
 
                                     {/* Node 4: On-Scene */}
@@ -863,6 +923,11 @@ alert(
                                       <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
                                         {booking.status === 'in-progress' && booking.subStatus === 'arrived' ? 'Active Rescue' : (booking.status === 'completed' ? 'Arrived' : 'On-Scene')}
                                       </span>
+                                      {booking.timeline?.arrivedAt && (
+                                        <span className="text-[7.5px] text-success/75 mt-0.5 font-bold font-mono uppercase bg-success/5 border border-success/15 px-1.5 py-0.5 rounded">
+                                          {new Date(booking.timeline.arrivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      )}
                                     </div>
 
                                     {/* Node 5: Success */}
@@ -878,6 +943,11 @@ alert(
                                       <span className="text-[8px] text-foreground/40 mt-1 font-semibold leading-normal">
                                         {booking.status === 'completed' ? 'Case Resolved' : 'Ticket Open'}
                                       </span>
+                                      {booking.timeline?.completedAt && (
+                                        <span className="text-[7.5px] text-success/75 mt-0.5 font-bold font-mono uppercase bg-success/5 border border-success/15 px-1.5 py-0.5 rounded">
+                                          {new Date(booking.timeline.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      )}
                                     </div>
 
                                   </div>
@@ -931,9 +1001,15 @@ alert(
           >
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
               <div>
-                <h3 className="text-sm font-black text-white uppercase tracking-widest">Select Rescue Operator</h3>
+                <h3 className="text-sm font-black text-white uppercase tracking-widest">
+                  {selectedBooking.status === 'completed' || selectedBooking.status === 'cancelled'
+                    ? "Modify Incident Record"
+                    : "Select Rescue Operator"}
+                </h3>
                 <p className="text-[9px] text-foreground/45 uppercase tracking-wider font-semibold mt-1">
-                  Assign unit to Booking {selectedBooking.id} ({selectedBooking.serviceLabel})
+                  {selectedBooking.status === 'completed' || selectedBooking.status === 'cancelled'
+                    ? `Update Service Details for Incident ${selectedBooking.id}`
+                    : `Assign unit to Booking ${selectedBooking.id} (${selectedBooking.serviceLabel})`}
                 </p>
               </div>
               <button 
@@ -957,46 +1033,158 @@ alert(
                 <span className="text-foreground/45 font-bold uppercase tracking-wider">Requester</span>
                 <span className="text-white font-bold">{selectedBooking.customerName}</span>
               </div>
-            </div>
-
-            {/* List Available Technicians */}
-            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-              <h4 className="text-[10px] text-foreground/45 font-black uppercase tracking-widest mb-2">Available Dispatch Units</h4>
-              
-              {getAvailableTechsForService(selectedBooking.serviceType).length > 0 ? (
-                getAvailableTechsForService(selectedBooking.serviceType).map((tech) => (
-                  <div 
-                    key={tech.id}
-                    className="bg-background/40 hover:bg-white/3 border border-white/5 hover:border-primary/30 p-4 rounded-xl flex items-center justify-between gap-4 transition-all group"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-white">{tech.name}</span>
-                        <span className="text-[9px] bg-success/20 text-success border border-success/35 px-2 py-0.2 rounded-full font-black uppercase tracking-wider">
-                          {tech.rating} ★
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-foreground/45 mt-1 font-semibold">
-                        {tech.vehicleType} | {tech.serviceArea}
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => handleAssignTech(tech.id)}
-                      className="px-3.5 py-2 bg-primary hover:bg-primary-hover text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer group-hover:shadow-md group-hover:shadow-primary/20 flex items-center gap-1"
+              <div className="flex flex-col gap-2 pt-2 border-t border-white/5 mt-1">
+                {isEditingService ? (
+                  <div className="flex flex-col gap-2 bg-black/35 p-3 rounded-lg border border-white/5">
+                    <label className="text-[9px] text-foreground/45 uppercase tracking-wider font-black">
+                      Correct Service Type
+                    </label>
+                    <select
+                      value={editingServiceType}
+                      onChange={(e) => setEditingServiceType(e.target.value as any)}
+                      className="bg-background border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-primary/50 cursor-pointer"
                     >
-                      <span>Deploy Unit</span>
-                      <ChevronRight size={12} />
-                    </button>
+                      <option value="towing">Flatbed Towing</option>
+                      <option value="battery">Battery Jumpstart</option>
+                      <option value="urgent_battery">Urgent Battery Replacement</option>
+                      <option value="ev">Mobile EV Charging</option>
+                      <option value="lockout">Lockout Assistance</option>
+                      <option value="fuel">Emergency Fuel Delivery</option>
+                      <option value="flat_tyre">Flat Tyre Replacement</option>
+                      <option value="engine">Engine Diagnostics</option>
+                      <option value="accident">Accident Recovery</option>
+                      <option value="other">Other Assistance</option>
+                    </select>
+
+                    {/* Pricing Preview */}
+                    {(() => {
+                      const serviceLabels: Record<string, string> = {
+                        towing: "Flatbed Towing",
+                        battery: "Battery Jumpstart",
+                        urgent_battery: "Urgent Battery Replacement",
+                        ev: "Mobile EV Charging",
+                        lockout: "Lockout Assistance",
+                        fuel: "Emergency Fuel Delivery",
+                        flat_tyre: "Flat Tyre Replacement",
+                        engine: "Engine Diagnostics",
+                        accident: "Accident Recovery",
+                        other: "Other Assistance",
+                      };
+
+                      const newPrice = calculatePrice({
+                        serviceType: editingServiceType,
+                        vehicleType: selectedBooking.vehicleType || "Car (Hatchback/Sedan)",
+                        distanceKm: selectedBooking.distanceKm || 10,
+                        isEmergency: selectedBooking.isPriority || false,
+                        config: pricing,
+                      });
+
+                      return (
+                        <div className="flex items-center justify-between text-[10px] text-foreground/60 font-semibold mt-1">
+                          <span>Recalculated Price: <strong className="text-white">₹{newPrice.total}</strong></span>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const newLabel = serviceLabels[editingServiceType] || "Roadside Service";
+                                await updateBookingService(
+                                  selectedBooking.id,
+                                  editingServiceType,
+                                  newLabel,
+                                  newPrice.total
+                                );
+                                // Update current selected booking state so modal updates live
+                                setSelectedBooking({
+                                  ...selectedBooking,
+                                  serviceType: editingServiceType,
+                                  serviceLabel: newLabel,
+                                  paymentAmount: newPrice.total,
+                                });
+                                setIsEditingService(false);
+                              }}
+                              className="px-2 py-0.5 bg-success hover:bg-success-hover text-background font-bold rounded text-[9px] uppercase cursor-pointer"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsEditingService(false);
+                                setEditingServiceType(selectedBooking.serviceType);
+                              }}
+                              className="px-2 py-0.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded text-[9px] uppercase cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
-                ))
-              ) : (
-                <div className="border border-white/5 rounded-xl p-6 text-center text-foreground/30 font-bold uppercase tracking-widest text-[11px] leading-relaxed">
-                  ⚠️ No available technicians in this sector. <br />
-                  <span className="text-[9px] font-semibold text-foreground/20">Go to Technicians panel and set off-duty units to Available.</span>
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-foreground/45 font-bold uppercase tracking-wider">Booked Service</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-bold">
+                        {selectedBooking.serviceLabel} (₹{selectedBooking.paymentAmount})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingServiceType(selectedBooking.serviceType);
+                          setIsEditingService(true);
+                        }}
+                        className="text-primary hover:text-primary-hover p-1 transition-all rounded hover:bg-white/5 cursor-pointer flex items-center justify-center"
+                        title="Edit Service Type"
+                      >
+                        <Wrench size={12} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* List Available Technicians (Only show if booking is active) */}
+            {selectedBooking.status !== 'completed' && selectedBooking.status !== 'cancelled' && (
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                <h4 className="text-[10px] text-foreground/45 font-black uppercase tracking-widest mb-2">Available Dispatch Units</h4>
+                
+                {getAvailableTechsForService(selectedBooking.serviceType).length > 0 ? (
+                  getAvailableTechsForService(selectedBooking.serviceType).map((tech) => (
+                    <div 
+                      key={tech.id}
+                      className="bg-background/40 hover:bg-white/3 border border-white/5 hover:border-primary/30 p-4 rounded-xl flex items-center justify-between gap-4 transition-all group"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-white">{tech.name}</span>
+                          <span className="text-[9px] bg-success/20 text-success border border-success/35 px-2 py-0.2 rounded-full font-black uppercase tracking-wider">
+                            {tech.rating} ★
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-foreground/45 mt-1 font-semibold">
+                          {tech.vehicleType} | {tech.serviceArea}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleAssignTech(tech.id)}
+                        className="px-3.5 py-2 bg-primary hover:bg-primary-hover text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer group-hover:shadow-md group-hover:shadow-primary/20 flex items-center gap-1"
+                      >
+                        <span>Deploy Unit</span>
+                        <ChevronRight size={12} />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="border border-white/5 rounded-xl p-6 text-center text-foreground/30 font-bold uppercase tracking-widest text-[11px] leading-relaxed">
+                    ⚠️ No available technicians in this sector. <br />
+                    <span className="text-[9px] font-semibold text-foreground/20">Go to Technicians panel and set off-duty units to Available.</span>
+                  </div>
+                )}
+              </div>
+            )}
 
           </motion.div>
         </div>

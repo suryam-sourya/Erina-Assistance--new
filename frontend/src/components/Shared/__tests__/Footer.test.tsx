@@ -25,7 +25,7 @@ describe('Footer', () => {
     it('renders the Erina Assistance logo', () => {
       const logo = screen.getByAltText('Erina Assistance') as HTMLImageElement;
       expect(logo).toBeInTheDocument();
-      expect(logo.src).toContain('logo-full.svg');
+      expect(logo.src).toContain('logo-icon.png');
     });
 
     it('renders the tagline text', () => {

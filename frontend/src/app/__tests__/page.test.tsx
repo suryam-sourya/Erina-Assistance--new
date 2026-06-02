@@ -8,9 +8,33 @@ jest.mock('@/components/Home/HeroSection', () => {
   };
 });
 
+jest.mock('@/components/Home/TrustBanner', () => {
+  return function MockTrustBanner() {
+    return <div data-testid="trust-banner">TrustBanner</div>;
+  };
+});
+
 jest.mock('@/components/Home/ServicesSection', () => {
   return function MockServicesSection() {
     return <div data-testid="services-section">ServicesSection</div>;
+  };
+});
+
+jest.mock('@/components/Home/HowItWorksSection', () => {
+  return function MockHowItWorksSection() {
+    return <div data-testid="how-it-works-section">HowItWorksSection</div>;
+  };
+});
+
+jest.mock('@/components/Home/StatsSection', () => {
+  return function MockStatsSection() {
+    return <div data-testid="stats-section">StatsSection</div>;
+  };
+});
+
+jest.mock('@/components/Home/CoverageSection', () => {
+  return function MockCoverageSection() {
+    return <div data-testid="coverage-section">CoverageSection</div>;
   };
 });
 

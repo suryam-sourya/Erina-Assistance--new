@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "@/store/userStore";
 import { 
   Phone, 
   MapPin, 
@@ -52,6 +53,7 @@ export default function MyBookingsPage() {
   const [error, setError] = useState("");
   const [isSubmittingPhone, setIsSubmittingPhone] = useState(false);
   const router = useRouter();
+  const { user } = useUserStore();
 
   // Load phone number on mount
   useEffect(() => {
@@ -60,9 +62,17 @@ export default function MyBookingsPage() {
       if (savedPhone) {
         setStoredPhone(savedPhone);
         fetchBookings(savedPhone);
+      } else if (user?.phoneNumber) {
+        // Sanitize and set user phone number from firebase authentication profile
+        const cleanPhone = user.phoneNumber.replace(/[^\d+]/g, "").trim();
+        if (cleanPhone) {
+          localStorage.setItem("erina_user_phone", cleanPhone);
+          setStoredPhone(cleanPhone);
+          fetchBookings(cleanPhone);
+        }
       }
     }
-  }, []);
+  }, [user]);
 
   const fetchBookings = async (phone: string) => {
     setIsLoading(true);
@@ -209,7 +219,7 @@ export default function MyBookingsPage() {
                 <button
                   type="submit"
                   disabled={isSubmittingPhone}
-                  className="w-full py-4.5 rounded-2xl bg-gradient-to-r from-primary to-orange-600 hover:from-primary/95 hover:to-orange-600/95 text-white font-black uppercase tracking-wider text-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-orange-600 hover:from-primary/95 hover:to-orange-600/95 text-white font-black uppercase tracking-wider text-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmittingPhone ? "Connecting..." : "Retrieve Rescue History"}
                   <ArrowRight size={16} />
@@ -253,7 +263,7 @@ export default function MyBookingsPage() {
                 <button
                   onClick={() => fetchBookings(storedPhone)}
                   disabled={isLoading}
-                  className="px-4.5 py-2.5 rounded-xl glass-panel border border-white/10 hover:bg-white/5 transition-colors font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-xl glass-panel border border-white/10 hover:bg-white/5 transition-colors font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw size={14} className={isLoading ? "animate-spin text-primary" : ""} />
                   Refresh List
@@ -272,7 +282,7 @@ export default function MyBookingsPage() {
               /* Loading Skeleton Screen */
               <div className="space-y-6">
                 {[1, 2].map((i) => (
-                  <div key={i} className="glass-panel border border-white/5 rounded-3xl p-6.5 animate-pulse space-y-4">
+                  <div key={i} className="glass-panel border border-white/5 rounded-3xl p-6 animate-pulse space-y-4">
                     <div className="h-6 w-1/3 bg-white/5 rounded-lg" />
                     <div className="h-4 w-2/3 bg-white/5 rounded-lg" />
                     <div className="h-10 w-24 bg-white/5 rounded-lg" />
@@ -333,7 +343,7 @@ export default function MyBookingsPage() {
                         <motion.div
                           key={b.id}
                           layoutId={b.id}
-                          className="glass-panel border-2 border-emerald-500/20 hover:border-emerald-500/40 rounded-3xl p-6.5 relative overflow-hidden shadow-xl shadow-emerald-500/5 transition-all"
+                          className="glass-panel border-2 border-emerald-500/20 hover:border-emerald-500/40 rounded-3xl p-6 relative overflow-hidden shadow-xl shadow-emerald-500/5 transition-all"
                         >
                           <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
                           
@@ -398,7 +408,7 @@ export default function MyBookingsPage() {
                           </div>
 
                           {/* Live Dispatcher Ticker / Steps */}
-                          <div className="bg-[#111622] border border-white/5 rounded-2xl p-4.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="bg-[#111622] border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                                 <Clock size={20} className="animate-spin" />
@@ -437,7 +447,7 @@ export default function MyBookingsPage() {
                     {pastBookings.map((b) => (
                       <div
                         key={b.id}
-                        className="glass-panel border border-white/10 hover:border-white/15 rounded-2xl p-5.5 relative overflow-hidden transition-all"
+                        className="glass-panel border border-white/10 hover:border-white/15 rounded-2xl p-5 relative overflow-hidden transition-all"
                       >
                         {/* Upper row */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4.5 border-b border-white/5 pb-3">

@@ -1,27 +1,25 @@
 "use client";
 
 import { useEffect, useState, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, MessageSquare, Star, Clock, CheckCircle2, CircleDashed, Search, Navigation, XCircle, Heart, ThumbsUp } from 'lucide-react';
+import { MapPin, Phone, MessageSquare, Star, Clock, CheckCircle2, CircleDashed, Search, Navigation, XCircle, Heart, ThumbsUp, Share2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from "next/navigation";
 const TrackingLiveMap = dynamic(() => import('./TrackingLiveMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full bg-[#0B0F19] animate-pulse rounded-3xl flex items-center justify-center font-bold text-xs text-[#FF3366]/40 uppercase tracking-widest min-h-[500px]">
+    <div className="w-full h-full bg-[#0B0F19] animate-pulse rounded-3xl flex items-center justify-center font-bold text-xs text-[#FF3366]/40 uppercase tracking-widest h-[340px] lg:h-[500px]">
       Initializing GPS Tracking Map...
     </div>
   )
 });
 
 const TECHNICIAN_PHONES: Record<string, string> = {
-  "Amit Singh": "+91 98888 11111",
-  "Ramesh Kumar": "+91 98888 22222",
-  "Vikram Rao": "+91 98888 33333",
-  "Nitesh Gowda": "+91 98888 44444",
-  "Suresh Patil": "+91 98888 55555",
-  "Karthik Raja": "+91 98888 66666",
+  "Wahid": "+91 99010 08741",
+  "Syed Suhel": "+91 99862 03946",
+  "Fayaz": "+91 89706 68830",
+  "Siraj": "+91 76600 66655",
 };
 
 function TrackingContent() {
@@ -42,6 +40,10 @@ function TrackingContent() {
   const [cancelError, setCancelError] = useState('');
   const [cancelSuccess, setCancelSuccess] = useState(false);
 
+  // SLA Countdown States
+  const [slaTimeRemaining, setSlaTimeRemaining] = useState<string>('');
+  const [isSlaOverdue, setIsSlaOverdue] = useState<boolean>(false);
+
   // Feedback System States
   const [feedbackRating, setFeedbackRating] = useState<number>(0);
   const [feedbackHoverRating, setFeedbackHoverRating] = useState<number>(0);
@@ -49,7 +51,105 @@ function TrackingContent() {
   const [feedbackComment, setFeedbackComment] = useState<string>('');
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState<boolean>(false);
   const [feedbackError, setFeedbackError] = useState<string>('');
-  
+
+  // SLA 30-Minute Guarantee Countdown Ticker
+  useEffect(() => {
+    if (!booking) return;
+    
+    const rawStatus = (booking.status || 'pending').toLowerCase();
+    const status = rawStatus === 'in_progress' ? 'in-progress' : rawStatus;
+    
+    if (status === 'completed' || status === 'cancelled') {
+      setSlaTimeRemaining('');
+      return;
+    }
+
+    const confirmedAtStr = booking.timeline?.confirmedAt || booking.createdAt;
+    if (!confirmedAtStr) return;
+
+    const calculateSla = () => {
+      const confirmedTime = new Date(confirmedAtStr).getTime();
+      const targetTime = confirmedTime + 30 * 60 * 1000; // 30 minutes
+      const now = Date.now();
+      const difference = targetTime - now;
+
+      if (difference <= 0) {
+        setIsSlaOverdue(true);
+        const overdueMs = Math.abs(difference);
+        const mins = Math.floor(overdueMs / 60000);
+        const secs = Math.floor((overdueMs % 60000) / 1000);
+        setSlaTimeRemaining(`${mins}m ${secs}s`);
+      } else {
+        setIsSlaOverdue(false);
+        const mins = Math.floor(difference / 60000);
+        const secs = Math.floor((difference % 60000) / 1000);
+        setSlaTimeRemaining(`${mins}:${secs < 10 ? '0' : ''}${secs}`);
+      }
+    };
+
+    calculateSla();
+    const interval = setInterval(calculateSla, 1000);
+
+    return () => clearInterval(interval);
+  }, [booking]);
+
+  // Zomato-style Real-Time GPS simulation loop (runs every 4 seconds when driver is en-route)
+  useEffect(() => {
+    if (!booking || !id) return;
+
+    const rawStatus = (booking.status || 'pending').toLowerCase();
+    const status = rawStatus === 'in_progress' ? 'in-progress' : rawStatus;
+    const rawSubStatus = booking.subStatus ? booking.subStatus.toLowerCase() : null;
+    const subStatus = rawSubStatus === 'leaving-hub' ? 'leaving_hub' : rawSubStatus;
+
+    if (status !== 'in-progress' || subStatus !== 'leaving_hub') return;
+
+    // Kadugodi Ops Central Hub Coordinates
+    const HUB_LAT = 12.9902;
+    const HUB_LNG = 77.7602;
+    const targetLat = booking.location?.lat || booking.location?.coordinates?.[1] || 12.9716;
+    const targetLng = booking.location?.lng || booking.location?.coordinates?.[0] || 77.5946;
+
+    const runSimulation = async () => {
+      try {
+        const currentProgress = booking.progress !== undefined ? booking.progress : 0;
+        if (currentProgress >= 1.0) return;
+
+        // Increase en-route progress by 2.5% every 4 seconds (takes 160 seconds to fully complete route)
+        const nextProgress = Math.min(1.0, currentProgress + 0.025);
+        
+        // Geodesic Linear Interpolation along Hub -> breakdown site route
+        const techLat = HUB_LAT + nextProgress * (targetLat - HUB_LAT);
+        const techLng = HUB_LNG + nextProgress * (targetLng - HUB_LNG);
+
+        // Import firestore actions dynamically
+        const { db } = await import('@/lib/firebase');
+        const { doc, updateDoc } = await import('firebase/firestore');
+
+        if (db && typeof db.app !== 'undefined') {
+          const docRef = doc(db, "active_bookings", id);
+          const updates: Record<string, any> = {
+            progress: nextProgress,
+            technicianLocation: { lat: techLat, lng: techLng }
+          };
+
+          // Once 100% en-route progress is achieved, transition subStatus to arrived automatically!
+          if (nextProgress >= 1.0) {
+            updates.subStatus = "arrived";
+          }
+
+          await updateDoc(docRef, updates);
+        }
+      } catch (err) {
+        console.error("Failed en-route GPS simulation update:", err);
+      }
+    };
+
+    // Run simulation tick every 4 seconds (4000ms)
+    const interval = setInterval(runSimulation, 4000);
+    return () => clearInterval(interval);
+  }, [booking, id]);
+
   // Monitor cancellation window eligibility
   useEffect(() => {
     if (!booking) return;
@@ -159,6 +259,22 @@ function TrackingContent() {
       setIsSubmittingFeedback(false);
     }
   };
+
+  // Auto-redirect to home page when feedback is submitted or already present on completed booking
+  useEffect(() => {
+    if (!booking) return;
+    const rawStatus = (booking.status || 'pending').toLowerCase();
+    const isCompleted = rawStatus === 'completed';
+    const hasFeedback = booking.feedback && booking.feedback.rating > 0;
+
+    if (isCompleted && hasFeedback) {
+      const redirectTimer = setTimeout(() => {
+        router.push("/");
+      }, 4000); // 4 seconds so they can read the Thank You card chimes
+
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [booking, router]);
 
   // Realtime Firestore WebSocket Active Listener with REST fallback
   useEffect(() => {
@@ -364,36 +480,57 @@ function TrackingContent() {
     return status;
   };
 
+  const formatTime = (dateInput: any) => {
+    if (!dateInput) return null;
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   // Calculate dynamic steps based on Mongoose status
   const steps = [
-    { title: 'Booking Confirmed', time: 'Received', completed: true },
+    { 
+      title: 'Booking Confirmed', 
+      time: formatTime(booking.timeline?.confirmedAt || booking.createdAt) 
+        ? `Confirmed at ${formatTime(booking.timeline?.confirmedAt || booking.createdAt)}` 
+        : 'Received', 
+      completed: true 
+    },
     { 
       title: 'Technician Assigned', 
-      time: booking.technicianId 
-        ? (subStatus === 'collecting_tools' ? 'Preparing Gear' : 'Assigned') 
-        : 'Searching...', 
+      time: formatTime(booking.timeline?.assignedAt)
+        ? `Assigned at ${formatTime(booking.timeline.assignedAt)}`
+        : (booking.technicianId 
+            ? (subStatus === 'collecting_tools' ? 'Preparing Gear' : 'Assigned') 
+            : 'Searching...'), 
       completed: !!booking.technicianId,
       current: !booking.technicianId 
     },
     { 
       title: 'Outbound (Left Hub)', 
-      time: (status === 'in-progress' && (subStatus === 'leaving_hub' || subStatus === 'arrived')) || status === 'completed'
-        ? 'En Route' 
-        : (status === 'assigned' ? 'Loading Rig' : 'Pending'), 
+      time: formatTime(booking.timeline?.enRouteAt)
+        ? `Dispatched at ${formatTime(booking.timeline.enRouteAt)}`
+        : ((status === 'in-progress' && (subStatus === 'leaving_hub' || subStatus === 'arrived')) || status === 'completed'
+            ? 'En Route' 
+            : (status === 'assigned' ? 'Loading Rig' : 'Pending')), 
       completed: (status === 'in-progress' && (subStatus === 'leaving_hub' || subStatus === 'arrived')) || status === 'completed',
       current: status === 'assigned' || (status === 'in-progress' && subStatus === 'collecting_tools')
     },
     { 
       title: 'Arrived at Location', 
-      time: (status === 'in-progress' && subStatus === 'arrived') || status === 'completed'
-        ? 'At Scene' 
-        : 'Pending', 
+      time: formatTime(booking.timeline?.arrivedAt)
+        ? `Arrived at ${formatTime(booking.timeline.arrivedAt)}`
+        : ((status === 'in-progress' && subStatus === 'arrived') || status === 'completed'
+            ? 'At Scene' 
+            : 'Pending'), 
       completed: (status === 'in-progress' && subStatus === 'arrived') || status === 'completed',
       current: status === 'in-progress' && subStatus === 'leaving_hub'
     },
     { 
       title: 'Assistance Resolved', 
-      time: status === 'completed' ? 'Resolved' : 'Pending', 
+      time: formatTime(booking.timeline?.completedAt)
+        ? `Resolved at ${formatTime(booking.timeline.completedAt)}`
+        : (status === 'completed' ? 'Resolved' : 'Pending'), 
       completed: status === 'completed',
       current: status === 'in-progress' && subStatus === 'arrived'
     }
@@ -409,7 +546,9 @@ function TrackingContent() {
               <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
               Live Tracking
             </div>
-            <h1 className="text-3xl font-extrabold text-foreground">Booking #{booking.id || booking._id}</h1>
+            <h1 className="text-3xl font-extrabold text-foreground">
+              Booking #{(booking.id || booking._id || "").substring(0, 8).toUpperCase()}
+            </h1>
             <p className="text-foreground/60 mt-2">{booking.serviceLabel} • {booking.address}</p>
           </div>
           
@@ -438,13 +577,21 @@ function TrackingContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Map Section */}
-          <div className="lg:col-span-2 bg-[#0B0F19] rounded-3xl min-h-[500px] relative overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
+          <div className="lg:col-span-2 bg-[#0B0F19] rounded-3xl h-[340px] lg:h-[500px] relative overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
+            {booking && status === 'in-progress' && subStatus === 'leaving_hub' && (
+              <div className="absolute top-4 left-4 z-[1000] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#111827]/90 backdrop-blur-md text-emerald-400 font-mono text-[9px] uppercase tracking-widest border border-emerald-500/20 shadow-2xl">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span>WebSocket Sync: Connected (4s refresh)</span>
+              </div>
+            )}
             <TrackingLiveMap 
               customerLat={booking.location?.lat || 12.9716}
               customerLng={booking.location?.lng || 77.5946}
               status={booking.status}
               subStatus={booking.subStatus || null}
               technicianName={booking.technicianName}
+              progress={booking.progress !== undefined ? booking.progress : 0}
+              technicianLocation={booking.technicianLocation || null}
             />
           </div>
 
@@ -521,8 +668,8 @@ function TrackingContent() {
                       </div>
                       <div>
                         <h3 className="font-extrabold text-foreground text-sm tracking-tight">Thank You!</h3>
-                        <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
-                          Your feedback has been recorded successfully.
+                        <p className="text-[10px] text-emerald-400 font-bold mt-0.5 leading-tight flex items-center gap-1 animate-pulse">
+                          <span>✓ Saved! Redirecting to home page...</span>
                         </p>
                       </div>
                     </div>
@@ -673,6 +820,49 @@ function TrackingContent() {
               </motion.div>
             )}
 
+            {/* Premium SLA Countdown HUD */}
+            {booking && status !== 'completed' && status !== 'cancelled' && slaTimeRemaining && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-3xl p-6 shadow-xl border text-left overflow-hidden relative transition-all ${
+                  isSlaOverdue 
+                    ? "bg-[#FF3366]/5 border-[#FF3366]/20 text-[#FF3366]" 
+                    : "bg-emerald-500/5 border-emerald-500/20 text-emerald-500"
+                }`}
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-current opacity-[0.02] rounded-full blur-xl pointer-events-none" />
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold shrink-0 ${
+                    isSlaOverdue ? "bg-[#FF3366]/10" : "bg-emerald-500/10"
+                  }`}>
+                    <Clock size={24} className={isSlaOverdue ? "animate-pulse" : "animate-spin-slow"} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-extrabold text-foreground text-sm uppercase tracking-wider">
+                      30-Min Rescue SLA
+                    </h3>
+                    <p className="text-[11px] text-foreground/50 mt-1 font-semibold leading-relaxed">
+                      {isSlaOverdue 
+                        ? "SLA Breach — Operations command is actively expediting dispatch." 
+                        : "We guarantee arrival of our roadside technician within 30 minutes."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 border-t border-foreground/5 pt-4 flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground/60">
+                    {isSlaOverdue ? "Time Overdue:" : "Guaranteed Arrival In:"}
+                  </span>
+                  <span className={`font-black text-2xl tracking-wider ${
+                    isSlaOverdue ? "text-[#FF3366] animate-pulse" : "text-emerald-500"
+                  }`}>
+                    {slaTimeRemaining}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+
             {/* Technician Card */}
             <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-800">
 
@@ -710,6 +900,26 @@ function TrackingContent() {
                           <a href={`tel:${operatorPhone}`} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors text-center shadow-md shadow-primary/20">
                             <Phone size={18} /> Call Unit
                           </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const shareText = `Erina RSA: Dispatched Technician ${booking.technicianName} (${operatorPhone}) is on their way in vehicle ${booking.vehicleName} (${booking.vehiclePlate}).`;
+                              if (navigator.share) {
+                                navigator.share({
+                                  title: 'Erina RSA Dispatch',
+                                  text: shareText,
+                                  url: window.location.href
+                                }).catch(console.error);
+                              } else {
+                                navigator.clipboard.writeText(shareText);
+                                alert("Operator contact details copied to clipboard!");
+                              }
+                            }}
+                            className="bg-gray-100 dark:bg-gray-800 text-foreground/80 hover:text-foreground py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shadow-sm cursor-pointer"
+                            title="Share Operator Contact"
+                          >
+                            <Share2 size={18} /> Share Contact
+                          </button>
                         </div>
                       </>
                     );

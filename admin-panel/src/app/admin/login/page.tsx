@@ -127,19 +127,25 @@ export default function AdminLogin() {
       >
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-14 h-14 relative flex items-center justify-center mb-3 transition-transform hover:scale-105 duration-300">
-            <img
-              src="/logo-icon.svg"
-              alt="Erina Assistance"
-              className="w-full h-full object-contain"
-            />
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-11 w-11 relative transition-transform hover:scale-105 duration-300 shrink-0">
+              <img
+                src="/logo-icon.png"
+                alt="Erina Assistance"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="flex flex-col text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold tracking-tight text-white font-sans leading-none">ERINA</span>
+                <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider shrink-0">Ops</span>
+              </div>
+              <span className="text-[10px] text-foreground/45 uppercase tracking-widest font-semibold mt-0.5 leading-none">ASSISTANCE</span>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-1.5 justify-center">
-            <span className="text-xl font-black tracking-wider text-white uppercase">Erina</span>
-            <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Assistance</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold uppercase tracking-widest text-[9px]">
+            Dispatcher Operations Hub
           </div>
-          <p className="text-xs text-foreground/40 mt-1 font-semibold uppercase tracking-widest">Dispatcher Operations Hub</p>
         </div>
 
         {/* Tab Toggle */}

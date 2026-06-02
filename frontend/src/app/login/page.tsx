@@ -106,29 +106,22 @@ export default function LoginPage() {
       >
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center gap-2.5 mb-4 group">
-            {/* Logo Icon */}
-            <div className="relative h-9 w-9 shrink-0 transition-transform group-hover:scale-105 duration-300">
+          <Link href="/" className="inline-flex items-center justify-center gap-3 mb-4 group">
+            <div className="relative h-10 w-10 transition-transform group-hover:scale-105 duration-300">
               <Image
-                src="/logo-icon.svg"
+                src="/logo-icon.png"
                 alt="Erina Assistance"
                 fill
                 className="object-contain"
                 priority
               />
             </div>
-            
-            {/* Brand Text */}
             <div className="flex flex-col text-left">
-              <div className="flex items-center gap-1 leading-none">
-                <span className="text-lg font-black tracking-wider text-foreground uppercase">Erina</span>
-                <span className="text-[7px] bg-primary/15 text-primary border border-primary/20 px-1 py-0 rounded-full font-black uppercase tracking-widest scale-90 origin-left">
-                  RSA
-                </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary duration-300">ERINA</span>
+                <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">BETA</span>
               </div>
-              <span className="text-[8px] text-foreground/45 uppercase tracking-wider font-extrabold block mt-0.5">
-                Assistance
-              </span>
+              <span className="text-[10px] text-foreground/50 uppercase tracking-widest font-semibold mt-0.5 leading-none">ASSISTANCE</span>
             </div>
           </Link>
           <h2 className="text-2xl font-black text-foreground mb-1.5">

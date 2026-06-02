@@ -153,6 +153,14 @@ export async function POST(req: Request) {
       paymentStatus: rawPaymentStatus.toUpperCase(),
       paymentAmount: rawPaymentAmount,
       createdBy: null,
+      timeline: {
+        confirmedAt: new Date(),
+        assignedAt: null,
+        enRouteAt: null,
+        arrivedAt: null,
+        completedAt: null,
+        cancelledAt: null,
+      },
 
       // 2. Flat Compatibilities for frontend/Zustand store (prevent layout crash)
       userId: sanitizeString(userId),
@@ -194,7 +202,15 @@ export async function POST(req: Request) {
           technicianName: null,
           technicianPhone: null,
           imageUrl: rawImageUrl || null,
-          createdTime: new Date().toISOString()
+          createdTime: new Date().toISOString(),
+          timeline: {
+            confirmedAt: new Date().toISOString(),
+            assignedAt: null,
+            enRouteAt: null,
+            arrivedAt: null,
+            completedAt: null,
+            cancelledAt: null,
+          },
         });
 
         // Enforce 1.2-second write limit to guarantee fast response

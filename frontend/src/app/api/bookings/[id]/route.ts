@@ -28,6 +28,7 @@ export async function GET(
     const serviceLabels: Record<string, string> = {
       TOWING: "Flatbed Towing",
       BATTERY: "Battery Jumpstart",
+      URGENT_BATTERY: "Urgent Battery Replacement",
       EV: "Mobile EV Charging",
       LOCKOUT: "Lockout Assistance",
       FUEL: "Emergency Fuel Delivery",
@@ -54,6 +55,16 @@ export async function GET(
       location: obj.location?.coordinates && Array.isArray(obj.location.coordinates) && obj.location.coordinates.length >= 2
         ? { lat: obj.location.coordinates[1], lng: obj.location.coordinates[0] } // [longitude, latitude] to {lat, lng}
         : (obj.location || { lat: 12.9716, lng: 77.5946 }),
+      timeline: obj.timeline || {
+        confirmedAt: obj.createdAt || new Date(),
+        assignedAt: obj.technicianId ? (obj.createdAt || new Date()) : null,
+        enRouteAt: (obj.status === "IN_PROGRESS" || obj.status === "COMPLETED") ? (obj.updatedAt || new Date()) : null,
+        arrivedAt: (obj.status === "IN_PROGRESS" && obj.subStatus === "ARRIVED" || obj.status === "COMPLETED") ? (obj.updatedAt || new Date()) : null,
+        completedAt: obj.status === "COMPLETED" ? (obj.updatedAt || new Date()) : null,
+        cancelledAt: obj.status === "CANCELLED" ? (obj.updatedAt || new Date()) : null,
+      },
+      progress: obj.progress !== undefined ? obj.progress : 0,
+      technicianLocation: obj.technicianLocation || null,
     };
 
     return NextResponse.json({
@@ -119,6 +130,19 @@ export async function DELETE(
     // 4. Perform cancellation in MongoDB
     booking.status = "CANCELLED";
     booking.paymentStatus = "CANCELLED";
+    
+    // Initialize or load timeline object
+    const timeline = booking.timeline ? booking.timeline : {
+      confirmedAt: booking.createdAt || new Date(),
+      assignedAt: null,
+      enRouteAt: null,
+      arrivedAt: null,
+      completedAt: null,
+      cancelledAt: null,
+    };
+    timeline.cancelledAt = new Date();
+    booking.timeline = timeline;
+    
     await booking.save();
 
     // 5. Sync cancellation to Cloud Firestore
@@ -126,6 +150,14 @@ export async function DELETE(
       if (db && typeof db.app !== 'undefined') {
         const firestorePromise = updateDoc(doc(db, "active_bookings", id), {
           status: "cancelled",
+          timeline: {
+            confirmedAt: timeline.confirmedAt ? timeline.confirmedAt.toISOString() : new Date(booking.createdAt).toISOString(),
+            assignedAt: timeline.assignedAt ? timeline.assignedAt.toISOString() : null,
+            enRouteAt: timeline.enRouteAt ? timeline.enRouteAt.toISOString() : null,
+            arrivedAt: timeline.arrivedAt ? timeline.arrivedAt.toISOString() : null,
+            completedAt: timeline.completedAt ? timeline.completedAt.toISOString() : null,
+            cancelledAt: timeline.cancelledAt.toISOString(),
+          }
         });
 
         // 1.2-second write limit

@@ -76,32 +76,22 @@ export default function Navbar() {
 
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              {/* Brand Logo Container */}
-              <div className="flex items-center gap-2.5">
-                {/* Logo Icon (always crisp SVG) */}
-                <div className="relative h-10 w-10 shrink-0 transition-transform group-hover:scale-105 duration-300">
-                  <Image
-                    src="/logo-icon.svg"
-                    alt="Erina Assistance"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative h-9 w-9 transition-transform group-hover:scale-105 duration-300">
+                <Image
+                  src="/logo-icon.png"
+                  alt="Erina Assistance"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary duration-300">ERINA</span>
+                  <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">BETA</span>
                 </div>
-                
-                {/* Brand Text (styled elegantly, highly responsive) */}
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1">
-                    <span className="text-base md:text-lg font-black tracking-wider text-foreground uppercase">Erina</span>
-                    <span className="text-[8px] bg-primary/15 text-primary border border-primary/20 px-1.5 py-0.1 rounded-full font-black uppercase tracking-widest scale-90 origin-left">
-                      RSA
-                    </span>
-                  </div>
-                  <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-extrabold block -mt-1">
-                    Assistance
-                  </span>
-                </div>
+                <span className="text-[10px] text-foreground/50 uppercase tracking-widest font-semibold mt-0.5 leading-none">ASSISTANCE</span>
               </div>
             </Link>
           </div>
@@ -282,21 +272,40 @@ export default function Navbar() {
                   <div className="px-3">
                     <p className="text-xs font-semibold text-foreground/45">Logged in as:</p>
                     <p className="text-sm font-bold text-foreground truncate mt-0.5">{user.displayName || user.email}</p>
+                    
+                    <Link
+                      href="/my-bookings"
+                      onClick={() => setIsOpen(false)}
+                      className="mt-3 w-full py-3 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
+                    >
+                      <User size={14} />
+                      <span>My Bookings</span>
+                    </Link>
+
                     <button
                       onClick={handleSignOut}
-                      className="mt-3 w-full py-3 rounded-xl bg-red-500/10 text-red-500 font-bold text-sm hover:bg-red-500 hover:text-white transition-all cursor-pointer text-center"
+                      className="mt-2 w-full py-3 rounded-xl bg-red-500/10 text-red-500 font-bold text-sm hover:bg-red-500 hover:text-white transition-all cursor-pointer text-center"
                     >
                       Logout Account
                     </button>
                   </div>
                 ) : (
-                  <Link
-                    href="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="block w-full py-3 text-center rounded-xl border border-gray-200 dark:border-gray-800 text-foreground font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
-                  >
-                    Sign In
-                  </Link>
+                  <div className="px-3 space-y-3">
+                    <Link
+                      href="/my-bookings"
+                      onClick={() => setIsOpen(false)}
+                      className="block w-full py-3 text-center rounded-xl border border-gray-200 dark:border-gray-800 text-foreground font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all text-sm uppercase tracking-wider"
+                    >
+                      My Bookings
+                    </Link>
+                    <Link
+                      href="/login"
+                      onClick={() => setIsOpen(false)}
+                      className="block w-full py-3 text-center rounded-xl bg-primary/10 text-primary font-bold hover:bg-primary hover:text-white transition-all text-sm uppercase tracking-wider"
+                    >
+                      Sign In
+                    </Link>
+                  </div>
                 )}
 
                 <Link

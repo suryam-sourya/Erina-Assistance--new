@@ -45,10 +45,10 @@ export default function BookingPage() {
 
     // Calculate distance to Erina Ops Central Hub (Kadugodi station: 12.9902, 77.7602)
     const dist = calculateDistance(12.9902, 77.7602, lat, lng);
-    setDistanceKm(dist);
+    setDistanceKm(Number(dist.toFixed(2)));
 
-    // Restriction: Primary active SLA grid is East Bangalore (Whitefield, Marathahalli, Kadugodi within 25km radius)
-    if (dist > 25) {
+    // Restriction: Primary active SLA grid is East Bangalore (Whitefield, Marathahalli, Kadugodi within 10km radius)
+    if (dist > 10) {
       setIsOutOfService(true);
     } else {
       setIsOutOfService(false);
@@ -198,9 +198,9 @@ export default function BookingPage() {
       return;
     }
 
-    // SLA Active Area Check - Restrict bookings outside Whitefield/Marathahalli grid (25km hub radius)
-    if (isOutOfService || (coordinates && calculateDistance(12.9902, 77.7602, coordinates.lat, coordinates.lng) > 25)) {
-      setErrorMessage('Service Unavailable: Erina Roadside Assistance only services the Bangalore East region (Whitefield, Marathahalli, Kadugodi, and surrounding areas within 25km of our Central Hub).');
+    // SLA Active Area Check - Restrict bookings outside Whitefield/Marathahalli grid (10km hub radius)
+    if (isOutOfService || (coordinates && calculateDistance(12.9902, 77.7602, coordinates.lat, coordinates.lng) > 10)) {
+      setErrorMessage('Service Unavailable: Erina Roadside Assistance only services locations within a 10 km radius of our Central Hub. Your location is outside our service area.');
       setSubmitStatus('error');
       return;
     }
@@ -498,7 +498,7 @@ export default function BookingPage() {
                     <ShieldAlert className="shrink-0 mt-0.5" size={16} />
                     <div>
                       <strong className="block text-sm font-black uppercase tracking-wider mb-1">Out of Service Area</strong>
-                      Erina Assistance primary active SLA grids are currently restricted to Bengaluru East (Whitefield, Marathahalli, Kadugodi, and areas within a 25km radius from our Kadugodi Central Hub). Bookings are suspended for this location.
+                       Erina Assistance primary active SLA grids are currently restricted to areas within a 10km radius from our Kadugodi Central Hub. Bookings are suspended for this location.
                     </div>
                   </div>
                 )}
@@ -650,7 +650,7 @@ export default function BookingPage() {
                       <span className="font-semibold text-foreground">₹{priceBreakdown.baseFee.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-foreground/60">
-                      <span>Distance ({distanceKm} km)</span>
+                      <span>Distance ({Number(distanceKm).toFixed(1)} km)</span>
                       <span className="font-semibold text-foreground">₹{priceBreakdown.distanceFee.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-foreground/60">

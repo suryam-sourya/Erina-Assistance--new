@@ -39,14 +39,21 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center">
-              <div className="relative h-10 w-44">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative h-9 w-9">
                 <Image
-                  src="/logo-full.svg"
+                  src="/logo-icon.png"
                   alt="Erina Assistance"
                   fill
-                  className="object-contain object-left brightness-0 invert"
+                  className="object-contain"
                 />
+              </div>
+              <div className="flex flex-col text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold tracking-tight text-white transition-colors group-hover:text-primary duration-300">ERINA</span>
+                  <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">BETA</span>
+                </div>
+                <span className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mt-0.5 leading-none">ASSISTANCE</span>
               </div>
             </Link>
             <p className="text-sm text-gray-400 mt-4 leading-relaxed">

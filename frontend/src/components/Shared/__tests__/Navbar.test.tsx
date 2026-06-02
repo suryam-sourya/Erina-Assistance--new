@@ -48,17 +48,10 @@ describe('Navbar', () => {
   });
 
   describe('Logo', () => {
-    it('renders the desktop logo with correct src', () => {
+    it('renders the brand logo with correct src', () => {
       const logos = screen.getAllByAltText('Erina Assistance');
-      // Desktop logo uses logo-icon.svg
-      const desktopLogo = logos.find(img => (img as HTMLImageElement).src.includes('logo-icon.svg'));
-      expect(desktopLogo).toBeDefined();
-    });
-
-    it('renders the mobile logo with warning.png', () => {
-      const logos = screen.getAllByAltText('Erina Assistance');
-      const mobileLogo = logos.find(img => (img as HTMLImageElement).src.includes('warning.png'));
-      expect(mobileLogo).toBeDefined();
+      const brandLogo = logos.find(img => (img as HTMLImageElement).src.includes('logo-icon.png'));
+      expect(brandLogo).toBeDefined();
     });
   });
 

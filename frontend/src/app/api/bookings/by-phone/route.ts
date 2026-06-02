@@ -37,6 +37,7 @@ export async function GET(req: Request) {
     const serviceLabels: Record<string, string> = {
       TOWING: "Flatbed Towing",
       BATTERY: "Battery Jumpstart",
+      URGENT_BATTERY: "Urgent Battery Replacement",
       EV: "Mobile EV Charging",
       LOCKOUT: "Lockout Assistance",
       FUEL: "Emergency Fuel Delivery",

@@ -249,6 +249,7 @@ Record<string, string> = {
     const serviceLabelsMap: Record<string, string> = {
       TOWING: "Flatbed Towing",
       BATTERY: "Battery Jumpstart",
+      URGENT_BATTERY: "Urgent Battery Replacement",
       EV: "Mobile EV Charging",
       LOCKOUT: "Lockout Assistance",
       FUEL: "Emergency Fuel Delivery",

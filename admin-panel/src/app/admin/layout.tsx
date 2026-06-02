@@ -157,26 +157,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         
         {/* Brand Header */}
         <div className="p-6 border-b border-border flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 relative overflow-hidden transition-transform hover:scale-105 duration-300">
+          <Link href="/admin" className="flex items-center gap-2.5 group">
+            <div className="h-9 w-9 relative transition-transform group-hover:scale-105 duration-300 shrink-0">
               <img
-                src="/logo-icon.svg"
+                src="/logo-icon.png"
                 alt="Erina Assistance"
                 className="w-full h-full object-contain"
               />
             </div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="text-base font-black tracking-wider text-white uppercase">Erina</span>
-                <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-widest">Ops</span>
+            <div className="flex flex-col text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-bold tracking-tight text-white font-sans transition-colors group-hover:text-primary duration-300 leading-none">ERINA</span>
+                <span className="text-[7px] bg-primary/20 text-primary border border-primary/30 px-1 py-0.2 rounded-full font-bold uppercase tracking-widest shrink-0">Ops</span>
               </div>
-              <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-semibold block mt-0.5">Control Center</span>
+              <span className="text-[8px] text-foreground/45 uppercase tracking-widest font-semibold mt-0.5 leading-none">ASSISTANCE</span>
             </div>
-          </div>
+          </Link>
           {/* Mobile Close Button */}
           <button 
             onClick={() => setIsMobileMenuOpen(false)}
-            className="md:hidden text-foreground/45 hover:text-white p-1 cursor-pointer transition-colors"
+            className="md:hidden text-foreground/45 hover:text-white p-1 cursor-pointer transition-colors shrink-0"
           >
             <X size={18} />
           </button>

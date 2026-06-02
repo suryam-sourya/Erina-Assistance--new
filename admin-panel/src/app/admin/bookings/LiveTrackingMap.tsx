@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Navigation, Truck, ShieldCheck, AlertTriangle } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import { db } from "@/frontend/lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 interface LiveTrackingMapProps {
   bookingId: string;
@@ -52,7 +54,8 @@ export default function LiveTrackingMap({
   // States
   const [distance, setDistance] = useState<number>(0);
   const [isServiceable, setIsServiceable] = useState<boolean>(true);
-  const [progress, setProgress] = useState<number>(0); // Simulated en-route progress (0 to 1)
+  const [progress, setProgress] = useState<number>(0); // Target en-route progress (0 to 1) synced from Firestore
+  const [smoothProgress, setSmoothProgress] = useState<number>(0); // Sleek linear interpolation (lerp) state
 
   // Calculate distance on mount/update
   useEffect(() => {
@@ -62,22 +65,71 @@ export default function LiveTrackingMap({
     setIsServiceable(dist <= 25);
   }, [customerLat, customerLng]);
 
-  // 🔄 Simulated Real-Time Journey Animation (Zepto-like!)
+  // 1. Listen directly to active Firestore GPS updates in real-time
   useEffect(() => {
-    if (status.toLowerCase() !== "in-progress" || subStatus !== "leaving_hub") {
+    const rawStatus = (status || '').toLowerCase();
+    const cleanStatus = rawStatus === 'in_progress' ? 'in-progress' : rawStatus;
+    const cleanSubStatus = subStatus ? subStatus.toLowerCase() : null;
+
+    if (cleanStatus !== "in-progress" || cleanSubStatus !== "leaving_hub" || !bookingId) {
       setProgress(0);
       return;
     }
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + 0.015; // Smooth incremental steps
-        return next >= 1 ? 0 : next; // Loops for continuous visual animation
-      });
-    }, 450);
+    let unsubscribe: any;
+    try {
+      if (db && typeof db.app !== 'undefined') {
+        unsubscribe = onSnapshot(doc(db, "active_bookings", bookingId), (docSnap) => {
+          if (docSnap.exists()) {
+            const activeData = docSnap.data();
+            if (activeData.progress !== undefined) {
+              setProgress(activeData.progress);
+            }
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Failed to establish real-time Firestore GPS sync in admin panel map:", err);
+    }
 
-    return () => clearInterval(interval);
-  }, [status, subStatus]);
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [bookingId, status, subStatus]);
+
+  // 2. Smoothly interpolate progress en-route over the 4-second refresh cycle
+  useEffect(() => {
+    const rawStatus = (status || '').toLowerCase();
+    const cleanStatus = rawStatus === 'in_progress' ? 'in-progress' : rawStatus;
+    const cleanSubStatus = subStatus ? subStatus.toLowerCase() : null;
+
+    if (cleanStatus !== "in-progress" || cleanSubStatus !== "leaving_hub") {
+      setSmoothProgress(0);
+      return;
+    }
+
+    let animationFrame: number;
+    const start = Date.now();
+    const duration = 4000; // 4 seconds cycle
+    const initialProgress = smoothProgress;
+    const targetProgress = progress;
+
+    const animate = () => {
+      const elapsed = Date.now() - start;
+      const t = Math.min(1, elapsed / duration);
+      
+      // Linear interpolation along progression percentage
+      const nextProgress = initialProgress + t * (targetProgress - initialProgress);
+      setSmoothProgress(nextProgress);
+
+      if (t < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [progress, status, subStatus]);
 
   // Map Initialization & Dynamic Marker Updates
   useEffect(() => {
@@ -162,8 +214,8 @@ export default function LiveTrackingMap({
         if (status === "in-progress") {
           if (subStatus === "leaving_hub") {
             // Smoothly interpolate coordinate along the line Hub -> Customer
-            techLat = HUB_LAT + progress * (customerLat - HUB_LAT);
-            techLng = HUB_LNG + progress * (customerLng - HUB_LNG);
+            techLat = HUB_LAT + smoothProgress * (customerLat - HUB_LAT);
+            techLng = HUB_LNG + smoothProgress * (customerLng - HUB_LNG);
           } else if (subStatus === "arrived") {
             techLat = customerLat;
             techLng = customerLng;
@@ -221,7 +273,7 @@ export default function LiveTrackingMap({
     return () => {
       // Clean up map only when fully unmounting
     };
-  }, [customerLat, customerLng, status, subStatus, technicianName, progress]);
+  }, [customerLat, customerLng, status, subStatus, technicianName, smoothProgress]);
 
   // Clean up Leaflet completely on component unmount
   useEffect(() => {

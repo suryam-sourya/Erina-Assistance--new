@@ -48,6 +48,21 @@ const BookingSchema = new mongoose.Schema(
       submittedAt: { type: Date, default: Date.now },
     },
 
+    timeline: {
+      confirmedAt: { type: Date, default: Date.now },
+      assignedAt: { type: Date },
+      enRouteAt: { type: Date },
+      arrivedAt: { type: Date },
+      completedAt: { type: Date },
+      cancelledAt: { type: Date },
+    },
+
+    progress: { type: Number, default: 0 },
+    technicianLocation: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
+
     // ── Backward Compatibility Flat Fallbacks (Optional) ──────────────────
     userId: String,
     customerName: String,

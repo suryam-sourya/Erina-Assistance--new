@@ -137,9 +137,11 @@ export default function OperationalSettings() {
   const SERVICE_LABELS: { key: keyof ServicePricing; label: string }[] = [
     { key: 'towing',   label: 'Flatbed Towing'  },
     { key: 'battery',  label: 'Battery Jump'     },
+    { key: 'urgentBattery', label: 'Urgent Battery Replacement' },
     { key: 'flatTyre', label: 'Flat Tyre'        },
     { key: 'fuel',     label: 'Fuel Delivery'    },
     { key: 'lockout',  label: 'Lockout'          },
+    { key: 'ev',       label: 'EV Charging'      },
     { key: 'engine',   label: 'Engine Failure'   },
     { key: 'accident', label: 'Accident Recovery'},
     { key: 'other',    label: 'Other'            },

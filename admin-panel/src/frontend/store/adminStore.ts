@@ -29,6 +29,19 @@ export interface Booking {
   location: string;
   imageUrl?: string | null;
   coordinates?: { lat: number; lng: number };
+  timeline?: {
+    confirmedAt?: string | null;
+    assignedAt?: string | null;
+    enRouteAt?: string | null;
+    arrivedAt?: string | null;
+    completedAt?: string | null;
+    cancelledAt?: string | null;
+  } | null;
+  progress?: number;
+  technicianLocation?: { lat: number; lng: number } | null;
+  isPriority?: boolean;
+  vehicleType?: string;
+  distanceKm?: number;
 }
 
 export interface Technician {
@@ -123,6 +136,7 @@ interface AdminState {
   clearAlert: () => void;
   resolveTicket: (ticketId: string) => void;
   addSupportTicket: (ticket: Omit<SupportTicket, 'id' | 'createdTime' | 'status'>) => void;
+  updateBookingService: (bookingId: string, serviceType: Booking['serviceType'], serviceLabel: string, paymentAmount: number) => Promise<void>;
 }
 
 // Seed Initial Mock Data
@@ -532,6 +546,9 @@ await fetch(
         location: b.address || (b.location?.lat ? `${b.location.lat}, ${b.location.lng}` : "Unknown Location"),
         imageUrl: b.imageUrl || null,
         coordinates: b.coordinates || { lat: 12.9716, lng: 77.5946 },
+        isPriority: b.isPriority || false,
+        vehicleType: b.vehicleType || (b.vehicle?.type ? (b.vehicle.type.toLowerCase() === 'car' ? 'Car (Hatchback/Sedan)' : b.vehicle.type) : "Car (Hatchback/Sedan)"),
+        distanceKm: b.distanceKm || 10,
       }));
 
       // Calculate payments based on completed bookings
@@ -697,6 +714,9 @@ await get().fetchTechnicians();
         updateData.paymentStatus = 'completed';
         updateData.subStatus = null;
       }
+      if (status === 'cancelled') {
+        updateData.subStatus = null;
+      }
       
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
@@ -707,23 +727,27 @@ await get().fetchTechnicians();
       
       if (response.ok) {
         await get().fetchBookings();
-        // Update technician local state if completed
-        await fetch(
-  `/api/technicians/${targetBooking.technicianId}`,
-  {
-    method: "PATCH",
-    headers: {
-      "Content-Type":
-        "application/json",
-    },
-    body: JSON.stringify({
-      availability: "available",
-      currentJob: null,
-    }),
-  }
-);
-
-await get().fetchTechnicians();
+        // Update technician local state if completed or cancelled
+        if ((status === 'completed' || status === 'cancelled') && targetBooking.technicianId) {
+          try {
+            await fetch(
+              `/api/technicians/${targetBooking.technicianId}`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  availability: "available",
+                  currentJob: null,
+                }),
+              }
+            );
+          } catch (err) {
+            console.error("Failed to update technician status", err);
+          }
+          await get().fetchTechnicians();
+        }
         get().addActivity(`Booking ${bookingId} status updated to ${status}.`, 'dispatch');
         return;
       }
@@ -941,5 +965,42 @@ await get().fetchTechnicians();
       supportTickets: [newTicket, ...state.supportTickets],
     }));
     get().addActivity(`New Support Ticket ${newId} created for ${ticketData.customerName}.`, 'dispatch');
+  },
+
+  updateBookingService: async (bookingId, serviceType, serviceLabel, paymentAmount) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceType: serviceType.toUpperCase(),
+          serviceLabel,
+          paymentAmount,
+        }),
+      });
+      if (response.ok) {
+        await get().fetchBookings();
+        get().addActivity(`Booking ${bookingId} service updated to ${serviceLabel} (₹${paymentAmount}).`, 'dispatch');
+        return;
+      }
+    } catch (e) {
+      console.warn("MongoDB API updateBookingService failed, using local fallback:", e);
+    }
+
+    // Local fallback
+    set((state) => ({
+      bookings: state.bookings.map(b => 
+        b.id === bookingId 
+          ? { 
+              ...b, 
+              serviceType,
+              serviceLabel,
+              paymentAmount
+            } 
+          : b
+      ),
+    }));
+    get().addActivity(`Booking ${bookingId} service updated to ${serviceLabel} (₹${paymentAmount}) (offline).`, 'dispatch');
   }
 }));

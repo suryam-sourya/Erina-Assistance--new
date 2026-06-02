@@ -39,7 +39,7 @@ const services = [
     description: 'Out of fuel? We deliver petrol or diesel directly to your location.',
     icon: { type: 'lucide', component: <Droplet size={28} />, color: 'from-emerald-500 to-emerald-600' },
     eta: '~20 min',
-    price: '₹600',
+    price: '₹200',
     delay: 0.25,
   },
   {
@@ -48,7 +48,7 @@ const services = [
     description: 'Locked your keys inside? Our experts will safely unlock your vehicle.',
     icon: { type: 'lucide', component: <Key size={28} />, color: 'from-purple-500 to-purple-600' },
     eta: '~18 min',
-    price: '₹800',
+    price: '₹500',
     delay: 0.3,
   },
   {
@@ -57,18 +57,18 @@ const services = [
     description: 'Mobile charging stations for electric vehicles stranded without charge.',
     icon: { type: 'lucide', component: <PlugZap size={28} />, color: 'from-cyan-500 to-cyan-600' },
     eta: '~30 min',
-    price: '₹1,400',
+    price: '₹600',
     delay: 0.35,
   },
   {
-  id: 'urgent-battery',
-  title: 'Urgent Battery',
-  description: 'Emergency battery replacement & jumpstart at your location',
-  icon: { type: 'lucide', component: <Zap size={28} />,color:'from-orange-500 to-red-500'},
-  eta: '~25 min',
-  price: '₹5000',
-  delay: 0.3,
-}
+    id: 'urgent-battery',
+    title: 'Urgent Battery',
+    description: 'Emergency battery replacement & jumpstart at your location',
+    icon: { type: 'lucide', component: <Zap size={28} />, color: 'from-orange-500 to-red-500' },
+    eta: '~25 min',
+    price: '₹3,000',
+    delay: 0.3,
+  }
 ];
 
 export default function ServicesSection() {
