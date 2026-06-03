@@ -152,6 +152,12 @@ export default function BookingsManagement() {
 useEffect(() => {
   fetchBookings();
   fetchTechnicians();
+
+  const interval = setInterval(() => {
+    fetchBookings();
+  }, 10000); // every 10 sec
+
+  return () => clearInterval(interval);
 }, []);
   // Filter Bookings
   
