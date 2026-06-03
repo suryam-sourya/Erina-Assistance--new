@@ -213,10 +213,13 @@ export default function BookingPage() {
       return;
     }
 
-    // Enforce rigorous vehicle license plate check (min 5 characters)
-    const cleanedPlate = vehicleNumber.replace(/[^a-zA-Z0-9]/g, "");
-    if (cleanedPlate.length < 5) {
-      setErrorMessage('Please enter a valid vehicle plate number (e.g. KA03MY1234).');
+    // Enforce rigorous vehicle license plate check (Indian registration format)
+    const cleanedPlate = vehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    const standardRegex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{1,4}$/;
+    const bhRegex = /^[0-9]{2}BH[0-9]{4}[A-Z]{2}$/;
+
+    if (!standardRegex.test(cleanedPlate) && !bhRegex.test(cleanedPlate)) {
+      setErrorMessage('Please enter a valid Indian vehicle number (e.g. KA03MY1234 or 22BH1234AA).');
       setSubmitStatus('error');
       return;
     }
