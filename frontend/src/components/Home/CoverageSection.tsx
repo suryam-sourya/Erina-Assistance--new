@@ -72,7 +72,7 @@ export default function CoverageSection() {
             </div>
 
             <Link
-              href="https://maps.google.com/?q=Kadugodi+Colony+Bengaluru+560067"
+              href="https://maps.app.goo.gl/FJjrhSuHKL5TWugr9"
               target="_blank"
               className="flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary hover:text-white text-primary font-bold text-sm py-3 rounded-xl transition-all w-full border border-primary/20"
             >

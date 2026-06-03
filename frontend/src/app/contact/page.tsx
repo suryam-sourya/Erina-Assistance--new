@@ -70,12 +70,21 @@ export default function ContactPage() {
               <div className="w-12 h-12 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
                 <MapPin size={24} />
               </div>
-              <div>
+              <div className="min-w-0 flex-grow">
                 <h3 className="font-bold text-lg text-foreground mb-1">Headquarters</h3>
-                <p className="text-foreground/60 text-sm leading-relaxed">
-                  123 Tech Park, HSR Layout, <br />
-                  Bangalore, Karnataka 560102
+                <p className="text-foreground/60 text-sm leading-relaxed mb-3">
+                  Shop No. 02, Dinnur Main Road, <br />
+                  Kadugodi Colony, Opp: Srihalli Cafe, <br />
+                  Bengaluru, Karnataka — 560067
                 </p>
+                <a 
+                  href="https://maps.app.goo.gl/FJjrhSuHKL5TWugr9" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-purple-500 font-bold hover:underline text-sm flex items-center gap-1"
+                >
+                  View on Google Maps →
+                </a>
               </div>
             </motion.div>
           </div>
@@ -120,17 +129,18 @@ export default function ContactPage() {
         {/* Map Section */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          className="mt-12 bg-gray-200 dark:bg-gray-800 w-full h-[400px] rounded-3xl overflow-hidden relative border border-gray-200 dark:border-gray-700"
+          className="mt-12 bg-gray-200 dark:bg-gray-800 w-full h-[400px] rounded-3xl overflow-hidden relative border border-gray-200 dark:border-gray-700 shadow-lg"
         >
-           <div className="absolute inset-0 opacity-50 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-           <div className="absolute inset-0 flex items-center justify-center flex-col gap-4">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-xl shadow-primary/30 animate-bounce">
-                <MapPin size={32} />
-              </div>
-              <div className="bg-white dark:bg-gray-900 px-6 py-3 rounded-xl shadow-lg font-bold">
-                Erina Assistance HQ
-              </div>
-           </div>
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.6711575588565!2d77.750408!3d12.9928723!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae05d744704021%3A0xfbe6bdc40ce115d!2sErina%20Assistance%20-%20BatterySOS!5e0!3m2!1sen!2sin!4v1717390000000!5m2!1sen!2sin" 
+            width="100%" 
+            height="100%" 
+            style={{ border: 0 }} 
+            allowFullScreen={true} 
+            loading="lazy" 
+            referrerPolicy="no-referrer-when-downgrade"
+            className="w-full h-full"
+          ></iframe>
         </motion.div>
 
       </div>
