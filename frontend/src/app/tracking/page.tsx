@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, MessageSquare, Star, Clock, CheckCircle2, CircleDashed, Search, Navigation, XCircle, Heart, ThumbsUp } from 'lucide-react';
 import dynamic from 'next/dynamic';
-
+import { useRouter } from "next/navigation";
 const TrackingLiveMap = dynamic(() => import('./TrackingLiveMap'), {
   ssr: false,
   loading: () => (
@@ -26,6 +26,7 @@ const TECHNICIAN_PHONES: Record<string, string> = {
 
 function TrackingContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const id = searchParams.get('id');
 
   const [booking, setBooking] = useState<any>(null);
@@ -48,7 +49,7 @@ function TrackingContent() {
   const [feedbackComment, setFeedbackComment] = useState<string>('');
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState<boolean>(false);
   const [feedbackError, setFeedbackError] = useState<string>('');
-
+  
   // Monitor cancellation window eligibility
   useEffect(() => {
     if (!booking) return;
@@ -64,7 +65,7 @@ function TrackingContent() {
     const calculateRemaining = () => {
       const createdTime = new Date(booking.createdAt).getTime();
       const elapsed = (Date.now() - createdTime) / 1000;
-      const remaining = Math.max(0, Math.ceil(30 - elapsed));
+      const remaining = Math.max(0, Math.ceil(300 - elapsed));
       return remaining;
     };
 
@@ -100,15 +101,22 @@ function TrackingContent() {
       });
       const data = await response.json();
       if (data.success) {
-        setCancelSuccess(true);
-        // Force state status to cancelled so view components update instantly
-        setBooking((prev: any) => ({
-          ...prev,
-          status: 'cancelled',
-          paymentStatus: 'cancelled',
-        }));
-        setSecondsRemaining(null);
-      } else {
+  setCancelSuccess(true);
+
+  setBooking((prev: any) => ({
+    ...prev,
+    status: 'cancelled',
+    paymentStatus: 'cancelled',
+  }));
+
+  setSecondsRemaining(null);
+
+  window.alert(
+    "Request cancelled successfully."
+  );
+
+  router.push("/");
+} else {
         setCancelError(data.error || 'Failed to cancel the booking request.');
       }
     } catch (err) {
@@ -455,14 +463,17 @@ function TrackingContent() {
                   <div>
                     <h3 className="font-extrabold text-foreground text-sm tracking-tight">Need to Cancel?</h3>
                     <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
-                      You can cancel this request within the first 30 seconds.
+                      You can cancel this request within the first 5 minutes.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-bold text-foreground">
                   <span>Time Remaining:</span>
-                  <span className="text-[#FF3366] font-black text-sm tracking-wider">{secondsRemaining}s</span>
+                  <span className="text-[#FF3366] font-black text-sm tracking-wider">
+                    {Math.floor(secondsRemaining / 60)}:
+                    {(secondsRemaining % 60).toString().padStart(2, "0")}
+                    </span>
                 </div>
 
                 {cancelError && (

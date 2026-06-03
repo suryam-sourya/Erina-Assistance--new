@@ -104,14 +104,14 @@ export async function DELETE(
       );
     }
 
-    // 3. Enforce 30-second cancellation threshold (with a 5s latency grace buffer)
+    // 3. Enforce 5-minute cancellation threshold
     const createdAtTime = new Date(booking.createdAt).getTime();
     const currentTime = Date.now();
     const elapsedSeconds = (currentTime - createdAtTime) / 1000;
 
-    if (elapsedSeconds > 35) {
+    if (elapsedSeconds > 305) {
       return NextResponse.json(
-        { success: false, error: "Cancellation window (30 seconds) has expired. Please contact support to cancel." },
+        { success: false, error: "Cancellation window (5 minutes) has expired. Please contact support to cancel." },
         { status: 400 }
       );
     }
