@@ -673,14 +673,12 @@ alert(
                         <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex flex-col items-end gap-2">
                             {/* Permanently visible Sell Products button (for all active/completed bookings, except cancelled ones) */}
-                            {booking.status?.toLowerCase() !== 'cancelled' && (
-                              <button
-                                onClick={() => openSellModal(booking)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-                              >
-                                <Package size={11} /> + Sell Products
-                              </button>
-                            )}
+                            <button
+                              onClick={() => openSellModal(booking)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                            >
+                              <Package size={11} /> + Sell Products
+                            </button>
 
                             <div className="flex justify-end items-center gap-2 flex-wrap">
                               {booking.status?.toLowerCase() === 'completed' ? (

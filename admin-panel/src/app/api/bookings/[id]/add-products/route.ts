@@ -52,17 +52,6 @@ export async function POST(req: Request, { params }: Params) {
       return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
     }
 
-    const allowedStatuses = ["in-progress", "in_progress", "IN_PROGRESS", "completed", "COMPLETED", "arrived", "ARRIVED"];
-    if (!allowedStatuses.includes(booking.status) && !allowedStatuses.includes(booking.subStatus)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Cannot add products to a booking with status "${booking.status}". Booking must be in-progress or completed.`,
-        },
-        { status: 422 }
-      );
-    }
-
     // ── 2. Validate all products and stock levels ─────────────────────────
     const productSnapshots = [];
     let productsTotal = 0; // GST-inclusive total for all products sold
