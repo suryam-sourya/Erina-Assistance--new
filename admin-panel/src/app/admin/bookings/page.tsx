@@ -27,7 +27,10 @@ import {
   Minus,
   Trash2,
   XCircle,
-  AlertOctagon
+  AlertOctagon,
+  Share2,
+  MessageSquare,
+  Phone
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import LiveTrackingMap from './LiveTrackingMap';
@@ -70,6 +73,7 @@ export default function BookingsManagement() {
 
   // Expanded visual dispatch progress row
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+  const [copiedBookingId, setCopiedBookingId] = useState<string | null>(null);
 
   // ── Add Products Sold ────────────────────────────────────────────────
   const [sellProductsBooking, setSellProductsBooking] = useState<Booking | null>(null);
@@ -673,12 +677,46 @@ alert(
                         <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex flex-col items-end gap-2">
                             {/* Permanently visible Sell Products button (for all active/completed bookings, except cancelled ones) */}
-                            <button
-                              onClick={() => openSellModal(booking)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-                            >
-                              <Package size={11} /> + Sell Products
-                            </button>
+                            <div className="flex gap-2 flex-wrap justify-end">
+                              <button
+                                onClick={() => openSellModal(booking)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                <Package size={11} /> + Sell Products
+                              </button>
+
+                              {booking.status?.toLowerCase() !== 'cancelled' && (() => {
+                                const cleanPhone = booking.customerPhone?.replace(/\D/g, '') || '';
+                                const whatsappPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+                                const messageText = `Hello ${booking.customerName}, you can track your Erina Roadside Assistance technician in real-time here: https://erinaassistance.in/tracking?id=${booking.id}`;
+                                return (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        const url = `https://erinaassistance.in/tracking?id=${booking.id}`;
+                                        navigator.clipboard.writeText(url);
+                                        setCopiedBookingId(booking.id);
+                                        setTimeout(() => setCopiedBookingId(null), 2000);
+                                      }}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                      title="Copy customer tracking link to clipboard"
+                                    >
+                                      <Share2 size={11} /> {copiedBookingId === booking.id ? "Copied!" : "Copy Tracker Link"}
+                                    </button>
+
+                                    <a
+                                      href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(messageText)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                      title="Share tracking link with customer on WhatsApp"
+                                    >
+                                      <MessageSquare size={11} /> WhatsApp Link
+                                    </a>
+                                  </>
+                                );
+                              })()}
+                            </div>
 
                             <div className="flex justify-end items-center gap-2 flex-wrap">
                               {booking.status?.toLowerCase() === 'completed' ? (
