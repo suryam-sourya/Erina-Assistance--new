@@ -575,18 +575,20 @@ alert(
                             <span className={`px-2.5 py-0.8 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}>
                               {booking.serviceLabel}
                             </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedBooking(booking);
-                                setIsEditingService(true);
-                              }}
-                              className="p-1.5 bg-white/5 hover:bg-white/10 text-foreground/45 hover:text-white rounded-lg transition-all border border-white/5 cursor-pointer flex items-center justify-center"
-                              title="Modify Booking Service"
-                            >
-                              <Wrench size={10} />
-                            </button>
+                            {booking.status?.toLowerCase() !== 'completed' && booking.status?.toLowerCase() !== 'cancelled' && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedBooking(booking);
+                                  setIsEditingService(true);
+                                }}
+                                className="p-1.5 bg-white/5 hover:bg-white/10 text-foreground/45 hover:text-white rounded-lg transition-all border border-white/5 cursor-pointer flex items-center justify-center"
+                                title="Modify Booking Service"
+                              >
+                                <Wrench size={10} />
+                              </button>
+                            )}
                           </div>
                         </td>
 
