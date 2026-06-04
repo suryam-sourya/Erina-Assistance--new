@@ -669,119 +669,125 @@ alert(
 
                         {/* Actions */}
                         <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex justify-end items-center gap-2">
-                            {booking.status?.toLowerCase() === 'completed' ? (
-                              <div className="flex items-center gap-2 justify-end flex-wrap">
-                                <button
-                                  onClick={() => openSellModal(booking)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all"
-                                >
-                                  <Package size={11} /> + Sell Products
-                                </button>
-                                <a
-                                  href={`/admin/invoice/${booking.id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all"
-                                >
-                                  <FileText size={11} /> Invoice
-                                </a>
-                                <span className="text-[10px] text-success flex items-center gap-1 font-bold uppercase tracking-wider">
-                                  <CheckCircle2 size={12} />
-                                  <span>Resolved</span>
-                                </span>
-                              </div>
-                            ) : booking.status?.toLowerCase() === 'cancelled' ? (
-                              <span className="text-[10px] text-emergency flex items-center gap-1 font-bold uppercase tracking-wider">
-                                <XCircle size={12} />
-                                <span>Booking Cancelled</span>
-                              </span>
-                            ) : (
-                              <>
-                                {/* If unassigned, show Assign Technician */}
-                                {!booking.technicianId ? (
-                                  <>
-                                    <button
-                                      onClick={() => setSelectedBooking(booking)}
-                                      className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/20"
-                                    >
-                                      Dispatch Technician
-                                    </button>
-                                    <button
-                                      onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                                      className="px-3 py-1.5 bg-emergency/15 hover:bg-emergency/25 text-emergency border border-emergency/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-                                      title="Cancel and abort this roadside request"
-                                    >
-                                      Cancel Booking
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    {/* Assigned (collecting_tools) -> En Route (leaving_hub) */}
-                                    {booking.status === 'assigned' && (
-                                      <button
-                                        onClick={() => updateBookingStatus(booking.id, 'in-progress', 'leaving_hub')}
-                                        className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-indigo-500/10"
-                                        title="Collect gear at Kadugodi Central Hub & start outbound travel"
-                                      >
-                                        Set En Route
-                                      </button>
-                                    )}
-
-                                    {/* En Route (leaving_hub) -> Arrived (arrived) */}
-                                    {booking.status === 'in-progress' && booking.subStatus === 'leaving_hub' && (
-                                      <button
-                                        onClick={() => updateBookingStatus(booking.id, 'in-progress', 'arrived')}
-                                        className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-500/10"
-                                        title="Confirm responder has arrived at motorists stranded site"
-                                      >
-                                        Mark Arrived
-                                      </button>
-                                    )}
-
-                                    {/* Arrived (arrived) -> Resolved (completed) */}
-                                    {booking.status === 'in-progress' && booking.subStatus === 'arrived' && (
-                                        <button
-                                          onClick={() => updateBookingStatus(booking.id, 'completed')}
-                                          className="px-2.5 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-success/15"
-                                          title="Resolve incident and close command ticket"
-                                        >
-                                          Mark Complete
-                                        </button>
-                                      )}
-
-                                      {/* Fallback for other en-route / in-progress states */}
-                                      {booking.status === 'in-progress' && !booking.subStatus && (
-                                        <button
-                                          onClick={() => updateBookingStatus(booking.id, 'completed')}
-                                          className="px-2.5 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-                                        >
-                                          Mark Complete
-                                        </button>
-                                      )}
-
-                                    {/* Emergency with Tech -> Progress */}
-                                    {booking.status === 'emergency' && (
-                                      <button
-                                        onClick={() => updateBookingStatus(booking.id, 'in-progress')}
-                                        className="px-3 py-1.5 bg-emergency hover:bg-emergency/80 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer animate-pulse"
-                                      >
-                                        Activate Case
-                                      </button>
-                                    )}
-
-                                    {/* Cancel Active Dispatch */}
-                                    <button
-                                      onClick={() => updateBookingStatus(booking.id, 'cancelled')}
-                                      className="px-3 py-1.5 bg-emergency/15 hover:bg-emergency/25 text-emergency border border-emergency/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-                                      title="Abort dispatch and recall technician to hub"
-                                    >
-                                      Cancel
-                                    </button>
-                                  </>
-                                )}
-                              </>
+                          <div className="flex flex-col items-end gap-2">
+                            {/* Permanently visible Sell Products button (for all active/completed bookings, except cancelled ones) */}
+                            {booking.status?.toLowerCase() !== 'cancelled' && (
+                              <button
+                                onClick={() => openSellModal(booking)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                <Package size={11} /> + Sell Products
+                              </button>
                             )}
+
+                            <div className="flex justify-end items-center gap-2 flex-wrap">
+                              {booking.status?.toLowerCase() === 'completed' ? (
+                                <div className="flex items-center gap-2 justify-end flex-wrap">
+                                  <a
+                                    href={`/admin/invoice/${booking.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all"
+                                  >
+                                    <FileText size={11} /> Invoice
+                                  </a>
+                                  <span className="text-[10px] text-success flex items-center gap-1 font-bold uppercase tracking-wider">
+                                    <CheckCircle2 size={12} />
+                                    <span>Resolved</span>
+                                  </span>
+                                </div>
+                              ) : booking.status?.toLowerCase() === 'cancelled' ? (
+                                <span className="text-[10px] text-emergency flex items-center gap-1 font-bold uppercase tracking-wider">
+                                  <XCircle size={12} />
+                                  <span>Booking Cancelled</span>
+                                </span>
+                              ) : (
+                                <>
+                                  {/* If unassigned, show Assign Technician */}
+                                  {!booking.technicianId ? (
+                                    <>
+                                      <button
+                                        onClick={() => setSelectedBooking(booking)}
+                                        className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/20"
+                                      >
+                                        Dispatch Technician
+                                      </button>
+                                      <button
+                                        onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                        className="px-3 py-1.5 bg-emergency/15 hover:bg-emergency/25 text-emergency border border-emergency/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                        title="Cancel and abort this roadside request"
+                                      >
+                                        Cancel Booking
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      {/* Assigned (collecting_tools) -> En Route (leaving_hub) */}
+                                      {booking.status === 'assigned' && (
+                                        <button
+                                          onClick={() => updateBookingStatus(booking.id, 'in-progress', 'leaving_hub')}
+                                          className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-indigo-500/10"
+                                          title="Collect gear at Kadugodi Central Hub & start outbound travel"
+                                        >
+                                          Set En Route
+                                        </button>
+                                      )}
+
+                                      {/* En Route (leaving_hub) -> Arrived (arrived) */}
+                                      {booking.status === 'in-progress' && booking.subStatus === 'leaving_hub' && (
+                                        <button
+                                          onClick={() => updateBookingStatus(booking.id, 'in-progress', 'arrived')}
+                                          className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-orange-500/10"
+                                          title="Confirm responder has arrived at motorists stranded site"
+                                        >
+                                          Mark Arrived
+                                        </button>
+                                      )}
+
+                                      {/* Arrived (arrived) -> Resolved (completed) */}
+                                      {booking.status === 'in-progress' && booking.subStatus === 'arrived' && (
+                                          <button
+                                            onClick={() => updateBookingStatus(booking.id, 'completed')}
+                                            className="px-2.5 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-success/15"
+                                            title="Resolve incident and close command ticket"
+                                          >
+                                            Mark Complete
+                                          </button>
+                                        )}
+
+                                        {/* Fallback for other en-route / in-progress states */}
+                                        {booking.status === 'in-progress' && !booking.subStatus && (
+                                          <button
+                                            onClick={() => updateBookingStatus(booking.id, 'completed')}
+                                            className="px-2.5 py-1.5 bg-success hover:bg-success/80 text-background font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                          >
+                                            Mark Complete
+                                          </button>
+                                        )}
+
+                                      {/* Emergency with Tech -> Progress */}
+                                      {booking.status === 'emergency' && (
+                                        <button
+                                          onClick={() => updateBookingStatus(booking.id, 'in-progress')}
+                                          className="px-3 py-1.5 bg-emergency hover:bg-emergency/80 text-white font-black rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer animate-pulse"
+                                        >
+                                          Activate Case
+                                        </button>
+                                      )}
+
+                                      {/* Cancel Active Dispatch */}
+                                      <button
+                                        onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                                        className="px-3 py-1.5 bg-emergency/15 hover:bg-emergency/25 text-emergency border border-emergency/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                                        title="Abort dispatch and recall technician to hub"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </>
+                                  )}
+                                </>
+                              )}
+                            </div>
                           </div>
                         </td>
 
