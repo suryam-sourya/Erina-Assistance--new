@@ -22,7 +22,11 @@ export async function POST(
       );
     }
 
-    const booking = await Booking.findById(id);
+    const cleanId = id.trim().replace(/\s+/g, '');
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(cleanId);
+    const booking = isValidMongoId
+      ? await Booking.findById(cleanId)
+      : await Booking.findOne({ ticketId: cleanId.toUpperCase() });
 
     if (!booking) {
       return NextResponse.json(

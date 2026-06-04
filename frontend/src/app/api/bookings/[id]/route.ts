@@ -11,9 +11,14 @@ export async function GET(
   try {
     await connectDB();
     const resolvedParams = await params;
+    const { id } = resolvedParams;
     
-    // Attempt to locate booking in MongoDB.
-    const booking = await Booking.findById(resolvedParams.id);
+    // Attempt to locate booking in MongoDB (support both ObjectId and ticketId)
+    const cleanId = id.trim().replace(/\s+/g, '');
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(cleanId);
+    const booking = isValidMongoId
+      ? await Booking.findById(cleanId)
+      : await Booking.findOne({ ticketId: cleanId.toUpperCase() });
 
     if (!booking) {
       return NextResponse.json(
@@ -89,7 +94,11 @@ export async function DELETE(
     const resolvedParams = await params;
     const { id } = resolvedParams;
 
-    const booking = await Booking.findById(id);
+    const cleanId = id.trim().replace(/\s+/g, '');
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(cleanId);
+    const booking = isValidMongoId
+      ? await Booking.findById(cleanId)
+      : await Booking.findOne({ ticketId: cleanId.toUpperCase() });
 
     if (!booking) {
       return NextResponse.json(
@@ -148,7 +157,7 @@ export async function DELETE(
     // 5. Sync cancellation to Cloud Firestore
     try {
       if (db && typeof db.app !== 'undefined') {
-        const firestorePromise = updateDoc(doc(db, "active_bookings", id), {
+        const firestorePromise = updateDoc(doc(db, "active_bookings", booking._id.toString()), {
           status: "cancelled",
           timeline: {
             confirmedAt: timeline.confirmedAt ? timeline.confirmedAt.toISOString() : new Date(booking.createdAt).toISOString(),

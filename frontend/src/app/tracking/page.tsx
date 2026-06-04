@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, MessageSquare, Star, Clock, CheckCircle2, CircleDashed, Search, Navigation, XCircle, Heart, ThumbsUp, Share2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useRouter } from "next/navigation";
 const TrackingLiveMap = dynamic(() => import('./TrackingLiveMap'), {
   ssr: false,
   loading: () => (
@@ -291,6 +290,37 @@ function TrackingContent() {
         if (data.success) {
           setBooking(data.booking);
           setError('');
+
+          // If we resolved by ticketId (e.g. RSA-3323), data.booking.id is the real MongoDB ObjectId.
+          // Start a new Firestore listener with the correct MongoDB ObjectId to enable real-time map tracking.
+          if (data.booking.id && data.booking.id !== id) {
+            try {
+              const { db } = await import('@/lib/firebase');
+              const { doc, onSnapshot } = await import('firebase/firestore');
+              if (db && typeof db.app !== 'undefined') {
+                if (unsubscribeFirestore) {
+                  unsubscribeFirestore();
+                }
+                unsubscribeFirestore = onSnapshot(doc(db, "active_bookings", data.booking.id), (docSnap) => {
+                  if (docSnap.exists()) {
+                    const activeData = docSnap.data();
+                    setBooking({
+                      ...activeData,
+                      customerPhone: activeData.customerPhone || '',
+                      location: activeData.location || { lat: 12.9716, lng: 77.5946 },
+                      serviceLabel: activeData.serviceLabel || 'Roadside Rescue',
+                      vehiclePlate: activeData.vehiclePlate || '',
+                      vehicleName: activeData.vehicleName || 'Vehicle',
+                      phone: activeData.customerPhone || '',
+                      technicianPhone: activeData.technicianPhone || null
+                    });
+                  }
+                });
+              }
+            } catch (fsErr) {
+              console.error("Failed to setup upgraded Firestore listener:", fsErr);
+            }
+          }
         } else {
           setError(data.error || 'Booking not found');
         }
