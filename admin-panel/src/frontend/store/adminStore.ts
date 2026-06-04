@@ -16,6 +16,7 @@ export interface Booking {
 | 'accident'
 | 'urgent_battery'
 | 'other';
+  serviceTypes?: string[];
   serviceLabel: string;
   vehicleName: string;
   vehiclePlate: string;
@@ -533,6 +534,7 @@ await fetch(
         customerName: b.customerName || "Customer",
         customerPhone: b.phone || "",
         serviceType:(b.serviceType ||"other").toLowerCase() as Booking['serviceType'],
+        serviceTypes:b.serviceTypes || [],
         serviceLabel: b.serviceLabel || "Roadside Service",
         vehicleName: b.vehicleName || b.vehicleType || "Vehicle",
         vehiclePlate: b.vehiclePlate || b.vehicleNumber || "",

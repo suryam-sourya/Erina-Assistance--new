@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       phone,
       customerPhone,
       serviceType,
+      serviceTypes = [],
       serviceLabel,
       vehicleType,
       vehicleName,
@@ -220,7 +221,16 @@ Record<string, string> = {
         address: rawAddress,
       },
       ticketId: generatedTicketId,
-      serviceType: officialServiceType,
+      serviceType:
+  officialServiceType,
+
+serviceTypes:
+  serviceTypes.map(
+    (s: string) =>
+      SERVICE_MAP[
+        s.toLowerCase()
+      ] || "OTHER"
+  ),
       description: `${rawServiceType} emergency breakdown assistance near ${rawAddress.split(",")[0]}.`,
       isPriority: rawStatus.toLowerCase() === "emergency",
       images: rawImageUrl ? [rawImageUrl] : [],

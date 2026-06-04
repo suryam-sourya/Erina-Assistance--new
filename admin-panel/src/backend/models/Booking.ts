@@ -24,7 +24,11 @@ const BookingSchema = new mongoose.Schema(
       address: { type: String },
     },
     ticketId: { type: String }, // e.g. "RSA-9779"
-    serviceType: { type: String, uppercase: true }, // e.g. "FLAT_TYRE", "TOWING"
+    serviceType: { type: String, uppercase: true },
+    serviceTypes: {
+  type: [String],
+  default: [],
+}, // e.g. "FLAT_TYRE", "TOWING"
     description: { type: String },
     isPriority: { type: Boolean, default: false },
     images: { type: [String], default: [] },

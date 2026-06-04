@@ -154,7 +154,7 @@ export default function BookingsManagement() {
 
   serviceType:
     "towing",
-
+  serviceTypes: [] as string[],
   address: "",
   landmark: "",
 
@@ -171,6 +171,28 @@ export default function BookingsManagement() {
   isPriority: false,
 });
 
+const toggleService = (
+  service: string
+) => {
+  setTicketForm((prev) => {
+    const alreadySelected =
+      prev.serviceTypes.includes(service);
+
+    const updatedServices =
+      alreadySelected
+        ? prev.serviceTypes.filter(
+            (s) => s !== service
+          )
+        : [...prev.serviceTypes, service];
+
+    return {
+      ...prev,
+      serviceTypes: updatedServices,
+      serviceType:
+        updatedServices[0] || "other",
+    };
+  });
+};
 useEffect(() => {
   fetchBookings();
   fetchTechnicians();
@@ -299,10 +321,17 @@ const handleCreateTicket =
               ticketForm.vehicleNumber,
           },
 
-          serviceType:
-            ticketForm.serviceType
-              .toUpperCase(),
+         serviceType:
+  (
+    ticketForm.serviceTypes[0] ||
+    ticketForm.serviceType
+  ).toUpperCase(),
 
+serviceTypes:
+  ticketForm.serviceTypes.map(
+    (service) =>
+      service.toUpperCase()
+  ),
           description:
             ticketForm.description,
 
@@ -601,6 +630,7 @@ alert(
 
                         {/* Service */}
                         <td className="py-4 px-5">
+<<<<<<< HEAD
                           <div className="flex items-center gap-2">
                             <span className={`px-2.5 py-0.8 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}>
                               {booking.serviceLabel}
@@ -621,6 +651,49 @@ alert(
                             )}
                           </div>
                         </td>
+=======
+  <div className="flex flex-wrap gap-1.5">
+
+    {booking.serviceTypes?.length ? (
+
+      booking.serviceTypes.map(
+        (service: string) => (
+
+          <span
+            key={service}
+            className="
+              px-2.5
+              py-1
+              rounded-md
+              border
+              text-[9px]
+              font-black
+              uppercase
+              tracking-wider
+              bg-cyan-500/10
+              border-cyan-500/30
+              text-cyan-400
+            "
+          >
+            {service.replaceAll("_", " ")}
+          </span>
+
+        )
+      )
+
+    ) : (
+
+      <span
+        className={`px-2.5 py-1 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}
+      >
+        {booking.serviceLabel}
+      </span>
+
+    )}
+
+  </div>
+</td>
+>>>>>>> a339e97 (feat(bookings): support multiple services selection and dashboard display)
 
                         {/* Vehicle */}
                         <td className="py-4 px-5">
@@ -1471,36 +1544,33 @@ alert(
 ].map((service) => (
 
               <button
-                key={service}
-                type="button"
-                onClick={() =>
-                  setTicketForm({
-                    ...ticketForm,
-                    serviceType:
-                      service
-                  })
-                }
-                className={`
-                  rounded-3xl
-                  p-5
-                  border
-                  transition
-                  text-left
-                  ${
-                    ticketForm.serviceType
-                    === service
-                    ? "border-cyan-400 bg-cyan-500/10"
-                    : "border-white/10 bg-white/[0.02]"
-                  }
-                `}
-              >
-                <div className="text-white font-black capitalize">
-                  {service.replace(
-                    "_",
-                    " "
-                  )}
-                </div>
-              </button>
+  key={service}
+  type="button"
+  onClick={() =>
+    toggleService(service)
+  }
+  className={`
+    rounded-3xl
+    p-5
+    border
+    transition
+    text-left
+    ${
+      ticketForm.serviceTypes.includes(
+        service
+      )
+        ? "border-cyan-400 bg-cyan-500/10"
+        : "border-white/10 bg-white/[0.02]"
+    }
+  `}
+>
+  <div className="text-white font-black capitalize">
+    {service.replace(
+      "_",
+      " "
+    )}
+  </div>
+</button>
             ))}
 
           </div>
