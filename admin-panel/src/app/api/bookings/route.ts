@@ -28,7 +28,7 @@ export async function GET() {
     const serviceLabels: Record<string, string> = {
       TOWING: "Flatbed Towing",
       BATTERY: "Battery Jumpstart",
-      URGENT_BATTERY:"Urgent Battery",
+      urgent_battery: "Urgent Battery",
       EV: "Mobile EV Charging",
       LOCKOUT: "Lockout Assistance",
       FUEL: "Emergency Fuel Delivery",
@@ -128,6 +128,9 @@ export async function GET() {
 
           battery:
             "Battery Jumpstart",
+          
+            urgent_battery:
+            "Urgent Battery",  
 
           ev:
             "Mobile EV Charging",

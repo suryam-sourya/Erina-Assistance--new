@@ -54,6 +54,9 @@ export default function BookingsManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [serviceFilter, setServiceFilter] = useState<string>('all');
+  const [currentPage,setCurrentPage] =useState(1);
+
+  const itemsPerPage = 20;
 
   // Assign Tech Modal State
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -178,6 +181,13 @@ useEffect(() => {
 
   return () => clearInterval(interval);
 }, []);
+useEffect(() => {
+  setCurrentPage(1);
+}, [
+  searchTerm,
+  statusFilter,
+  serviceFilter
+]);
   // Filter Bookings
   
   const filteredBookings = bookings.filter(booking => {
@@ -192,6 +202,22 @@ useEffect(() => {
 
     return matchesSearch && matchesStatus && matchesService;
   });
+  const totalPages =
+Math.ceil(
+  filteredBookings.length /
+  itemsPerPage
+);
+
+const startIndex =
+(currentPage - 1)
+*
+itemsPerPage;
+
+const paginatedBookings =
+filteredBookings.slice(
+  startIndex,
+  startIndex + itemsPerPage
+);
 
   const getAvailableTechsForService = (serviceType: Booking['serviceType']) => {
     // Return technicians that are available (or evenbusy if we want to show busy ones, but let's prioritize available)
@@ -541,7 +567,7 @@ alert(
             </thead>
             <tbody className="divide-y divide-white/5 font-semibold">
               {filteredBookings.length > 0 ? (
-                filteredBookings.map((booking) => {
+                paginatedBookings.map((booking) => {
                   const techInfo = technicians.find(t => t.id === booking.technicianId);
                   
                   return (
@@ -1033,6 +1059,36 @@ alert(
             </tbody>
           </table>
         </div>
+        {totalPages > 1 && (
+  <div className="flex items-center justify-between p-4 border-t border-white/5">
+
+    <button
+      disabled={currentPage === 1}
+      onClick={() =>
+        setCurrentPage(currentPage - 1)
+      }
+      className="px-4 py-2 bg-white/5 rounded-xl disabled:opacity-40 text-white"
+    >
+      Previous
+    </button>
+
+    <span className="text-sm text-white font-bold">
+      Page {currentPage} of {totalPages}
+    </span>
+
+    <button
+      disabled={currentPage === totalPages}
+      onClick={() =>
+        setCurrentPage(currentPage + 1)
+      }
+      className="px-4 py-2 bg-white/5 rounded-xl disabled:opacity-40 text-white"
+    >
+      Next
+    </button>
+
+  </div>
+)}
+
       </div>
 
       {/* TECHNICIAN DISPATCH/ASSIGNMENT MODAL */}
