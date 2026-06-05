@@ -646,11 +646,25 @@ alert(
 
                         {/* Service */}
                         <td className="py-4 px-5">
-<<<<<<< HEAD
                           <div className="flex items-center gap-2">
-                            <span className={`px-2.5 py-0.8 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}>
-                              {booking.serviceLabel}
-                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {booking.serviceTypes?.length ? (
+                                booking.serviceTypes.map((service: string) => (
+                                  <span
+                                    key={service}
+                                    className="px-2.5 py-1 rounded-md border text-[9px] font-black uppercase tracking-wider bg-cyan-500/10 border-cyan-500/30 text-cyan-400"
+                                  >
+                                    {service.replaceAll("_", " ")}
+                                  </span>
+                                ))
+                              ) : (
+                                <span
+                                  className={`px-2.5 py-1 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}
+                                >
+                                  {booking.serviceLabel}
+                                </span>
+                              )}
+                            </div>
                             {booking.status?.toLowerCase() !== 'cancelled' && (
                               <button
                                 type="button"
@@ -660,7 +674,7 @@ alert(
                                   setCustomServicePrice(getServicePrice(booking));
                                   setIsEditingService(true);
                                 }}
-                                className="p-1.5 bg-white/5 hover:bg-white/10 text-foreground/45 hover:text-white rounded-lg transition-all border border-white/5 cursor-pointer flex items-center justify-center"
+                                className="p-1.5 bg-white/5 hover:bg-white/10 text-foreground/45 hover:text-white rounded-lg transition-all border border-white/5 cursor-pointer flex items-center justify-center flex-shrink-0"
                                 title="Modify Booking Service"
                               >
                                 <Wrench size={10} />
@@ -668,49 +682,6 @@ alert(
                             )}
                           </div>
                         </td>
-=======
-  <div className="flex flex-wrap gap-1.5">
-
-    {booking.serviceTypes?.length ? (
-
-      booking.serviceTypes.map(
-        (service: string) => (
-
-          <span
-            key={service}
-            className="
-              px-2.5
-              py-1
-              rounded-md
-              border
-              text-[9px]
-              font-black
-              uppercase
-              tracking-wider
-              bg-cyan-500/10
-              border-cyan-500/30
-              text-cyan-400
-            "
-          >
-            {service.replaceAll("_", " ")}
-          </span>
-
-        )
-      )
-
-    ) : (
-
-      <span
-        className={`px-2.5 py-1 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}
-      >
-        {booking.serviceLabel}
-      </span>
-
-    )}
-
-  </div>
-</td>
->>>>>>> a339e97 (feat(bookings): support multiple services selection and dashboard display)
 
                         {/* Vehicle */}
                         <td className="py-4 px-5">
