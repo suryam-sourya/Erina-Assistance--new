@@ -103,6 +103,17 @@ zohoInvoiceUrl: {
         unitPrice:  { type: Number, required: true, min: 0 }, // Selling price (GST inclusive)
       },
     ],
+    soldServices: [
+      {
+        serviceType: { type: String, required: true },
+        name:        { type: String, required: true },
+        description: { type: String, default: "" },
+        sacCode:     { type: String, default: "9987" },
+        gstRate:     { type: Number, default: 0.18 },
+        quantity:    { type: Number, required: true, min: 1, default: 1 },
+        unitPrice:   { type: Number, required: true, min: 0 }, // Price (GST inclusive)
+      },
+    ],
 
     // ── Backward Compatibility Flat Fallbacks (Optional) ──────────────────
     userId: String,

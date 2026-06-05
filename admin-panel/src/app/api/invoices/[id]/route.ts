@@ -108,21 +108,89 @@ export async function GET(
     const obj = booking.toObject();
     const soldProducts = obj.soldProducts || [];
 
-    // ── Step 1: Compute Service Line ────────────────────────────────────
+    // ── Step 1: Build Service Line Items ────────────────────────────────
+    
+    interface SoldServiceItem {
+      serviceType: string;
+      name: string;
+      description?: string;
+      sacCode?: string;
+      gstRate?: number;
+      quantity: number;
+      unitPrice: number;
+    }
 
-    // The total paymentAmount stored is GST-inclusive for everything.
-    // Strip out product amounts first, then treat the remainder as service charge.
-    const totalProductsGstInclusive = soldProducts.reduce(
-      (sum: number, p: { unitPrice: number; quantity: number }) => sum + p.unitPrice * p.quantity,
-      0
-    );
-
-    const serviceGstInclusive = round2((obj.paymentAmount ?? 0) - totalProductsGstInclusive);
-    const serviceBase          = extractBase(serviceGstInclusive, SERVICE_GST_RATE);
-    const serviceCgst          = round2(serviceBase * (SERVICE_GST_RATE / 2));
-    const serviceSgst          = round2(serviceBase * (SERVICE_GST_RATE / 2));
+    interface ServiceLineItem {
+      type: "service";
+      description: string;
+      detail: string;
+      hsnCode: string;
+      quantity: number;
+      unitPrice: number;
+      base: number;
+      cgst: number;
+      sgst: number;
+      gstRate: number;
+      amount: number;
+      serviceType: string;
+    }
 
     const serviceKey = (obj.serviceType || "OTHER").toUpperCase().replace(/-/g, "_");
+    
+    let serviceLineItems: ServiceLineItem[] = [];
+
+    if (obj.soldServices && obj.soldServices.length > 0) {
+      serviceLineItems = obj.soldServices.map((s: SoldServiceItem) => {
+        const gstRate   = s.gstRate ?? 0.18;
+        const lineTotal = round2(s.unitPrice * s.quantity);
+        const base      = extractBase(lineTotal, gstRate);
+        const cgst      = round2(base * (gstRate / 2));
+        const sgst      = round2(base * (gstRate / 2));
+
+        return {
+          type:        "service",
+          description: s.name,
+          detail:      s.description || "",
+          hsnCode:     s.sacCode || "9987",
+          quantity:    s.quantity,
+          unitPrice:   s.unitPrice,
+          base,
+          cgst,
+          sgst,
+          gstRate,
+          amount:      lineTotal,
+          serviceType: s.serviceType,
+        };
+      });
+    } else {
+      // Legacy single service calculation
+      const totalProductsGstInclusive = soldProducts.reduce(
+        (sum: number, p: { unitPrice: number; quantity: number }) => sum + p.unitPrice * p.quantity,
+        0
+      );
+      const serviceGstInclusive = round2((obj.paymentAmount ?? 0) - totalProductsGstInclusive);
+      
+      if (serviceGstInclusive > 0) {
+        const serviceBase = extractBase(serviceGstInclusive, SERVICE_GST_RATE);
+        const serviceCgst = round2(serviceBase * (SERVICE_GST_RATE / 2));
+        const serviceSgst = round2(serviceBase * (SERVICE_GST_RATE / 2));
+
+        serviceLineItems.push({
+          type:        "service",
+          description: obj.serviceLabel || SERVICE_LABELS[serviceKey] || "Roadside Assistance",
+          detail:      obj.description  || SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER,
+          hsnCode:     obj.serviceSacCode || SERVICE_SAC_CODE,
+          quantity:    1,
+          unitPrice:   serviceGstInclusive,
+          base:        serviceBase,
+          cgst:        serviceCgst,
+          sgst:        serviceSgst,
+          gstRate:     SERVICE_GST_RATE,
+          amount:      serviceGstInclusive,
+          serviceType: serviceKey,
+        });
+      }
+    }
 
     // ── Step 2: Build Product Line Items ───────────────────────────────
 
@@ -175,18 +243,17 @@ export async function GET(
 
     // ── Step 3: Combined Tax Summary ────────────────────────────────────
 
-    const totalBase  = round2(serviceBase + productLineItems.reduce((s, l) => s + l.base, 0));
-    const totalCgst  = round2(serviceCgst  + productLineItems.reduce((s, l) => s + l.cgst, 0));
-    const totalSgst  = round2(serviceSgst  + productLineItems.reduce((s, l) => s + l.sgst, 0));
+    const allLineItems = [...serviceLineItems, ...productLineItems];
+    
+    const totalBase  = round2(allLineItems.reduce((s, l) => s + l.base, 0));
+    const totalCgst  = round2(allLineItems.reduce((s, l) => s + l.cgst, 0));
+    const totalSgst  = round2(allLineItems.reduce((s, l) => s + l.sgst, 0));
     const grandTotal = round2(totalBase + totalCgst + totalSgst);
 
     // Collect all active unique GST rates
     const activeRates: number[] = [];
-    if (serviceGstInclusive > 0) {
-      activeRates.push(SERVICE_GST_RATE);
-    }
-    productLineItems.forEach(item => {
-      if (!activeRates.includes(item.gstRate)) {
+    allLineItems.forEach(item => {
+      if (item.amount > 0 && !activeRates.includes(item.gstRate)) {
         activeRates.push(item.gstRate);
       }
     });
@@ -234,27 +301,12 @@ export async function GET(
         name:  obj.vehicleName || "",
       },
 
-      // Line items: service first (only if service charge is > 0), then products
-      lineItems: [
-        ...(serviceGstInclusive > 0 ? [{
-          type:        "service",
-          description: obj.serviceLabel || SERVICE_LABELS[serviceKey] || "Roadside Assistance",
-          detail:      obj.description  || SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER,
-          hsnCode:     obj.serviceSacCode || SERVICE_SAC_CODE,
-          quantity:    1,
-          unitPrice:   serviceGstInclusive,
-          base:        serviceBase,
-          cgst:        serviceCgst,
-          sgst:        serviceSgst,
-          gstRate:     SERVICE_GST_RATE,
-          amount:      serviceGstInclusive,
-        }] : []),
-        ...productLineItems,
-      ],
+      // Line items: service items first, then products
+      lineItems: allLineItems,
 
       // Combined GST breakdown
       tax: {
-        serviceSubtotal:  serviceBase,
+        serviceSubtotal:  round2(serviceLineItems.reduce((s, l) => s + l.base, 0)),
         productsSubtotal: round2(productLineItems.reduce((s, l) => s + l.base, 0)),
         subtotal:         totalBase,
         cgst:             totalCgst,
@@ -359,24 +411,28 @@ export async function PUT(
       }
     }
 
-    // 3. Update Sold Products (if provided)
-    let totalProductsGstInclusive = 0;
+    // 3. Update Sold Products & Services (if provided)
     if (Array.isArray(body.lineItems)) {
       const updatedProducts: any[] = [];
-      
-      // Separate service line item price from product line item prices
-      let newServicePrice = 0;
-      let hasServiceLine = false;
+      const updatedServices: any[] = [];
+      let totalGstInclusive = 0;
 
       for (const item of body.lineItems) {
-        if (item.type === "service") {
-          newServicePrice = Number(item.unitPrice) || 0;
-          hasServiceLine = true;
-        } else {
-          const qty = Number(item.quantity) || 1;
-          const unitPrice = Number(item.unitPrice) || 0;
-          totalProductsGstInclusive += unitPrice * qty;
+        const qty = Number(item.quantity) || 1;
+        const unitPrice = Number(item.unitPrice) || 0;
+        totalGstInclusive += unitPrice * qty;
 
+        if (item.type === "service") {
+          updatedServices.push({
+            serviceType: item.serviceType || "OTHER",
+            name: item.description || "Service",
+            description: item.detail || "",
+            sacCode: item.hsnCode || "9987",
+            gstRate: item.gstRate !== undefined ? Number(item.gstRate) : 0.18,
+            quantity: qty,
+            unitPrice: unitPrice,
+          });
+        } else {
           updatedProducts.push({
             productId: item.productId || "custom-product",
             name: item.description || "Product",
@@ -391,22 +447,10 @@ export async function PUT(
       }
 
       booking.soldProducts = updatedProducts;
-
-      // If service line was present, update the paymentAmount based on the new service price
-      // Else keep the old service fee
-      if (hasServiceLine) {
-        booking.paymentAmount = round2(newServicePrice + totalProductsGstInclusive);
-      } else {
-        // Compute service fee as existing service fee
-        const oldProductsTotal = (booking.soldProducts || []).reduce(
-          (sum: number, p: any) => sum + p.unitPrice * p.quantity,
-          0
-        );
-        const oldServiceFee = Math.max(0, (booking.paymentAmount || 0) - oldProductsTotal);
-        booking.paymentAmount = round2(oldServiceFee + totalProductsGstInclusive);
-      }
+      booking.soldServices = updatedServices;
+      booking.paymentAmount = round2(totalGstInclusive);
     } else if (body.servicePrice !== undefined) {
-      // Direct update of servicePrice
+      // Direct legacy update of servicePrice
       const servicePrice = Number(body.servicePrice) || 0;
       const productsTotal = (booking.soldProducts || []).reduce(
         (sum: number, p: any) => sum + p.unitPrice * p.quantity,

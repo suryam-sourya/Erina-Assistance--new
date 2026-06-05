@@ -5,6 +5,7 @@
  *
  * Provides a dynamic, editable invoice experience when in DRAFT state.
  * Allows editing service labels, prices, customer details, and products (add/delete/edit).
+ * Supports adding multiple services and products.
  * Real-time client-side tax/total recalculation.
  * Finalizing permanently locks editing and enables the clean read-only print layout.
  */
@@ -61,6 +62,7 @@ interface InvoiceLineItem {
   productId?: string;
   brand?: string;
   sku?: string;
+  serviceType?: string;
 }
 
 interface InvoiceData {
@@ -107,6 +109,20 @@ interface InvoiceData {
   };
   terms: string[];
 }
+
+// ── Predefined Services Reference Data ──────────────────────────────────────
+
+const PREDEFINED_SERVICES = [
+  { value: "TOWING", label: "Flatbed Towing", desc: "Flatbed Towing — Vehicle recovery and tow-to-hub transportation service." },
+  { value: "BATTERY", label: "Battery Jumpstart", desc: "Battery Jumpstart — On-site emergency battery jump-start and diagnostic service." },
+  { value: "EV", label: "Mobile EV Charging", desc: "Mobile EV Charging — Emergency mobile electric vehicle charging service." },
+  { value: "LOCKOUT", label: "Lockout Assistance", desc: "Lockout Assistance — Professional car lockout opening without vehicle damage." },
+  { value: "FUEL", label: "Emergency Fuel Delivery", desc: "Emergency Fuel Delivery — Fuel delivery to the breakdown location." },
+  { value: "FLAT_TYRE", label: "Flat Tyre Replacement", desc: "Flat Tyre Replacement — On-site spare tyre fitting and wheel balancing." },
+  { value: "ENGINE", label: "Engine Diagnostics", desc: "Engine Diagnostics — On-site engine fault diagnosis and recovery consultation." },
+  { value: "ACCIDENT", label: "Accident Recovery", desc: "Accident Recovery — Post-accident vehicle recovery, towing and site clearance." },
+  { value: "OTHER", label: "General Roadside Assistance", desc: "General Roadside Assistance — Emergency roadside help as per the service request." },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -210,7 +226,6 @@ export default function InvoicePage() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
-  const [serviceDescription, setServiceDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -228,7 +243,6 @@ export default function InvoicePage() {
         setCustomerPhone(data.invoice.customer.phone);
         setCustomerAddress(data.invoice.customer.address);
         setLineItems(data.invoice.lineItems);
-        setServiceDescription(data.invoice.booking.description || "");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load invoice");
       } finally {
@@ -260,6 +274,24 @@ export default function InvoicePage() {
     setLineItems([...lineItems, newItem]);
   };
 
+  const handleAddService = () => {
+    const newItem: InvoiceLineItem = {
+      type: "service",
+      description: "General Roadside Assistance",
+      detail: "General Roadside Assistance — Emergency roadside help as per the service request.",
+      hsnCode: "9987",
+      quantity: 1,
+      unitPrice: 0,
+      gstRate: 0.18,
+      amount: 0,
+      base: 0,
+      cgst: 0,
+      sgst: 0,
+      serviceType: "OTHER",
+    };
+    setLineItems([...lineItems, newItem]);
+  };
+
   const handleDeleteItem = (index: number) => {
     const updated = lineItems.filter((_, idx) => idx !== index);
     setLineItems(updated);
@@ -276,6 +308,24 @@ export default function InvoicePage() {
         newItem.detail = `SKU: ${newItem.sku || "N/A"} | HSN: ${newItem.hsnCode || "8507"}`;
       }
       return newItem;
+    });
+    setLineItems(updated);
+  };
+
+  const handleServiceSelect = (index: number, serviceTypeValue: string) => {
+    const found = PREDEFINED_SERVICES.find(s => s.value === serviceTypeValue);
+    if (!found) return;
+
+    const updated = lineItems.map((item, idx) => {
+      if (idx !== index) return item;
+      return {
+        ...item,
+        serviceType: serviceTypeValue,
+        description: found.label,
+        detail: found.desc,
+        hsnCode: "9987",
+        gstRate: 0.18,
+      };
     });
     setLineItems(updated);
   };
@@ -301,7 +351,7 @@ export default function InvoicePage() {
         },
         booking: {
           serviceLabel: lineItems.find(i => i.type === "service")?.description || "",
-          description: serviceDescription,
+          description: lineItems.find(i => i.type === "service")?.detail || "",
           sacCode: lineItems.find(i => i.type === "service")?.hsnCode || "9987",
         },
         lineItems: lineItems,
@@ -332,7 +382,6 @@ export default function InvoicePage() {
           setCustomerPhone(getData.invoice.customer.phone);
           setCustomerAddress(getData.invoice.customer.address);
           setLineItems(getData.invoice.lineItems);
-          setServiceDescription(getData.invoice.booking.description || "");
         }
       }
 
@@ -640,36 +689,58 @@ export default function InvoicePage() {
                     return (
                       <tr key={i} className="border-b border-white/5">
                         <td className="py-4 pr-4">
-                          <input
-                            type="text"
-                            value={item.description}
-                            onChange={(e) => handleItemChange(i, "description", e.target.value)}
-                            className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 font-bold"
-                            placeholder="Description"
-                          />
                           {isService ? (
-                            <textarea
-                              value={serviceDescription}
-                              onChange={(e) => setServiceDescription(e.target.value)}
-                              className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50 mt-1.5 h-12 resize-none"
-                              placeholder="Service details/description..."
-                            />
+                            <div className="flex flex-col gap-2">
+                              <div className="flex gap-2">
+                                <select
+                                  value={item.serviceType || "OTHER"}
+                                  onChange={(e) => handleServiceSelect(i, e.target.value)}
+                                  className="bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 font-bold shrink-0"
+                                >
+                                  {PREDEFINED_SERVICES.map(s => (
+                                    <option key={s.value} value={s.value}>{s.label}</option>
+                                  ))}
+                                </select>
+                                <input
+                                  type="text"
+                                  value={item.description}
+                                  onChange={(e) => handleItemChange(i, "description", e.target.value)}
+                                  className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 font-bold"
+                                  placeholder="Service Title"
+                                />
+                              </div>
+                              <textarea
+                                value={item.detail || ""}
+                                onChange={(e) => handleItemChange(i, "detail", e.target.value)}
+                                className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50 h-12 resize-none"
+                                placeholder="Service details/description..."
+                              />
+                            </div>
                           ) : (
-                            <div className="flex gap-2 mt-1.5">
+                            <div>
                               <input
                                 type="text"
-                                value={item.brand || ""}
-                                onChange={(e) => handleItemChange(i, "brand", e.target.value)}
-                                className="w-1/2 bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50"
-                                placeholder="Brand (e.g. Exide)"
+                                value={item.description}
+                                onChange={(e) => handleItemChange(i, "description", e.target.value)}
+                                className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 font-bold"
+                                placeholder="Product Name"
                               />
-                              <input
-                                type="text"
-                                value={item.sku || ""}
-                                onChange={(e) => handleItemChange(i, "sku", e.target.value)}
-                                className="w-1/2 bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50"
-                                placeholder="SKU"
-                              />
+                              <div className="flex gap-2 mt-1.5">
+                                <input
+                                  type="text"
+                                  value={item.brand || ""}
+                                  onChange={(e) => handleItemChange(i, "brand", e.target.value)}
+                                  className="w-1/2 bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50"
+                                  placeholder="Brand (e.g. Exide)"
+                                />
+                                <input
+                                  type="text"
+                                  value={item.sku || ""}
+                                  onChange={(e) => handleItemChange(i, "sku", e.target.value)}
+                                  className="w-1/2 bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50"
+                                  placeholder="SKU"
+                                />
+                              </div>
                             </div>
                           )}
                         </td>
@@ -683,17 +754,13 @@ export default function InvoicePage() {
                           />
                         </td>
                         <td className="py-4 text-center">
-                          {isService ? (
-                            <span className="text-foreground/50 font-bold">1</span>
-                          ) : (
-                            <input
-                              type="number"
-                              min="1"
-                              value={item.quantity}
-                              onChange={(e) => handleItemChange(i, "quantity", parseInt(e.target.value) || 1)}
-                              className="w-12 bg-[#161B26] border border-white/10 rounded-lg px-2 py-1.5 text-center text-xs text-white font-bold focus:outline-none focus:border-primary/50"
-                            />
-                          )}
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => handleItemChange(i, "quantity", parseInt(e.target.value) || 1)}
+                            className="w-12 bg-[#161B26] border border-white/10 rounded-lg px-2 py-1.5 text-center text-xs text-white font-bold focus:outline-none focus:border-primary/50"
+                          />
                         </td>
                         <td className="py-4 text-right">
                           <div className="relative inline-block">
@@ -709,31 +776,25 @@ export default function InvoicePage() {
                         </td>
                         <td className="py-4 text-right pl-4">
                           <div className="flex items-center justify-end gap-2">
-                            {!isService && (
-                              <select
-                                value={item.gstRate}
-                                onChange={(e) => handleItemChange(i, "gstRate", parseFloat(e.target.value))}
-                                className="bg-[#161B26] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
-                              >
-                                <option value="0.28">28%</option>
-                                <option value="0.18">18%</option>
-                                <option value="0.12">12%</option>
-                                <option value="0.05">5%</option>
-                                <option value="0">0%</option>
-                              </select>
-                            )}
-                            {isService ? (
-                              <span className="text-foreground/40 text-[10px] uppercase font-bold mr-2">18% GST</span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteItem(i)}
-                                className="p-1.5 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg transition-all border border-danger/10 cursor-pointer"
-                                title="Delete Item"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            )}
+                            <select
+                              value={item.gstRate}
+                              onChange={(e) => handleItemChange(i, "gstRate", parseFloat(e.target.value))}
+                              className="bg-[#161B26] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                            >
+                              <option value="0.28">28%</option>
+                              <option value="0.18">18%</option>
+                              <option value="0.12">12%</option>
+                              <option value="0.05">5%</option>
+                              <option value="0">0%</option>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteItem(i)}
+                              className="p-1.5 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg transition-all border border-danger/10 cursor-pointer"
+                              title="Delete Item"
+                            >
+                              <Trash2 size={13} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -741,13 +802,22 @@ export default function InvoicePage() {
                   })}
                   <tr className="print:hidden">
                     <td colSpan={5} className="py-4 text-center">
-                      <button
-                        type="button"
-                        onClick={handleAddProduct}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
-                      >
-                        <Plus size={13} /> Add Product Line Item
-                      </button>
+                      <div className="flex items-center justify-center gap-4">
+                        <button
+                          type="button"
+                          onClick={handleAddService}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                        >
+                          <Plus size={13} /> Add Service Line Item
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAddProduct}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                        >
+                          <Plus size={13} /> Add Product Line Item
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 </>
@@ -791,13 +861,13 @@ export default function InvoicePage() {
               </div>
               <div className="flex justify-between items-center py-2 border-b border-white/5 print:border-b print:border-gray-100">
                 <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
-                  CGST {taxData.cgstRate !== undefined && taxData.cgstRate !== null ? `@ ${(taxData.cgstRate * 100).toFixed(0)}%` : ""}
+                  CGST {taxData.cgstRate !== undefined && taxData.cgstRate !== null ? `@ ${(taxData.cgstRate * 100).toFixed(1)}%` : ""}
                 </span>
                 <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(taxData.cgst)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-white/8 print:border-b print:border-gray-200">
                 <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
-                  SGST {taxData.sgstRate !== undefined && taxData.sgstRate !== null ? `@ ${(taxData.sgstRate * 100).toFixed(0)}%` : ""}
+                  SGST {taxData.sgstRate !== undefined && taxData.sgstRate !== null ? `@ ${(taxData.sgstRate * 100).toFixed(1)}%` : ""}
                 </span>
                 <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(taxData.sgst)}</span>
               </div>
