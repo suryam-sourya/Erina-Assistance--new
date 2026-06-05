@@ -77,6 +77,7 @@ export default function BookingsManagement() {
   // Expanded visual dispatch progress row
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
   const [copiedBookingId, setCopiedBookingId] = useState<string | null>(null);
+  const [customServicePrice, setCustomServicePrice] = useState<number>(0);
 
   // ── Add Products Sold ────────────────────────────────────────────────
   const [sellProductsBooking, setSellProductsBooking] = useState<Booking | null>(null);
@@ -86,12 +87,25 @@ export default function BookingsManagement() {
   const [sellSaving, setSellSaving] = useState(false);
   const [sellError, setSellError] = useState<string | null>(null);
   const [sellSuccess, setSellSuccess] = useState(false);
+  const [waiveServiceFee, setWaiveServiceFee] = useState(false);
+
+  const getProductsTotal = (booking: Booking) => {
+    return (booking.soldProducts || []).reduce(
+      (sum: number, p: any) => sum + p.unitPrice * p.quantity,
+      0
+    );
+  };
+
+  const getServicePrice = (booking: Booking) => {
+    return Math.max(0, booking.paymentAmount - getProductsTotal(booking));
+  };
 
   const openSellModal = async (booking: Booking) => {
     setSellProductsBooking(booking);
     setSelectedItems([]);
     setSellError(null);
     setSellSuccess(false);
+    setWaiveServiceFee(false);
     setCatalogLoading(true);
     try {
       const res = await fetch('/api/products?includeInactive=false');
@@ -126,11 +140,13 @@ export default function BookingsManagement() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: selectedItems.map(i => ({ productId: i.product._id, quantity: i.qty }))
+          items: selectedItems.map(i => ({ productId: i.product._id, quantity: i.qty })),
+          waiveServiceFee
         }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
+      await fetchBookings();
       setSellSuccess(true);
       setTimeout(() => setSellProductsBooking(null), 2000);
     } catch (err) {
@@ -635,12 +651,13 @@ alert(
                             <span className={`px-2.5 py-0.8 rounded-md border text-[9px] font-black uppercase tracking-wider ${getServiceBadgeStyles(booking.serviceType)}`}>
                               {booking.serviceLabel}
                             </span>
-                            {booking.status?.toLowerCase() !== 'completed' && booking.status?.toLowerCase() !== 'cancelled' && (
+                            {booking.status?.toLowerCase() !== 'cancelled' && (
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedBooking(booking);
+                                  setCustomServicePrice(getServicePrice(booking));
                                   setIsEditingService(true);
                                 }}
                                 className="p-1.5 bg-white/5 hover:bg-white/10 text-foreground/45 hover:text-white rounded-lg transition-all border border-white/5 cursor-pointer flex items-center justify-center"
@@ -1214,7 +1231,18 @@ alert(
                     </label>
                     <select
                       value={editingServiceType}
-                      onChange={(e) => setEditingServiceType(e.target.value as any)}
+                      onChange={(e) => {
+                        const newType = e.target.value as any;
+                        setEditingServiceType(newType);
+                        const newPrice = calculatePrice({
+                          serviceType: newType,
+                          vehicleType: selectedBooking.vehicleType || "Car (Hatchback/Sedan)",
+                          distanceKm: selectedBooking.distanceKm || 10,
+                          isEmergency: selectedBooking.isPriority || false,
+                          config: pricing,
+                        });
+                        setCustomServicePrice(newPrice.total);
+                      }}
                       className="bg-background border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-primary/50 cursor-pointer"
                     >
                       <option value="towing">Flatbed Towing</option>
@@ -1229,7 +1257,19 @@ alert(
                       <option value="other">Other Assistance</option>
                     </select>
 
-                    {/* Pricing Preview */}
+                    <div className="flex flex-col gap-1 mt-1">
+                      <label className="text-[9px] text-foreground/45 uppercase tracking-wider font-black">
+                        Custom Service Fee (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={customServicePrice}
+                        onChange={(e) => setCustomServicePrice(Math.max(0, Number(e.target.value)))}
+                        className="bg-background border border-white/10 rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-primary/50"
+                        placeholder="e.g. 0 to make service free"
+                      />
+                    </div>
+
                     {(() => {
                       const serviceLabels: Record<string, string> = {
                         towing: "Flatbed Towing",
@@ -1244,34 +1284,29 @@ alert(
                         other: "Other Assistance",
                       };
 
-                      const newPrice = calculatePrice({
-                        serviceType: editingServiceType,
-                        vehicleType: selectedBooking.vehicleType || "Car (Hatchback/Sedan)",
-                        distanceKm: selectedBooking.distanceKm || 10,
-                        isEmergency: selectedBooking.isPriority || false,
-                        config: pricing,
-                      });
-
                       return (
-                        <div className="flex items-center justify-between text-[10px] text-foreground/60 font-semibold mt-1">
-                          <span>Recalculated Price: <strong className="text-white">₹{newPrice.total}</strong></span>
+                        <div className="flex items-center justify-between text-[10px] text-foreground/60 font-semibold mt-1 pt-1.5 border-t border-white/5">
+                          <span>Recalculation Preview: <strong className="text-white">₹{customServicePrice}</strong></span>
                           <div className="flex gap-2">
                             <button
                               type="button"
                               onClick={async () => {
                                 const newLabel = serviceLabels[editingServiceType] || "Roadside Service";
+                                const productsTotal = getProductsTotal(selectedBooking);
+                                const newTotalAmount = Math.round((customServicePrice + productsTotal) * 100) / 100;
+
                                 await updateBookingService(
                                   selectedBooking.id,
                                   editingServiceType,
                                   newLabel,
-                                  newPrice.total
+                                  newTotalAmount
                                 );
                                 // Update current selected booking state so modal updates live
                                 setSelectedBooking({
                                   ...selectedBooking,
                                   serviceType: editingServiceType,
                                   serviceLabel: newLabel,
-                                  paymentAmount: newPrice.total,
+                                  paymentAmount: newTotalAmount,
                                 });
                                 setIsEditingService(false);
                               }}
@@ -1305,6 +1340,7 @@ alert(
                         type="button"
                         onClick={() => {
                           setEditingServiceType(selectedBooking.serviceType);
+                          setCustomServicePrice(getServicePrice(selectedBooking));
                           setIsEditingService(true);
                         }}
                         className="text-primary hover:text-primary-hover p-1 transition-all rounded hover:bg-white/5 cursor-pointer flex items-center justify-center"
@@ -1919,6 +1955,18 @@ alert(
                   <div className="flex justify-between text-xs border-t border-white/8 pt-1.5 mt-1.5">
                     <span className="font-black text-foreground/60 uppercase tracking-wider">Products Total</span>
                     <span className="font-black text-primary">₹{sellTotal.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2 border-t border-white/5 mt-2">
+                    <input
+                      type="checkbox"
+                      id="waiveServiceFee"
+                      checked={waiveServiceFee}
+                      onChange={(e) => setWaiveServiceFee(e.target.checked)}
+                      className="rounded border-white/10 bg-background text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <label htmlFor="waiveServiceFee" className="text-[10px] text-foreground/60 font-semibold cursor-pointer">
+                      Waive roadside assistance service fee (Set service charge to ₹0)
+                    </label>
                   </div>
                 </div>
               )}

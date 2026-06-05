@@ -15,7 +15,10 @@ jest.mock('@/backend/lib/mongodb', () => ({
 jest.mock('@/backend/models/Booking', () => ({
   __esModule: true,
   default: {
+    findById: jest.fn(),
+    findOne: jest.fn(),
     findByIdAndUpdate: jest.fn(),
+    findOneAndUpdate: jest.fn(),
   },
 }));
 
@@ -25,7 +28,7 @@ describe('PUT /api/bookings/[id] API Route', () => {
   });
 
   it('should successfully update a booking', async () => {
-    const mockId = 'mock-booking-id';
+    const mockId = '507f1f77bcf86cd799439011';
     const updateBody = {
       status: 'assigned',
       technicianId: 'TECH-01',
@@ -45,7 +48,10 @@ describe('PUT /api/bookings/[id] API Route', () => {
       }),
     };
 
+    (Booking.findById as jest.Mock).mockResolvedValue(mockUpdatedBooking);
+    (Booking.findOne as jest.Mock).mockResolvedValue(mockUpdatedBooking);
     (Booking.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockUpdatedBooking);
+    (Booking.findOneAndUpdate as jest.Mock).mockResolvedValue(mockUpdatedBooking);
 
     const req = new Request(`http://localhost/api/bookings/${mockId}`, {
       method: 'PUT',
@@ -62,7 +68,11 @@ describe('PUT /api/bookings/[id] API Route', () => {
     expect(connectDB).toHaveBeenCalledTimes(1);
     expect(Booking.findByIdAndUpdate).toHaveBeenCalledWith(
       mockId,
-      updateBody,
+      expect.objectContaining({
+        status: 'ASSIGNED',
+        technicianId: 'TECH-01',
+        technicianName: 'Amit Singh',
+      }),
       { new: true }
     );
 
@@ -73,8 +83,11 @@ describe('PUT /api/bookings/[id] API Route', () => {
   });
 
   it('should return a 404 if booking is not found', async () => {
-    const mockId = 'nonexistent-id';
+    const mockId = '507f1f77bcf86cd799439011';
+    (Booking.findById as jest.Mock).mockResolvedValue(null);
+    (Booking.findOne as jest.Mock).mockResolvedValue(null);
     (Booking.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+    (Booking.findOneAndUpdate as jest.Mock).mockResolvedValue(null);
 
     const req = new Request(`http://localhost/api/bookings/${mockId}`, {
       method: 'PUT',
@@ -94,9 +107,12 @@ describe('PUT /api/bookings/[id] API Route', () => {
   });
 
   it('should handle database errors and return a 500 status', async () => {
-    const mockId = 'mock-id';
+    const mockId = '507f1f77bcf86cd799439011';
     const mockError = new Error('Database connection reset');
+    (Booking.findById as jest.Mock).mockRejectedValue(mockError);
+    (Booking.findOne as jest.Mock).mockRejectedValue(mockError);
     (Booking.findByIdAndUpdate as jest.Mock).mockRejectedValue(mockError);
+    (Booking.findOneAndUpdate as jest.Mock).mockRejectedValue(mockError);
 
     const req = new Request(`http://localhost/api/bookings/${mockId}`, {
       method: 'PUT',

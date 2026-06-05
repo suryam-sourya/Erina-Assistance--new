@@ -11,7 +11,7 @@ jest.mock('@/backend/lib/mongodb', () => ({
   connectDB: jest.fn().mockResolvedValue(null),
 }));
 
-// Setup query mock for chained .find().sort()
+// Setup query mock for chained .find().sort().limit()
 const mockSort = jest.fn();
 jest.mock('@/backend/models/Booking', () => ({
   __esModule: true,
@@ -51,13 +51,19 @@ describe('GET /api/bookings API Route', () => {
       },
     ];
 
-    mockSort.mockResolvedValue(mockDbBookings);
+    const mockQuery1 = Promise.resolve(mockDbBookings);
+    const mockQuery2 = Promise.resolve([]);
+    (mockQuery2 as any).limit = jest.fn().mockResolvedValue([]);
+
+    mockSort
+      .mockReturnValueOnce(mockQuery1)
+      .mockReturnValueOnce(mockQuery2);
 
     const response = await GET();
     const json = await response.json();
 
     expect(connectDB).toHaveBeenCalledTimes(1);
-    expect(Booking.find).toHaveBeenCalledTimes(1);
+    expect(Booking.find).toHaveBeenCalledTimes(2);
     expect(mockSort).toHaveBeenCalledWith({ createdAt: -1 });
 
     expect(response.status).toBe(200);
@@ -69,7 +75,8 @@ describe('GET /api/bookings API Route', () => {
 
   it('should handle errors and return a 500 status', async () => {
     const mockError = new Error('Database query timed out');
-    mockSort.mockRejectedValue(mockError);
+    const mockRejectedQuery = Promise.reject(mockError);
+    mockSort.mockReturnValue(mockRejectedQuery);
 
     const response = await GET();
     const json = await response.json();

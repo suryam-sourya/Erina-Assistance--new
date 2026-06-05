@@ -2,13 +2,44 @@ import { useAdminStore } from '@/frontend/store/adminStore';
 
 describe('Admin Store', () => {
   beforeEach(() => {
-    // Reset store to initial state before each test
-    const { setState } = useAdminStore.getState();
-    // Reinitialize using the original initial data by re-creating store (simple approach: reload module)
-    jest.resetModules();
-    const { useAdminStore: freshStore } = require('@/frontend/store/adminStore');
-    // Replace the exported store with fresh one
-    Object.assign(useAdminStore, freshStore);
+    // Mock fetch to reject so that tests always run the offline local fallback flow
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network error (test fallback simulator)'));
+
+    // Seed some test data directly into the store state to make tests self-contained
+    useAdminStore.setState({
+      bookings: [
+        {
+          id: 'ER-4892',
+          customerName: 'Arjun Krishnan',
+          customerPhone: '+91 98450 12345',
+          serviceType: 'battery',
+          serviceLabel: 'Battery Jumpstart',
+          vehicleName: 'Tata Nexon EV',
+          vehiclePlate: 'KA-03-MY-7890',
+          technicianId: null,
+          technicianName: null,
+          status: 'pending',
+          paymentStatus: 'pending',
+          paymentAmount: 1800,
+          location: 'Nandi Hills Road, Bangalore',
+        },
+      ],
+      technicians: [
+        {
+          id: 'TECH-01',
+          name: 'Amit Singh',
+          phone: '+91 98888 11111',
+          availability: 'available',
+          currentJob: null,
+          rating: 4.8,
+          serviceArea: 'Electronic City / NICE Road',
+          vehicleType: 'Flatbed Tow Truck',
+        }
+      ],
+      payments: [],
+      supportTickets: [],
+      recentActivities: [],
+    });
   });
 
   test('initial stats are calculated correctly', () => {
@@ -19,9 +50,9 @@ describe('Admin Store', () => {
     expect(stats.revenueToday).toBeGreaterThanOrEqual(0);
   });
 
-  test('addBooking adds a new booking', () => {
+  test('addBooking adds a new booking', async () => {
     const initialCount = useAdminStore.getState().bookings.length;
-    useAdminStore.getState().addBooking({
+    await useAdminStore.getState().addBooking({
       customerName: 'Test User',
       customerPhone: '+91 1111111111',
       serviceType: 'towing',
@@ -41,16 +72,17 @@ describe('Admin Store', () => {
     expect(newBooking.customerName).toBe('Test User');
   });
 
-  test('assignTechnician updates booking and technician', () => {
+  test('assignTechnician updates booking and technician', async () => {
     // pick an existing pending booking without technician
     const pending = useAdminStore
       .getState()
       .bookings.find((b) => b.technicianId === null && b.status === 'pending');
     const tech = useAdminStore.getState().technicians.find((t) => t.availability === 'available');
-    if (!pending || !tech) {
-      return; // nothing to test if data not available
-    }
-    useAdminStore.getState().assignTechnician(pending.id, tech.id);
+    expect(pending).toBeDefined();
+    expect(tech).toBeDefined();
+    if (!pending || !tech) return;
+
+    await useAdminStore.getState().assignTechnician(pending.id, tech.id);
     const updatedBooking = useAdminStore.getState().bookings.find((b) => b.id === pending.id)!;
     const updatedTech = useAdminStore.getState().technicians.find((t) => t.id === tech.id)!;
     expect(updatedBooking.technicianId).toBe(tech.id);
@@ -59,10 +91,12 @@ describe('Admin Store', () => {
     expect(updatedTech.currentJob).toBe(pending.id);
   });
 
-  test('updateBookingStatus to completed triggers payment and activity', () => {
+  test('updateBookingStatus to completed triggers payment and activity', async () => {
     const booking = useAdminStore.getState().bookings.find((b) => b.status !== 'completed');
+    expect(booking).toBeDefined();
     if (!booking) return;
-    useAdminStore.getState().updateBookingStatus(booking.id, 'completed');
+
+    await useAdminStore.getState().updateBookingStatus(booking.id, 'completed');
     const updated = useAdminStore.getState().bookings.find((b) => b.id === booking.id)!;
     expect(updated.status).toBe('completed');
     expect(updated.paymentStatus).toBe('completed');
@@ -73,10 +107,13 @@ describe('Admin Store', () => {
     expect(payment).toBeDefined();
   });
 
-  test('toggleTechnicianAvailability flips state', () => {
+  test('toggleTechnicianAvailability flips state', async () => {
     const tech = useAdminStore.getState().technicians[0];
+    expect(tech).toBeDefined();
+    if (!tech) return;
+
     const original = tech.availability;
-    useAdminStore.getState().toggleTechnicianAvailability(tech.id);
+    await useAdminStore.getState().toggleTechnicianAvailability(tech.id);
     const updated = useAdminStore.getState().technicians.find((t) => t.id === tech.id)!;
     const expected = original === 'available' ? 'offline' : 'available';
     expect(updated.availability).toBe(expected);

@@ -110,14 +110,16 @@ export async function POST(req: Request, { params }: Params) {
     }
 
     // ── 4. Append product snapshots to booking ────────────────────────────
+    const waiveServiceFee = body.waiveServiceFee === true;
     const existingProductsTotal = (booking.soldProducts || []).reduce(
       (sum: number, p: { unitPrice: number; quantity: number }) => sum + p.unitPrice * p.quantity,
       0
     );
 
     // Recalculate paymentAmount: original service amount + all sold products
-    const originalServiceAmount = booking.paymentAmount - existingProductsTotal;
-    const newPaymentAmount = Math.round((originalServiceAmount + productsTotal) * 100) / 100;
+    const originalServiceAmount = waiveServiceFee ? 0 : Math.max(0, booking.paymentAmount - existingProductsTotal);
+    const totalProducts = existingProductsTotal + productsTotal;
+    const newPaymentAmount = Math.round((originalServiceAmount + totalProducts) * 100) / 100;
 
     booking.soldProducts = [...(booking.soldProducts || []), ...productSnapshots];
     booking.paymentAmount = newPaymentAmount;

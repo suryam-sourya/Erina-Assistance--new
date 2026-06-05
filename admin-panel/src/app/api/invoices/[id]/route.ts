@@ -180,6 +180,20 @@ export async function GET(
     const totalSgst  = round2(serviceSgst  + productLineItems.reduce((s, l) => s + l.sgst, 0));
     const grandTotal = round2(totalBase + totalCgst + totalSgst);
 
+    // Collect all active unique GST rates
+    const activeRates: number[] = [];
+    if (serviceGstInclusive > 0) {
+      activeRates.push(SERVICE_GST_RATE);
+    }
+    productLineItems.forEach(item => {
+      if (!activeRates.includes(item.gstRate)) {
+        activeRates.push(item.gstRate);
+      }
+    });
+
+    const isUniformRate = activeRates.length === 1;
+    const uniformRate = isUniformRate ? activeRates[0] : null;
+
     // ── Step 4: Assemble Final Invoice Object ───────────────────────────
 
     const invoice = {
@@ -219,9 +233,9 @@ export async function GET(
         name:  obj.vehicleName || "",
       },
 
-      // Line items: service first, then products
+      // Line items: service first (only if service charge is > 0), then products
       lineItems: [
-        {
+        ...(serviceGstInclusive > 0 ? [{
           type:        "service",
           description: SERVICE_LABELS[serviceKey] || "Roadside Assistance",
           detail:      SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER,
@@ -233,7 +247,7 @@ export async function GET(
           sgst:        serviceSgst,
           gstRate:     SERVICE_GST_RATE,
           amount:      serviceGstInclusive,
-        },
+        }] : []),
         ...productLineItems,
       ],
 
@@ -247,6 +261,9 @@ export async function GET(
         totalGst:         round2(totalCgst + totalSgst),
         grandTotal,
         hasProducts:      soldProducts.length > 0,
+        cgstRate:         uniformRate !== null ? uniformRate / 2 : null,
+        sgstRate:         uniformRate !== null ? uniformRate / 2 : null,
+        gstRate:          uniformRate !== null ? uniformRate : null,
       },
 
       // Payment

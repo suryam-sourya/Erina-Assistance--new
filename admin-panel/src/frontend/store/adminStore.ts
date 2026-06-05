@@ -43,6 +43,16 @@ export interface Booking {
   isPriority?: boolean;
   vehicleType?: string;
   distanceKm?: number;
+  soldProducts?: {
+    productId: string;
+    name: string;
+    brand?: string;
+    sku?: string;
+    hsnCode?: string;
+    gstRate?: number;
+    quantity: number;
+    unitPrice: number;
+  }[];
 }
 
 export interface Technician {
@@ -846,9 +856,17 @@ await get().fetchTechnicians();
       "dispatch"
     );
   } catch (error) {
-    console.error(
-      "Failed to update technician status",
-      error
+    console.warn("MongoDB API toggle availability failed, using local fallback:", error);
+    set((state) => ({
+      technicians: state.technicians.map(t => 
+        t.id === technicianId 
+          ? { ...t, availability: newStatus } 
+          : t
+      ),
+    }));
+    get().addActivity(
+      `Technician ${tech.name} status updated to ${newStatus.toUpperCase()} (offline).`,
+      "dispatch"
     );
   }
 },

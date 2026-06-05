@@ -31,19 +31,20 @@ import Link from "next/link";
 
 interface InvoiceTax {
   subtotal: number;
-  cgstRate: number;
+  cgstRate?: number | null;
   cgst: number;
-  sgstRate: number;
+  sgstRate?: number | null;
   sgst: number;
   totalGst: number;
-  gstRate: number;
+  gstRate?: number | null;
   grandTotal: number;
 }
 
 interface InvoiceLineItem {
   description: string;
   detail: string;
-  sacCode: string;
+  sacCode?: string;
+  hsnCode?: string;
   quantity: number;
   unitPrice: number;
   amount: number;
@@ -373,7 +374,9 @@ export default function InvoicePage() {
                       </span>
                     )}
                   </td>
-                  <td className="py-5 text-center text-foreground/40 font-mono text-[10px] print:text-gray-500">{item.sacCode}</td>
+                  <td className="py-5 text-center text-foreground/40 font-mono text-[10px] print:text-gray-500">
+                    {item.hsnCode || item.sacCode || "—"}
+                  </td>
                   <td className="py-5 text-center text-foreground/50 font-bold print:text-gray-600">{item.quantity}</td>
                   <td className="py-5 text-right text-foreground/60 font-semibold print:text-gray-600">₹{fmt(item.unitPrice)}</td>
                   <td className="py-5 text-right text-white font-black print:text-black">₹{fmt(item.amount)}</td>
@@ -392,11 +395,15 @@ export default function InvoicePage() {
                 <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(tax.subtotal)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-white/5 print:border-b print:border-gray-100">
-                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">CGST @ {(tax.cgstRate * 100).toFixed(0)}%</span>
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
+                  CGST {tax.cgstRate !== undefined && tax.cgstRate !== null ? `@ ${(tax.cgstRate * 100).toFixed(0)}%` : ""}
+                </span>
                 <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(tax.cgst)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-white/8 print:border-b print:border-gray-200">
-                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">SGST @ {(tax.sgstRate * 100).toFixed(0)}%</span>
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
+                  SGST {tax.sgstRate !== undefined && tax.sgstRate !== null ? `@ ${(tax.sgstRate * 100).toFixed(0)}%` : ""}
+                </span>
                 <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(tax.sgst)}</span>
               </div>
               <div className="flex justify-between items-center py-4 mt-1">
