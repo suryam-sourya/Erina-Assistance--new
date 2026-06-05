@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       phone,
       customerPhone,
       serviceType,
+      description,
       serviceLabel,
       vehicleType,
       vehicleName,
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
     const rawVehicleNumber = sanitizeString(vehicleNumber || vehiclePlate || "KA01AB1234");
     const rawVehicleType = sanitizeString(vehicleType || vehicleName || "Car (Hatchback/Sedan)");
     const rawServiceType = sanitizeString(serviceType || "other");
+    const rawDescription =sanitizeString(description);
     const rawStatus = sanitizeString(status || "pending");
     const rawAddress = sanitizeString(address || "Bengaluru, Karnataka");
     const rawPaymentAmount = sanitizeNumber(paymentAmount) || 0;
@@ -142,7 +144,11 @@ export async function POST(req: Request) {
       },
       ticketId: generatedTicketId,
       serviceType: officialServiceType,
-      description: `${rawServiceType} emergency breakdown assistance near ${rawAddress.split(",")[0]}.`,
+      description:
+  officialServiceType === "OTHER" &&
+  rawDescription
+    ? rawDescription
+    : `${rawServiceType} emergency breakdown assistance near ${rawAddress.split(",")[0]}.`,
       isPriority: rawStatus.toLowerCase() === "emergency",
       images: rawImageUrl ? [rawImageUrl] : [],
       status: rawStatus.toLowerCase() === "emergency" ? "EMERGENCY" : "PENDING",

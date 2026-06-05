@@ -85,6 +85,7 @@ export default function BookingPage() {
   const [vehicleType, setVehicleType] = useState('Car (Hatchback/Sedan)');
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [selectedIssue, setSelectedIssue] = useState('');
+  const [issueDescription, setIssueDescription] = useState('');
 
   const [locationName, setLocationName] = useState('');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -192,11 +193,24 @@ export default function BookingPage() {
 
   const handleSubmit = async (e: React.FormEvent, isPaymentBypassed = false) => {
     if (e) e.preventDefault();
-    if (!selectedIssue) {
-      setErrorMessage('Please select the type of issue.');
-      setSubmitStatus('error');
-      return;
-    }
+   if (!selectedIssue) {
+  setErrorMessage(
+    "Please select the type of issue."
+  );
+  setSubmitStatus("error");
+  return;
+}
+
+if (
+  selectedIssue === "Other" &&
+  !issueDescription.trim()
+) {
+  setErrorMessage(
+    "Please describe your issue."
+  );
+  setSubmitStatus("error");
+  return;
+}
 
     // SLA Active Area Check - Restrict bookings outside Whitefield/Marathahalli grid (10km hub radius)
     if (isOutOfService || (coordinates && calculateDistance(12.9902, 77.7602, coordinates.lat, coordinates.lng) > 10)) {
@@ -251,6 +265,7 @@ export default function BookingPage() {
           customerName,
           phone,
           serviceType: selectedIssue.toLowerCase().replace(' ', '_'),
+          description:selectedIssue === "Other"? issueDescription: `${selectedIssue} emergency breakdown assistance near ${locationName}`,
           vehicleType,
           vehicleNumber,
           vehiclePlate: vehicleNumber,
@@ -490,7 +505,29 @@ export default function BookingPage() {
                   })}
                 </div>
               </div>
+              {selectedIssue === "Other" && (
+  <div>
+    <label className="block text-sm font-semibold text-foreground mb-2">
+      Describe Your Issue *
+    </label>
 
+    <textarea
+      value={issueDescription}
+      onChange={(e) =>
+        setIssueDescription(
+          e.target.value
+        )
+      }
+      placeholder="Please describe your issue in detail..."
+      rows={4}
+      className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground"
+    />
+
+    <p className="text-xs text-foreground/50 mt-2">
+      Example: Steering locked, unusual engine noise, clutch not working, etc.
+    </p>
+  </div>
+)}
               {/* Pickup Location Map Selector */}
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Pickup Location</label>
