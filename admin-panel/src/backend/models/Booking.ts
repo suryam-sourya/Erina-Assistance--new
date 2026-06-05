@@ -62,6 +62,8 @@ zohoInvoiceUrl: {
   default: null,
 },
     paymentAmount: { type: Number, default: 0 },
+    invoiceStatus: { type: String, enum: ["DRAFT", "FINAL"], default: "DRAFT" },
+    serviceSacCode: { type: String, default: "9987" },
     createdBy: { type: String, default: null },
 
     feedback: {

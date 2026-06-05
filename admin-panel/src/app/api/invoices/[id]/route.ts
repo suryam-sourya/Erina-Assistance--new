@@ -201,6 +201,7 @@ export async function GET(
       invoiceNumber: generateInvoiceNumber(obj._id.toString(), obj.createdAt),
       invoiceDate:   obj.createdAt,
       dueDate:       null,
+      invoiceStatus: obj.invoiceStatus || "DRAFT",
 
       // Company (biller)
       company: COMPANY,
@@ -218,9 +219,9 @@ export async function GET(
         ticketId:     obj.ticketId || null,
         status:       (obj.status  || "pending").toLowerCase(),
         serviceType:  serviceKey,
-        serviceLabel: SERVICE_LABELS[serviceKey]       || "Roadside Assistance",
-        description:  SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER,
-        sacCode:      SERVICE_SAC_CODE,
+        serviceLabel: obj.serviceLabel || SERVICE_LABELS[serviceKey]       || "Roadside Assistance",
+        description:  obj.description  || SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER,
+        sacCode:      obj.serviceSacCode || SERVICE_SAC_CODE,
         isPriority:   obj.isPriority ?? false,
         technicianName:  obj.technicianName  || null,
         technicianPhone: obj.technicianPhone || null,
@@ -237,9 +238,9 @@ export async function GET(
       lineItems: [
         ...(serviceGstInclusive > 0 ? [{
           type:        "service",
-          description: SERVICE_LABELS[serviceKey] || "Roadside Assistance",
-          detail:      SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER,
-          hsnCode:     SERVICE_SAC_CODE,
+          description: obj.serviceLabel || SERVICE_LABELS[serviceKey] || "Roadside Assistance",
+          detail:      obj.description  || SERVICE_DESCRIPTIONS[serviceKey] || SERVICE_DESCRIPTIONS.OTHER,
+          hsnCode:     obj.serviceSacCode || SERVICE_SAC_CODE,
           quantity:    1,
           unitPrice:   serviceGstInclusive,
           base:        serviceBase,
@@ -288,6 +289,147 @@ export async function GET(
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal server error";
     console.error("[GET /api/invoices/:id] Error:", message);
+    return NextResponse.json(
+      { success: false, error: message },
+      { status: 500 }
+    );
+  }
+}
+
+// ── PUT Handler ────────────────────────────────────────────────────────────
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await connectDB();
+    const { id } = await params;
+    const body = await req.json();
+
+    const isValidMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    const booking = isValidMongoId
+      ? await Booking.findById(id)
+      : await Booking.findOne({ ticketId: id });
+
+    if (!booking) {
+      return NextResponse.json(
+        { success: false, error: "Booking not found" },
+        { status: 404 }
+      );
+    }
+
+    // Lock updates if already finalized
+    if (booking.invoiceStatus === "FINAL") {
+      return NextResponse.json(
+        { success: false, error: "Invoice is finalized and cannot be modified" },
+        { status: 400 }
+      );
+    }
+
+    // 1. Update Customer Details (if provided)
+    if (body.customer) {
+      if (body.customer.name) {
+        if (!booking.customer) booking.customer = {};
+        booking.customer.name = body.customer.name;
+        booking.customerName = body.customer.name;
+      }
+      if (body.customer.phone) {
+        if (!booking.customer) booking.customer = {};
+        booking.customer.phone = body.customer.phone;
+        booking.phone = body.customer.phone;
+      }
+      if (body.customer.address) {
+        if (!booking.location) booking.location = { coordinates: [0, 0] };
+        booking.location.address = body.customer.address;
+        booking.addressString = body.customer.address;
+      }
+    }
+
+    // 2. Update Service Details (if provided)
+    if (body.booking) {
+      if (body.booking.serviceLabel) {
+        booking.serviceLabel = body.booking.serviceLabel;
+      }
+      if (body.booking.description) {
+        booking.description = body.booking.description;
+      }
+      if (body.booking.sacCode) {
+        booking.serviceSacCode = body.booking.sacCode;
+      }
+    }
+
+    // 3. Update Sold Products (if provided)
+    let totalProductsGstInclusive = 0;
+    if (Array.isArray(body.lineItems)) {
+      const updatedProducts: any[] = [];
+      
+      // Separate service line item price from product line item prices
+      let newServicePrice = 0;
+      let hasServiceLine = false;
+
+      for (const item of body.lineItems) {
+        if (item.type === "service") {
+          newServicePrice = Number(item.unitPrice) || 0;
+          hasServiceLine = true;
+        } else {
+          const qty = Number(item.quantity) || 1;
+          const unitPrice = Number(item.unitPrice) || 0;
+          totalProductsGstInclusive += unitPrice * qty;
+
+          updatedProducts.push({
+            productId: item.productId || "custom-product",
+            name: item.description || "Product",
+            brand: item.brand || "",
+            sku: item.sku || "",
+            hsnCode: item.hsnCode || "8507",
+            gstRate: item.gstRate !== undefined ? Number(item.gstRate) : 0.28,
+            quantity: qty,
+            unitPrice: unitPrice,
+          });
+        }
+      }
+
+      booking.soldProducts = updatedProducts;
+
+      // If service line was present, update the paymentAmount based on the new service price
+      // Else keep the old service fee
+      if (hasServiceLine) {
+        booking.paymentAmount = round2(newServicePrice + totalProductsGstInclusive);
+      } else {
+        // Compute service fee as existing service fee
+        const oldProductsTotal = (booking.soldProducts || []).reduce(
+          (sum: number, p: any) => sum + p.unitPrice * p.quantity,
+          0
+        );
+        const oldServiceFee = Math.max(0, (booking.paymentAmount || 0) - oldProductsTotal);
+        booking.paymentAmount = round2(oldServiceFee + totalProductsGstInclusive);
+      }
+    } else if (body.servicePrice !== undefined) {
+      // Direct update of servicePrice
+      const servicePrice = Number(body.servicePrice) || 0;
+      const productsTotal = (booking.soldProducts || []).reduce(
+        (sum: number, p: any) => sum + p.unitPrice * p.quantity,
+        0
+      );
+      booking.paymentAmount = round2(servicePrice + productsTotal);
+    }
+
+    // 4. Update Invoice Status / Finalize
+    if (body.invoiceStatus) {
+      booking.invoiceStatus = body.invoiceStatus;
+    }
+
+    await booking.save();
+
+    return NextResponse.json({
+      success: true,
+      message: `Invoice updated successfully. Status: ${booking.invoiceStatus}`,
+      invoiceStatus: booking.invoiceStatus,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal server error";
+    console.error("[PUT /api/invoices/:id] Error:", message);
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }
