@@ -572,21 +572,7 @@ function TrackingContent() {
   return (
     <div className="min-h-screen pt-28 pb-16 bg-light dark:bg-[#0B0F19]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Price Estimate Top Bar */}
-        <div className="border border-gray-200 dark:border-gray-800 rounded-3xl p-6 mb-8 flex justify-between items-center bg-white dark:bg-gray-900 shadow-md">
-          <div className="flex flex-col">
-            <span className="font-mono text-xs tracking-widest font-black uppercase text-foreground/50">PRICE ESTIMATE</span>
-            <span className="text-[10px] text-foreground/40 mt-1">
-              {booking.paymentMethod === "ONLINE" ? "Online Transaction Securely Processed" : "Pay via Cash or UPI on dispatch completion"}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="font-mono text-3xl font-black text-foreground">
-              ₹{(booking.paymentAmount && booking.paymentAmount > 0) ? booking.paymentAmount.toLocaleString("en-IN") : "339"}
-            </span>
-          </div>
-        </div>
+
 
         {status === 'cancelled' && (
           <div className="mb-8 p-6 bg-[#FF3366]/10 border border-[#FF3366]/20 text-[#FF3366] rounded-3xl flex items-center gap-4 shadow-sm animate-pulse">
