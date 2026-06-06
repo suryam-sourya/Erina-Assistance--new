@@ -646,65 +646,50 @@ function TrackingContent() {
           <div className="space-y-6">
             
             {/* Cancellation Window card */}
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-md border border-gray-200 dark:border-gray-800 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                  <Clock size={20} className={secondsRemaining !== null && secondsRemaining > 0 ? "animate-spin-slow" : ""} />
+            {secondsRemaining !== null && secondsRemaining > 0 && (
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-md border border-gray-200 dark:border-gray-800 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                    <Clock size={20} className="animate-spin-slow" />
+                  </div>
+                  <div>
+                    <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70">Cancellation Window</h3>
+                    <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
+                      Eligible for full cancellation during the initial search phase.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70">Cancellation Window</h3>
-                  <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
-                    Eligible for full cancellation during the initial search phase.
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between text-xs font-bold text-foreground">
-                <span>Status:</span>
-                {secondsRemaining !== null && secondsRemaining > 0 ? (
+                <div className="flex items-center justify-between text-xs font-bold text-foreground">
+                  <span>Status:</span>
                   <span className="text-[#FF3366] font-mono font-black text-sm tracking-wider animate-pulse">
                     {Math.floor(secondsRemaining / 60)}:{(secondsRemaining % 60).toString().padStart(2, "0")} Remaining
                   </span>
+                </div>
+
+                {cancelError && (
+                  <p className="text-[10px] font-semibold text-[#FF3366]">{cancelError}</p>
+                )}
+                {cancelSuccess ? (
+                  <div className="bg-success/5 border border-success/20 p-3 text-center text-[11px] font-bold text-success rounded-xl">
+                    ✓ Request cancelled successfully.
+                  </div>
                 ) : (
-                  <span className="text-foreground/40 font-mono font-bold uppercase tracking-wider text-[10px]">
-                    Window Closed
-                  </span>
+                  <button
+                    type="button"
+                    disabled={isCancelling}
+                    onClick={handleCancelBooking}
+                    className="w-full bg-[#FF3366] hover:bg-[#E02E5A] text-white py-3 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-2 shadow-md shadow-[#FF3366]/20 disabled:opacity-50 cursor-pointer"
+                  >
+                    {isCancelling ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      "Cancel Service Request"
+                    )}
+                  </button>
                 )}
               </div>
-
-              {secondsRemaining !== null && secondsRemaining > 0 ? (
-                <>
-                  {cancelError && (
-                    <p className="text-[10px] font-semibold text-[#FF3366]">{cancelError}</p>
-                  )}
-                  {cancelSuccess ? (
-                    <div className="bg-success/5 border border-success/20 p-3 text-center text-[11px] font-bold text-success rounded-xl">
-                      ✓ Request cancelled successfully.
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={isCancelling}
-                      onClick={handleCancelBooking}
-                      className="w-full bg-[#FF3366] hover:bg-[#E02E5A] text-white py-3 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-2 shadow-md shadow-[#FF3366]/20 disabled:opacity-50 cursor-pointer"
-                    >
-                      {isCancelling ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        "Cancel Service Request"
-                      )}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <button
-                  disabled
-                  className="w-full bg-gray-100 dark:bg-gray-800 text-foreground/30 py-3 rounded-xl font-bold text-xs cursor-not-allowed border border-gray-200/50 dark:border-gray-800/50"
-                >
-                  Cancel Locked
-                </button>
-              )}
-            </div>
+            )}
 
             {/* Zomato-style Premium Feedback Card */}
             {status?.toLowerCase() === 'completed' && (
