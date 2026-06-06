@@ -9,12 +9,31 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useUserStore } from '@/store/userStore';
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, setUser, activeBookingId } = useUserStore();
+  const pathname = usePathname();
+  const isHome = pathname === '/';
+
+  // Listen to scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    // Initialize scroll state on mount
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Listen to Firebase Auth state
   useEffect(() => {
@@ -70,7 +89,13 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed w-full z-50 glass-panel border-b border-white/10 dark:border-white/5 transition-all duration-300">
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${
+      isScrolled 
+        ? "bg-white/95 dark:bg-[#0B0F19]/95 border-b border-black/5 dark:border-white/5 backdrop-blur-md shadow-sm"
+        : isHome
+          ? "bg-transparent border-b border-transparent"
+          : "bg-white/95 dark:bg-[#0B0F19]/95 border-b border-black/5 dark:border-white/5 backdrop-blur-md shadow-sm"
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
 
@@ -88,10 +113,14 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary duration-300">ERINA</span>
+                  <span className={`text-xl font-bold tracking-tight transition-colors group-hover:text-primary duration-300 ${
+                    isHome && !isScrolled ? 'text-white' : 'text-foreground'
+                  }`}>ERINA</span>
                   <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">BETA</span>
                 </div>
-                <span className="text-[10px] text-foreground/50 uppercase tracking-widest font-semibold mt-0.5 leading-none">ASSISTANCE</span>
+                <span className={`text-[10px] uppercase tracking-widest font-semibold mt-0.5 leading-none transition-colors ${
+                  isHome && !isScrolled ? 'text-white/60' : 'text-foreground/50'
+                }`}>ASSISTANCE</span>
               </div>
             </Link>
           </div>
@@ -102,7 +131,11 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className="text-foreground/80 hover:text-primary transition-colors font-semibold text-sm"
+                className={`transition-colors font-semibold text-sm ${
+                  isHome && !isScrolled
+                    ? 'text-white/80 hover:text-primary'
+                    : 'text-foreground/80 hover:text-primary'
+                }`}
               >
                 {link.name}
               </Link>
@@ -124,7 +157,9 @@ export default function Navbar() {
               </motion.div>
             )}
 
-            <div className="pl-4 flex items-center space-x-4 border-l border-foreground/10">
+            <div className={`pl-4 flex items-center space-x-4 border-l transition-colors ${
+              isHome && !isScrolled ? 'border-white/10' : 'border-foreground/10'
+            }`}>
               <ThemeToggle />
               
               {/* Conditional Auth State Display */}
@@ -132,15 +167,23 @@ export default function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gray-50 dark:bg-gray-800 border border-gray-150 dark:border-gray-700/60 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all font-semibold text-sm cursor-pointer select-none"
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all font-semibold text-sm cursor-pointer select-none border ${
+                      isHome && !isScrolled
+                        ? 'bg-white/10 hover:bg-white/20 border-white/20'
+                        : 'bg-gray-50 dark:bg-gray-800 border border-gray-150 dark:border-gray-700/60 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
                   >
                     <div className="w-6.5 h-6.5 rounded-full bg-gradient-to-br from-primary to-orange-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
                       {getInitials()}
                     </div>
-                    <span className="text-foreground/85 truncate max-w-[90px]">
+                    <span className={`truncate max-w-[90px] transition-colors ${
+                      isHome && !isScrolled ? 'text-white/90' : 'text-foreground/85'
+                    }`}>
                       {user.displayName || user.email?.split('@')[0]}
                     </span>
-                    <ChevronDown size={14} className={`text-foreground/50 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-all ${
+                      isHome && !isScrolled ? 'text-white/60' : 'text-foreground/50'
+                    } ${isDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Dropdown Card */}
@@ -196,7 +239,11 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/login"
-                  className="px-5 py-2 text-sm rounded-full border border-gray-200 dark:border-gray-800 text-foreground/80 hover:text-foreground hover:bg-gray-50 dark:hover:bg-gray-800 font-bold transition-all duration-300"
+                  className={`px-5 py-2 text-sm rounded-full font-bold transition-all duration-300 border ${
+                    isHome && !isScrolled
+                      ? 'border-white/20 text-white/90 hover:bg-white/10 hover:text-white'
+                      : 'border-gray-200 dark:border-gray-800 text-foreground/80 hover:text-foreground hover:bg-gray-50 dark:hover:bg-gray-800 font-bold transition-all duration-300'
+                  }`}
                 >
                   Sign In
                 </Link>
@@ -219,7 +266,9 @@ export default function Navbar() {
             <ThemeToggle />
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-foreground p-2 rounded-md focus:outline-none"
+              className={`p-2 rounded-md focus:outline-none transition-colors ${
+                isHome && !isScrolled ? 'text-white hover:text-white/80' : 'text-foreground'
+              }`}
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
