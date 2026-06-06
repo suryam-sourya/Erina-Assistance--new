@@ -991,7 +991,7 @@ function TrackingContent() {
                 <>
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden relative border-2 border-primary flex-shrink-0">
-                      <img src="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=2069&auto=format&fit=crop" alt="Technician" className="w-full h-full object-cover" />
+                      <img src="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=2069&auto=format&fit=crop" alt="Technician" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                     <div>
                       <h4 className="font-bold text-lg text-foreground">{booking.technicianName}</h4>
