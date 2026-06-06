@@ -537,7 +537,7 @@ function TrackingContent() {
       current: !booking.technicianId 
     },
     { 
-      title: 'Outbound (Left Hub)', 
+      title: 'On The Way', 
       time: formatTime(booking.timeline?.enRouteAt)
         ? `Dispatched at ${formatTime(booking.timeline.enRouteAt)}`
         : ((status === 'in-progress' && (subStatus === 'leaving_hub' || subStatus === 'arrived')) || status === 'completed'
@@ -547,7 +547,7 @@ function TrackingContent() {
       current: status === 'assigned' || (status === 'in-progress' && subStatus === 'collecting_tools')
     },
     { 
-      title: 'Arrived at Location', 
+      title: 'Arrived', 
       time: formatTime(booking.timeline?.arrivedAt)
         ? `Arrived at ${formatTime(booking.timeline.arrivedAt)}`
         : ((status === 'in-progress' && subStatus === 'arrived') || status === 'completed'
@@ -557,7 +557,7 @@ function TrackingContent() {
       current: status === 'in-progress' && subStatus === 'leaving_hub'
     },
     { 
-      title: 'Assistance Resolved', 
+      title: 'Completed', 
       time: formatTime(booking.timeline?.completedAt)
         ? `Resolved at ${formatTime(booking.timeline.completedAt)}`
         : (status === 'completed' ? 'Resolved' : 'Pending'), 
@@ -566,30 +566,25 @@ function TrackingContent() {
     }
   ];
 
+  const bookingNumber = booking ? (booking.ticketId || (booking.id || booking._id || "").substring(0, 8).toUpperCase()) : "";
+  const displayBookingId = bookingNumber.startsWith("ERINA-") ? bookingNumber : `ERINA-${bookingNumber}`;
+
   return (
     <div className="min-h-screen pt-28 pb-16 bg-light dark:bg-[#0B0F19]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-sm mb-4">
-              <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-              Live Tracking
-            </div>
-            <h1 className="text-3xl font-extrabold text-foreground">
-              Booking #{(booking.id || booking._id || "").substring(0, 8).toUpperCase()}
-            </h1>
-            <p className="text-foreground/60 mt-2">{booking.serviceLabel} • {booking.address}</p>
+        {/* Price Estimate Top Bar */}
+        <div className="border border-gray-200 dark:border-gray-800 rounded-3xl p-6 mb-8 flex justify-between items-center bg-white dark:bg-gray-900 shadow-md">
+          <div className="flex flex-col">
+            <span className="font-mono text-xs tracking-widest font-black uppercase text-foreground/50">PRICE ESTIMATE</span>
+            <span className="text-[10px] text-foreground/40 mt-1">
+              {booking.paymentMethod === "ONLINE" ? "Online Transaction Securely Processed" : "Pay via Cash or UPI on dispatch completion"}
+            </span>
           </div>
-          
-          <div className="bg-white dark:bg-gray-800 px-6 py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4">
-            <div className="bg-primary/10 p-3 rounded-full text-primary">
-              <Clock size={24} />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground/60">Case Status</p>
-              <p className="text-2xl font-black uppercase text-foreground">{getDisplayStatusHeader()}</p>
-            </div>
+          <div className="text-right">
+            <span className="font-mono text-3xl font-black text-foreground">
+              ₹{(booking.paymentAmount && booking.paymentAmount > 0) ? booking.paymentAmount.toLocaleString("en-IN") : "339"}
+            </span>
           </div>
         </div>
 
@@ -603,11 +598,10 @@ function TrackingContent() {
           </div>
         )}
 
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Map Section */}
-          <div className="lg:col-span-2 bg-[#0B0F19] rounded-3xl h-[340px] lg:h-[500px] relative overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
+          <div className="lg:col-span-2 bg-[#0B0F19] rounded-3xl h-[340px] lg:h-[500px] relative overflow-hidden border border-gray-200 dark:border-gray-800 flex flex-col shadow-md">
             {booking && status === 'in-progress' && subStatus === 'leaving_hub' && (
               <div className="absolute top-4 left-4 z-[1000] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#111827]/90 backdrop-blur-md text-emerald-400 font-mono text-[9px] uppercase tracking-widest border border-emerald-500/20 shadow-2xl">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
@@ -648,62 +642,69 @@ function TrackingContent() {
             />
           </div>
 
-          <div className="space-y-8">
-            {/* Cancellation option */}
-            {secondsRemaining !== null && secondsRemaining > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-[#FF3366]/20 bg-[#FF3366]/5 space-y-4"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FF3366]/10 text-[#FF3366] flex items-center justify-center font-bold">
-                    <Clock size={20} className="animate-spin-slow" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-foreground text-sm tracking-tight">Need to Cancel?</h3>
-                    <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
-                      You can cancel this request within the first 5 minutes.
-                    </p>
-                  </div>
+          {/* Right Sidebar Stack */}
+          <div className="space-y-6">
+            
+            {/* Cancellation Window card */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-md border border-gray-200 dark:border-gray-800 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                  <Clock size={20} className={secondsRemaining !== null && secondsRemaining > 0 ? "animate-spin-slow" : ""} />
                 </div>
-
-                <div className="flex items-center justify-between text-xs font-bold text-foreground">
-                  <span>Time Remaining:</span>
-                  <span className="text-[#FF3366] font-black text-sm tracking-wider">
-                    {Math.floor(secondsRemaining / 60)}:
-                    {(secondsRemaining % 60).toString().padStart(2, "0")}
-                    </span>
+                <div>
+                  <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70">Cancellation Window</h3>
+                  <p className="text-[10px] text-foreground/50 mt-0.5 leading-tight">
+                    Eligible for full cancellation during the initial search phase.
+                  </p>
                 </div>
+              </div>
 
-                {cancelError && (
-                  <p className="text-[10px] font-semibold text-[#FF3366]">{cancelError}</p>
+              <div className="flex items-center justify-between text-xs font-bold text-foreground">
+                <span>Status:</span>
+                {secondsRemaining !== null && secondsRemaining > 0 ? (
+                  <span className="text-[#FF3366] font-mono font-black text-sm tracking-wider animate-pulse">
+                    {Math.floor(secondsRemaining / 60)}:{(secondsRemaining % 60).toString().padStart(2, "0")} Remaining
+                  </span>
+                ) : (
+                  <span className="text-foreground/40 font-mono font-bold uppercase tracking-wider text-[10px]">
+                    Window Closed
+                  </span>
                 )}
+              </div>
 
-                <button
-                  type="button"
-                  disabled={isCancelling}
-                  onClick={handleCancelBooking}
-                  className="w-full bg-[#FF3366] hover:bg-[#E02E5A] text-white py-3 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-2 shadow-md shadow-[#FF3366]/20 disabled:opacity-50 cursor-pointer"
-                >
-                  {isCancelling ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    "Cancel Service Request"
+              {secondsRemaining !== null && secondsRemaining > 0 ? (
+                <>
+                  {cancelError && (
+                    <p className="text-[10px] font-semibold text-[#FF3366]">{cancelError}</p>
                   )}
+                  {cancelSuccess ? (
+                    <div className="bg-success/5 border border-success/20 p-3 text-center text-[11px] font-bold text-success rounded-xl">
+                      ✓ Request cancelled successfully.
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isCancelling}
+                      onClick={handleCancelBooking}
+                      className="w-full bg-[#FF3366] hover:bg-[#E02E5A] text-white py-3 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-2 shadow-md shadow-[#FF3366]/20 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isCancelling ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        "Cancel Service Request"
+                      )}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <button
+                  disabled
+                  className="w-full bg-gray-100 dark:bg-gray-800 text-foreground/30 py-3 rounded-xl font-bold text-xs cursor-not-allowed border border-gray-200/50 dark:border-gray-800/50"
+                >
+                  Cancel Locked
                 </button>
-              </motion.div>
-            )}
-
-            {cancelSuccess && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-success/20 bg-success/5 p-4 text-center text-xs font-bold text-success"
-              >
-                ✓ Request cancelled successfully.
-              </motion.div>
-            )}
+              )}
+            </div>
 
             {/* Zomato-style Premium Feedback Card */}
             {status?.toLowerCase() === 'completed' && (
@@ -873,18 +874,13 @@ function TrackingContent() {
               </motion.div>
             )}
 
-            {/* Premium SLA Countdown HUD */}
-            {booking && status !== 'completed' && status !== 'cancelled' && slaTimeRemaining && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`rounded-3xl p-6 shadow-xl border text-left overflow-hidden relative transition-all ${
-                  isSlaOverdue 
-                    ? "bg-[#FF3366]/5 border-[#FF3366]/20 text-[#FF3366]" 
-                    : "bg-emerald-500/5 border-emerald-500/20 text-emerald-500"
-                }`}
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-current opacity-[0.02] rounded-full blur-xl pointer-events-none" />
+            {/* SLA Countdown Card */}
+            {booking && status !== 'completed' && status !== 'cancelled' && (
+              <div className={`rounded-3xl p-6 shadow-md border text-left overflow-hidden relative transition-all ${
+                isSlaOverdue 
+                  ? "bg-[#FF3366]/5 border-[#FF3366]/20 text-[#FF3366]" 
+                  : "bg-emerald-500/5 border-emerald-500/20 text-emerald-500"
+              }`}>
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold shrink-0 ${
                     isSlaOverdue ? "bg-[#FF3366]/10" : "bg-emerald-500/10"
@@ -892,34 +888,35 @@ function TrackingContent() {
                     <Clock size={24} className={isSlaOverdue ? "animate-pulse" : "animate-spin-slow"} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-extrabold text-foreground text-sm uppercase tracking-wider">
+                    <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70">
                       30-Min Rescue SLA
                     </h3>
-                    <p className="text-[11px] text-foreground/50 mt-1 font-semibold leading-relaxed">
+                    <p className="text-[10px] text-foreground/50 mt-1 font-semibold leading-relaxed">
                       {isSlaOverdue 
-                        ? "SLA Breach — Operations command is actively expediting dispatch." 
-                        : "We guarantee arrival of our roadside technician within 30 minutes."}
+                        ? "SLA breach - Operations command has escalated dispatch." 
+                        : "Technician guaranteed arrival within 30 minutes."}
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-5 border-t border-foreground/5 pt-4 flex items-center justify-between">
                   <span className="text-xs font-bold text-foreground/60">
-                    {isSlaOverdue ? "Time Overdue:" : "Guaranteed Arrival In:"}
+                    {isSlaOverdue ? "Time Overdue:" : "Remaining Window:"}
                   </span>
-                  <span className={`font-black text-2xl tracking-wider ${
+                  <span className={`font-mono font-black text-xl tracking-wider ${
                     isSlaOverdue ? "text-[#FF3366] animate-pulse" : "text-emerald-500"
                   }`}>
-                    {slaTimeRemaining}
+                    {slaTimeRemaining || "00:00"}
                   </span>
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Technician Card */}
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-800">
-
-              <h3 className="font-bold text-lg mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">Assigned Technician</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-md border border-gray-200 dark:border-gray-800">
+              <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                Assigned Operator
+              </h3>
               {booking.technicianId ? (
                 <>
                   <div className="flex items-center gap-4 mb-6">
@@ -927,11 +924,11 @@ function TrackingContent() {
                       <img src="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=2069&auto=format&fit=crop" alt="Technician" className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-xl text-foreground">{booking.technicianName}</h4>
+                      <h4 className="font-bold text-lg text-foreground">{booking.technicianName}</h4>
                       <div className="flex items-center gap-1 text-yellow-500 mt-1">
-                        <Star size={16} fill="currentColor" />
-                        <span className="font-semibold text-sm">4.9</span>
-                        <span className="text-foreground/45 text-xs ml-1">Operator Profile</span>
+                        <Star size={14} fill="currentColor" />
+                        <span className="font-semibold text-xs">4.9</span>
+                        <span className="text-foreground/45 text-[10px] ml-1">operator</span>
                       </div>
                     </div>
                   </div>
@@ -939,19 +936,19 @@ function TrackingContent() {
                     const operatorPhone = booking.technicianPhone || (booking.technicianName ? TECHNICIAN_PHONES[booking.technicianName] : null) || "+91 73400 66655";
                     return (
                       <>
-                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 text-sm font-medium">
-                          <div className="flex justify-between mb-2">
-                            <span className="text-foreground/60">Dispatched Vehicle</span>
-                            <span className="text-foreground">{booking.vehicleName} ({booking.vehiclePlate})</span>
+                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 text-xs font-medium space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-foreground/60">Rig Plate</span>
+                            <span className="text-foreground font-semibold">{booking.vehiclePlate || "KA07BB7929"}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-foreground/60">Contact Operator</span>
-                            <span className="text-foreground">{operatorPhone}</span>
+                            <span className="text-foreground/60">Phone Contact</span>
+                            <span className="text-foreground font-semibold">{operatorPhone}</span>
                           </div>
                         </div>
-                        <div className="flex gap-3">
-                          <a href={`tel:${operatorPhone}`} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors text-center shadow-md shadow-primary/20">
-                            <Phone size={18} /> Call Unit
+                        <div className="flex gap-2">
+                          <a href={`tel:${operatorPhone}`} className="flex-1 bg-primary hover:bg-primary-hover text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors text-center text-xs shadow-md shadow-primary/10">
+                            <Phone size={14} /> Call
                           </a>
                           <button
                             type="button"
@@ -968,10 +965,9 @@ function TrackingContent() {
                                 alert("Operator contact details copied to clipboard!");
                               }
                             }}
-                            className="bg-gray-100 dark:bg-gray-800 text-foreground/80 hover:text-foreground py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shadow-sm cursor-pointer"
-                            title="Share Operator Contact"
+                            className="bg-gray-150 dark:bg-gray-800 text-foreground/85 hover:text-foreground py-2.5 px-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs shadow-sm cursor-pointer"
                           >
-                            <Share2 size={18} /> Share Contact
+                            Share
                           </button>
                         </div>
                       </>
@@ -979,45 +975,194 @@ function TrackingContent() {
                   })()}
                 </>
               ) : (
-                <div className="text-center py-8 space-y-4">
-                  <div className="relative w-12 h-12 mx-auto">
-                    <CircleDashed className="animate-spin text-warning absolute inset-0" size={48} />
+                <div className="text-center py-6 space-y-4">
+                  <div className="relative w-10 h-10 mx-auto">
+                    <CircleDashed className="animate-spin text-warning absolute inset-0" size={40} />
                   </div>
-                  <p className="text-sm font-semibold text-foreground/50 leading-relaxed uppercase tracking-wider text-xs">
-                    Dispatching Nearest <br /> Rescue Operator...
+                  <p className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider leading-relaxed">
+                    Allocating Nearest <br /> Rescue Operator...
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Timeline */}
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-800">
-              <h3 className="font-bold text-lg mb-6">Tracking Status</h3>
-              <div className="space-y-6">
-                {steps.map((step, index) => (
-                  <div key={index} className="flex gap-4 relative">
-                    {index !== steps.length - 1 && (
-                      <div className={`absolute left-3 top-8 bottom-[-24px] w-0.5 ${step.completed ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`} />
-                    )}
-                    <div className="relative z-10">
-                      {step.completed ? (
-                        <CheckCircle2 className="text-primary bg-white dark:bg-gray-900 rounded-full" size={24} />
-                      ) : step.current ? (
-                        <div className="w-6 h-6 rounded-full border-4 border-primary bg-white dark:bg-gray-900 shadow-[0_0_10px_rgba(255,51,102,0.5)] animate-pulse" />
-                      ) : (
-                        <CircleDashed className="text-gray-300 dark:text-gray-600 bg-white dark:bg-gray-900 rounded-full" size={24} />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className={`font-bold ${step.completed || step.current ? 'text-foreground' : 'text-foreground/40'}`}>{step.title}</h4>
-                      <p className="text-xs text-foreground/60 mt-1">{step.time}</p>
-                    </div>
-                  </div>
-                ))}
+            {/* Need Help Card */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-md border border-gray-200 dark:border-gray-800 space-y-4">
+              <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70">
+                Need Help?
+              </h3>
+              <p className="text-[10px] text-foreground/50 leading-relaxed">
+                Encountering issues with live updates or have immediate safety questions? Reach operations.
+              </p>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <a
+                  href="tel:+917340066655"
+                  className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground/80 hover:text-foreground py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all border border-gray-200/50 dark:border-gray-800/50"
+                >
+                  <Phone size={12} /> Support
+                </a>
+                <a
+                  href="https://wa.me/917340066655"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground/80 hover:text-foreground py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all border border-gray-200/50 dark:border-gray-800/50"
+                >
+                  <MessageSquare size={12} /> Live Chat
+                </a>
               </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Tracking Status Section */}
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-md border border-gray-200 dark:border-gray-800 mt-8">
+          <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70 mb-8">TRACKING STATUS</h3>
+          
+          {/* Desktop Horizontal Timeline */}
+          <div className="hidden md:block">
+            <div className="relative flex items-center justify-between px-8">
+              {/* Background Line */}
+              <div className="absolute left-16 right-16 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 dark:bg-gray-800 z-0" />
+              
+              {/* Active Progress Line */}
+              {(() => {
+                const completedCount = steps.filter(s => s.completed).length;
+                const totalSteps = steps.length;
+                const widthPercent = totalSteps > 1 ? ((completedCount - 1) / (totalSteps - 1)) * 100 : 0;
+                return (
+                  <div 
+                    className="absolute left-16 top-1/2 -translate-y-1/2 h-0.5 bg-primary z-0 transition-all duration-500" 
+                    style={{ width: `calc(${widthPercent}% - 4rem)` }}
+                  />
+                );
+              })()}
+
+              {steps.map((step, index) => (
+                <div key={index} className="relative z-10 flex flex-col items-center">
+                  {step.completed ? (
+                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center border-4 border-white dark:border-gray-900 shadow-md">
+                      <CheckCircle2 size={16} />
+                    </div>
+                  ) : step.current ? (
+                    <div className="w-8 h-8 rounded-full border-4 border-primary bg-white dark:bg-gray-900 shadow-[0_0_10px_rgba(255,51,102,0.5)] animate-pulse" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full border-4 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900" />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Labels underneath */}
+            <div className="grid grid-cols-5 gap-4 mt-6 text-center">
+              {steps.map((step, index) => (
+                <div key={index} className="space-y-1">
+                  <h4 className={`text-xs font-black uppercase tracking-wider ${step.completed || step.current ? 'text-foreground' : 'text-foreground/40'}`}>
+                    {step.title}
+                  </h4>
+                  <p className="text-[10px] text-foreground/50 leading-relaxed max-w-[150px] mx-auto">
+                    {step.time}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile Vertical Timeline */}
+          <div className="block md:hidden space-y-6">
+            {steps.map((step, index) => (
+              <div key={index} className="flex gap-4 relative">
+                {index !== steps.length - 1 && (
+                  <div className={`absolute left-3 top-8 bottom-[-24px] w-0.5 ${step.completed ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`} />
+                )}
+                <div className="relative z-10">
+                  {step.completed ? (
+                    <CheckCircle2 className="text-primary bg-white dark:bg-gray-900 rounded-full" size={24} />
+                  ) : step.current ? (
+                    <div className="w-6 h-6 rounded-full border-4 border-primary bg-white dark:bg-gray-900 shadow-[0_0_10px_rgba(255,51,102,0.5)] animate-pulse" />
+                  ) : (
+                    <CircleDashed className="text-gray-300 dark:text-gray-600 bg-white dark:bg-gray-900 rounded-full" size={24} />
+                  )}
+                </div>
+                <div>
+                  <h4 className={`text-xs font-black uppercase tracking-wider ${step.completed || step.current ? 'text-foreground' : 'text-foreground/45'}`}>
+                    {step.title}
+                  </h4>
+                  <p className="text-[10px] text-foreground/50 mt-1">{step.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Booking Summary Bar */}
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-md border border-gray-200 dark:border-gray-800 mt-8">
+          {/* Desktop View */}
+          <div className="hidden md:grid grid-cols-6 gap-6 divide-x divide-gray-100 dark:divide-gray-800 text-center">
+            <div className="space-y-1">
+              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Booking ID</span>
+              <span className="block text-sm font-extrabold text-foreground">{displayBookingId}</span>
+            </div>
+            <div className="space-y-1 pl-4">
+              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Service</span>
+              <span className="block text-sm font-extrabold text-foreground">{booking.serviceLabel || "Roadside Rescue"}</span>
+            </div>
+            <div className="space-y-1 pl-4">
+              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Vehicle</span>
+              <span className="block text-sm font-extrabold text-foreground truncate px-1">{booking.vehiclePlate || "Searching..."}</span>
+            </div>
+            <div className="space-y-1 pl-4">
+              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Location</span>
+              <span className="block text-sm font-extrabold text-foreground truncate px-1" title={booking.address}>
+                {booking.address ? (booking.address.split(',')[0] || booking.address) : "On-Scene"}
+              </span>
+            </div>
+            <div className="space-y-1 pl-4">
+              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Time</span>
+              <span className="block text-sm font-extrabold text-foreground">
+                {formatTime(booking.timeline?.confirmedAt || booking.createdAt) || "Just Now"}
+              </span>
+            </div>
+            <div className="space-y-1 pl-4">
+              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Payment</span>
+              <span className="block text-sm font-extrabold text-foreground">{booking.paymentMethod || "UPI"}</span>
+            </div>
+          </div>
+
+          {/* Mobile View */}
+          <div className="grid grid-cols-2 md:hidden gap-6">
+            <div className="space-y-1">
+              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Booking ID</span>
+              <span className="block text-xs font-extrabold text-foreground">{displayBookingId}</span>
+            </div>
+            <div className="space-y-1">
+              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Service</span>
+              <span className="block text-xs font-extrabold text-foreground">{booking.serviceLabel || "Roadside Rescue"}</span>
+            </div>
+            <div className="space-y-1">
+              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Vehicle</span>
+              <span className="block text-xs font-extrabold text-foreground">{booking.vehiclePlate || "Searching..."}</span>
+            </div>
+            <div className="space-y-1">
+              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Location</span>
+              <span className="block text-xs font-extrabold text-foreground truncate" title={booking.address}>
+                {booking.address ? (booking.address.split(',')[0] || booking.address) : "On-Scene"}
+              </span>
+            </div>
+            <div className="space-y-1">
+              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Time</span>
+              <span className="block text-xs font-extrabold text-foreground">
+                {formatTime(booking.timeline?.confirmedAt || booking.createdAt) || "Just Now"}
+              </span>
+            </div>
+            <div className="space-y-1">
+              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Payment</span>
+              <span className="block text-xs font-extrabold text-foreground">{booking.paymentMethod || "UPI"}</span>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
