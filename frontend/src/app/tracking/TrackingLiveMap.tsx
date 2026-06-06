@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Truck } from "lucide-react";
+import { useTheme } from "next-themes";
 import "leaflet/dist/leaflet.css";
 
 interface TrackingLiveMapProps {
@@ -44,6 +45,7 @@ export default function TrackingLiveMap({
 }: TrackingLiveMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
+  const { resolvedTheme } = useTheme();
   
   // Marker Refs
   const hubMarkerRef = useRef<any>(null);
@@ -104,12 +106,28 @@ export default function TrackingLiveMap({
       L = leafletModule;
 
       // Fix default Leaflet asset lookup paths
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
+      if (L.Icon && L.Icon.Default && L.Icon.Default.prototype) {
+        try {
+          delete (L.Icon.Default.prototype as any)._getIconUrl;
+          L.Icon.Default.mergeOptions({
+            iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+            iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+            shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          });
+        } catch (e) {
+          console.warn("Leaflet default icon paths setting failed", e);
+        }
+      }
+
+      // If theme has changed, remove the old map so we can recreate it with correct tile colors
+      if (mapRef.current && mapRef.current.theme !== resolvedTheme) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        hubMarkerRef.current = null;
+        techMarkerRef.current = null;
+        customerMarkerRef.current = null;
+        routeLineRef.current = null;
+      }
 
       // 1. Initialize Map
       if (!mapRef.current) {
@@ -123,14 +141,16 @@ export default function TrackingLiveMap({
           attributionControl: false,
         }).fitBounds(bounds.pad(0.3));
 
-        // Dark tiles for automotive cyberpunk aesthetic
-        L.tileLayer(
-          "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-          {
-            maxZoom: 19,
-          }
-        ).addTo(mapInstance);
+        // Dynamic tiles depending on light/dark mode
+        const tileUrl = resolvedTheme === "light"
+          ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
+        L.tileLayer(tileUrl, {
+          maxZoom: 19,
+        }).addTo(mapInstance);
+
+        (mapInstance as any).theme = resolvedTheme;
         mapRef.current = mapInstance;
 
         // Custom HTML Icons
@@ -227,7 +247,7 @@ export default function TrackingLiveMap({
         }
       }
     });
-  }, [customerLat, customerLng, status, subStatus, technicianName, smoothProgress]);
+  }, [customerLat, customerLng, status, subStatus, technicianName, smoothProgress, resolvedTheme]);
 
   // Component unmount map cleanup
   useEffect(() => {

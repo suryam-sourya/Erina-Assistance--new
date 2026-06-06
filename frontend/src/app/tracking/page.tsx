@@ -600,49 +600,134 @@ function TrackingContent() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Map Section */}
-          <div className="lg:col-span-2 bg-[#0B0F19] rounded-3xl h-[340px] lg:h-[500px] relative overflow-hidden border border-gray-200 dark:border-gray-800 flex flex-col shadow-md">
-            {booking && status === 'in-progress' && subStatus === 'leaving_hub' && (
-              <div className="absolute top-4 left-4 z-[1000] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#111827]/90 backdrop-blur-md text-emerald-400 font-mono text-[9px] uppercase tracking-widest border border-emerald-500/20 shadow-2xl">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>WebSocket Sync: Connected (4s refresh)</span>
-              </div>
-            )}
-
-            {/* Zomato-style Floating Price Bar */}
-            {booking && booking.paymentAmount !== undefined && booking.paymentAmount > 0 && (
-              <div className="absolute top-4 right-4 z-[1000] bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md border border-gray-150 dark:border-white/10 rounded-2xl px-4 py-3 shadow-2xl flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-500 flex items-center justify-center font-black text-sm shrink-0">
-                  ₹
+          {/* Left Column: Map + Stepper */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Map Section */}
+            <div className="bg-[#0B0F19] rounded-3xl h-[340px] lg:h-[450px] relative overflow-hidden border border-gray-200 dark:border-gray-800 flex flex-col shadow-md">
+              {booking && status === 'in-progress' && subStatus === 'leaving_hub' && (
+                <div className="absolute top-4 left-4 z-[1000] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#111827]/90 backdrop-blur-md text-emerald-400 font-mono text-[9px] uppercase tracking-widest border border-emerald-500/20 shadow-2xl">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span>WebSocket Sync: Connected (4s refresh)</span>
                 </div>
-                <div>
-                  <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-extrabold block">
-                    {booking.paymentMethod === "ONLINE" ? "Amount Paid" : "Amount to pay"}
-                  </span>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-base font-black text-foreground leading-none">
-                      ₹{booking.paymentAmount.toLocaleString("en-IN")}
+              )}
+
+              {/* Zomato-style Floating Price Bar */}
+              {booking && booking.paymentAmount !== undefined && booking.paymentAmount > 0 && (
+                <div className="absolute top-4 right-4 z-[1000] bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md border border-gray-150 dark:border-white/10 rounded-2xl px-4 py-3 shadow-2xl flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-500 flex items-center justify-center font-black text-sm shrink-0">
+                    ₹
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-extrabold block">
+                      {booking.paymentMethod === "ONLINE" ? "Amount Paid" : "Amount to pay"}
                     </span>
-                    <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider leading-none">
-                      {booking.paymentMethod === "ONLINE" ? "Paid" : "Cash/UPI"}
-                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-base font-black text-foreground leading-none">
+                        ₹{booking.paymentAmount.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider leading-none">
+                        {booking.paymentMethod === "ONLINE" ? "Paid" : "Cash/UPI"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <TrackingLiveMap 
-              customerLat={booking.location?.lat || 12.9716}
-              customerLng={booking.location?.lng || 77.5946}
-              status={booking.status}
-              subStatus={booking.subStatus || null}
-              technicianName={booking.technicianName}
-              progress={booking.progress !== undefined ? booking.progress : 0}
-              technicianLocation={booking.technicianLocation || null}
-            />
+              <TrackingLiveMap 
+                customerLat={booking.location?.lat || booking.location?.coordinates?.[1] || 12.9716}
+                customerLng={booking.location?.lng || booking.location?.coordinates?.[0] || 77.5946}
+                status={booking.status}
+                subStatus={booking.subStatus || null}
+                technicianName={booking.technicianName}
+                progress={booking.progress !== undefined ? booking.progress : 0}
+                technicianLocation={booking.technicianLocation || null}
+              />
+            </div>
+
+            {/* Tracking Status Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-md border border-gray-200 dark:border-gray-800">
+              <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70 mb-8">TRACKING STATUS</h3>
+              
+              {/* Desktop Horizontal Timeline */}
+              <div className="hidden md:block">
+                <div className="relative flex items-center justify-between px-8">
+                  {/* Background Line */}
+                  <div className="absolute left-16 right-16 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 dark:bg-gray-800 z-0" />
+                  
+                  {/* Active Progress Line */}
+                  {(() => {
+                    const completedCount = steps.filter(s => s.completed).length;
+                    const totalSteps = steps.length;
+                    const widthPercent = totalSteps > 1 ? ((completedCount - 1) / (totalSteps - 1)) * 100 : 0;
+                    return (
+                      <div 
+                        className="absolute left-16 top-1/2 -translate-y-1/2 h-0.5 bg-primary z-0 transition-all duration-500" 
+                        style={{ width: `calc(${widthPercent}% - 4rem)` }}
+                      />
+                    );
+                  })()}
+
+                  {steps.map((step, index) => (
+                    <div key={index} className="relative z-10 flex flex-col items-center">
+                      {step.completed ? (
+                        <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center border-4 border-white dark:border-gray-900 shadow-md">
+                          <CheckCircle2 size={16} />
+                        </div>
+                      ) : step.current ? (
+                        <div className="w-8 h-8 rounded-full border-4 border-primary bg-white dark:bg-gray-900 shadow-[0_0_10px_rgba(255,51,102,0.5)] animate-pulse" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full border-4 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Labels underneath */}
+                <div className="grid grid-cols-5 gap-4 mt-6 text-center">
+                  {steps.map((step, index) => (
+                    <div key={index} className="space-y-1">
+                      <h4 className={`text-xs font-black uppercase tracking-wider ${step.completed || step.current ? 'text-foreground' : 'text-foreground/40'}`}>
+                        {step.title}
+                      </h4>
+                      <p className="text-[10px] text-foreground/50 leading-relaxed max-w-[150px] mx-auto">
+                        {step.time}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mobile Vertical Timeline */}
+              <div className="block md:hidden space-y-6">
+                {steps.map((step, index) => (
+                  <div key={index} className="flex gap-4 relative">
+                    {index !== steps.length - 1 && (
+                      <div className={`absolute left-3 top-8 bottom-[-24px] w-0.5 ${step.completed ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`} />
+                    )}
+                    <div className="relative z-10">
+                      {step.completed ? (
+                        <CheckCircle2 className="text-primary bg-white dark:bg-gray-900 rounded-full" size={24} />
+                      ) : step.current ? (
+                        <div className="w-6 h-6 rounded-full border-4 border-primary bg-white dark:bg-gray-900 shadow-[0_0_10px_rgba(255,51,102,0.5)] animate-pulse" />
+                      ) : (
+                        <CircleDashed className="text-gray-300 dark:text-gray-600 bg-white dark:bg-gray-900 rounded-full" size={24} />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className={`text-xs font-black uppercase tracking-wider ${step.completed || step.current ? 'text-foreground' : 'text-foreground/45'}`}>
+                        {step.title}
+                      </h4>
+                      <p className="text-[10px] text-foreground/50 mt-1">{step.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
 
-          {/* Right Sidebar Stack */}
+          {/* Right Column: Actions, Tech Profile & Summary */}
           <div className="space-y-6">
             
             {/* Cancellation Window card */}
@@ -997,155 +1082,43 @@ function TrackingContent() {
               </div>
             </div>
 
-          </div>
-
-        </div>
-
-        {/* Tracking Status Section */}
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-md border border-gray-200 dark:border-gray-800 mt-8">
-          <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70 mb-8">TRACKING STATUS</h3>
-          
-          {/* Desktop Horizontal Timeline */}
-          <div className="hidden md:block">
-            <div className="relative flex items-center justify-between px-8">
-              {/* Background Line */}
-              <div className="absolute left-16 right-16 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 dark:bg-gray-800 z-0" />
-              
-              {/* Active Progress Line */}
-              {(() => {
-                const completedCount = steps.filter(s => s.completed).length;
-                const totalSteps = steps.length;
-                const widthPercent = totalSteps > 1 ? ((completedCount - 1) / (totalSteps - 1)) * 100 : 0;
-                return (
-                  <div 
-                    className="absolute left-16 top-1/2 -translate-y-1/2 h-0.5 bg-primary z-0 transition-all duration-500" 
-                    style={{ width: `calc(${widthPercent}% - 4rem)` }}
-                  />
-                );
-              })()}
-
-              {steps.map((step, index) => (
-                <div key={index} className="relative z-10 flex flex-col items-center">
-                  {step.completed ? (
-                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center border-4 border-white dark:border-gray-900 shadow-md">
-                      <CheckCircle2 size={16} />
-                    </div>
-                  ) : step.current ? (
-                    <div className="w-8 h-8 rounded-full border-4 border-primary bg-white dark:bg-gray-900 shadow-[0_0_10px_rgba(255,51,102,0.5)] animate-pulse" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full border-4 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900" />
-                  )}
+            {/* Booking Details Card */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-md border border-gray-200 dark:border-gray-800">
+              <h3 className="font-mono text-xs tracking-widest font-black uppercase text-foreground/70 mb-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+                Booking Details
+              </h3>
+              <div className="space-y-3.5 text-xs font-semibold text-foreground/85">
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground/50 font-normal">Booking ID</span>
+                  <span className="font-mono">{displayBookingId}</span>
                 </div>
-              ))}
-            </div>
-
-            {/* Labels underneath */}
-            <div className="grid grid-cols-5 gap-4 mt-6 text-center">
-              {steps.map((step, index) => (
-                <div key={index} className="space-y-1">
-                  <h4 className={`text-xs font-black uppercase tracking-wider ${step.completed || step.current ? 'text-foreground' : 'text-foreground/40'}`}>
-                    {step.title}
-                  </h4>
-                  <p className="text-[10px] text-foreground/50 leading-relaxed max-w-[150px] mx-auto">
-                    {step.time}
-                  </p>
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground/50 font-normal">Service</span>
+                  <span>{booking.serviceLabel || "Roadside Rescue"}</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile Vertical Timeline */}
-          <div className="block md:hidden space-y-6">
-            {steps.map((step, index) => (
-              <div key={index} className="flex gap-4 relative">
-                {index !== steps.length - 1 && (
-                  <div className={`absolute left-3 top-8 bottom-[-24px] w-0.5 ${step.completed ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`} />
-                )}
-                <div className="relative z-10">
-                  {step.completed ? (
-                    <CheckCircle2 className="text-primary bg-white dark:bg-gray-900 rounded-full" size={24} />
-                  ) : step.current ? (
-                    <div className="w-6 h-6 rounded-full border-4 border-primary bg-white dark:bg-gray-900 shadow-[0_0_10px_rgba(255,51,102,0.5)] animate-pulse" />
-                  ) : (
-                    <CircleDashed className="text-gray-300 dark:text-gray-600 bg-white dark:bg-gray-900 rounded-full" size={24} />
-                  )}
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground/50 font-normal">Vehicle</span>
+                  <span className="font-mono">{booking.vehiclePlate || "Searching..."}</span>
                 </div>
-                <div>
-                  <h4 className={`text-xs font-black uppercase tracking-wider ${step.completed || step.current ? 'text-foreground' : 'text-foreground/45'}`}>
-                    {step.title}
-                  </h4>
-                  <p className="text-[10px] text-foreground/50 mt-1">{step.time}</p>
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-foreground/50 font-normal shrink-0">Location</span>
+                  <span className="text-right truncate max-w-[180px]" title={booking.address}>
+                    {booking.address ? (booking.address.split(',')[0] || booking.address) : "On-Scene"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground/50 font-normal">Time</span>
+                  <span>{formatTime(booking.timeline?.confirmedAt || booking.createdAt) || "Just Now"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-foreground/50 font-normal">Payment</span>
+                  <span>{booking.paymentMethod || "UPI"}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Booking Summary Bar */}
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-md border border-gray-200 dark:border-gray-800 mt-8">
-          {/* Desktop View */}
-          <div className="hidden md:grid grid-cols-6 gap-6 divide-x divide-gray-100 dark:divide-gray-800 text-center">
-            <div className="space-y-1">
-              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Booking ID</span>
-              <span className="block text-sm font-extrabold text-foreground">{displayBookingId}</span>
-            </div>
-            <div className="space-y-1 pl-4">
-              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Service</span>
-              <span className="block text-sm font-extrabold text-foreground">{booking.serviceLabel || "Roadside Rescue"}</span>
-            </div>
-            <div className="space-y-1 pl-4">
-              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Vehicle</span>
-              <span className="block text-sm font-extrabold text-foreground truncate px-1">{booking.vehiclePlate || "Searching..."}</span>
-            </div>
-            <div className="space-y-1 pl-4">
-              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Location</span>
-              <span className="block text-sm font-extrabold text-foreground truncate px-1" title={booking.address}>
-                {booking.address ? (booking.address.split(',')[0] || booking.address) : "On-Scene"}
-              </span>
-            </div>
-            <div className="space-y-1 pl-4">
-              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Time</span>
-              <span className="block text-sm font-extrabold text-foreground">
-                {formatTime(booking.timeline?.confirmedAt || booking.createdAt) || "Just Now"}
-              </span>
-            </div>
-            <div className="space-y-1 pl-4">
-              <span className="block text-[10px] text-foreground/45 font-black uppercase tracking-wider">Payment</span>
-              <span className="block text-sm font-extrabold text-foreground">{booking.paymentMethod || "UPI"}</span>
-            </div>
           </div>
 
-          {/* Mobile View */}
-          <div className="grid grid-cols-2 md:hidden gap-6">
-            <div className="space-y-1">
-              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Booking ID</span>
-              <span className="block text-xs font-extrabold text-foreground">{displayBookingId}</span>
-            </div>
-            <div className="space-y-1">
-              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Service</span>
-              <span className="block text-xs font-extrabold text-foreground">{booking.serviceLabel || "Roadside Rescue"}</span>
-            </div>
-            <div className="space-y-1">
-              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Vehicle</span>
-              <span className="block text-xs font-extrabold text-foreground">{booking.vehiclePlate || "Searching..."}</span>
-            </div>
-            <div className="space-y-1">
-              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Location</span>
-              <span className="block text-xs font-extrabold text-foreground truncate" title={booking.address}>
-                {booking.address ? (booking.address.split(',')[0] || booking.address) : "On-Scene"}
-              </span>
-            </div>
-            <div className="space-y-1">
-              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Time</span>
-              <span className="block text-xs font-extrabold text-foreground">
-                {formatTime(booking.timeline?.confirmedAt || booking.createdAt) || "Just Now"}
-              </span>
-            </div>
-            <div className="space-y-1">
-              <span className="block text-[9px] text-foreground/45 font-black uppercase tracking-wider">Payment</span>
-              <span className="block text-xs font-extrabold text-foreground">{booking.paymentMethod || "UPI"}</span>
-            </div>
-          </div>
         </div>
 
       </div>
