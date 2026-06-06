@@ -614,6 +614,29 @@ function TrackingContent() {
                 <span>WebSocket Sync: Connected (4s refresh)</span>
               </div>
             )}
+
+            {/* Zomato-style Floating Price Bar */}
+            {booking && booking.paymentAmount !== undefined && booking.paymentAmount > 0 && (
+              <div className="absolute top-4 right-4 z-[1000] bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md border border-gray-150 dark:border-white/10 rounded-2xl px-4 py-3 shadow-2xl flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-500 flex items-center justify-center font-black text-sm shrink-0">
+                  ₹
+                </div>
+                <div>
+                  <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-extrabold block">
+                    {booking.paymentMethod === "ONLINE" ? "Amount Paid" : "Amount to pay"}
+                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-base font-black text-foreground leading-none">
+                      ₹{booking.paymentAmount.toLocaleString("en-IN")}
+                    </span>
+                    <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider leading-none">
+                      {booking.paymentMethod === "ONLINE" ? "Paid" : "Cash/UPI"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <TrackingLiveMap 
               customerLat={booking.location?.lat || 12.9716}
               customerLng={booking.location?.lng || 77.5946}
