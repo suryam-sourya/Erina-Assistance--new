@@ -118,7 +118,7 @@ export default function HeroSection() {
             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Trusted Parts:</span>
             
             
-            {['CASTROL', 'MRF', 'AMARON'].map((b) => (
+            {['LUMINOUS', 'EXIDE', 'AMARON'].map((b) => (
               <span key={b} className="text-xs font-black text-white/15 hover:text-white/40 transition-colors tracking-widest">{b}</span>
             ))}
           </motion.div>
