@@ -593,19 +593,54 @@ function TrackingContent() {
           </div>
         </div>
 
-        {status === 'cancelled' && (
-          <div className="mb-8 p-6 bg-[#FF3366]/10 border border-[#FF3366]/20 text-[#FF3366] rounded-3xl flex items-center gap-4 shadow-sm animate-pulse">
-            <XCircle size={32} className="shrink-0" />
-            <div>
-              <h3 className="font-extrabold text-lg uppercase tracking-wide">Request Cancelled</h3>
-              <p className="text-sm text-foreground/60 mt-1">This roadside assistance booking has been successfully cancelled. If you still need help, please submit a new request or call our hotline.</p>
-            </div>
-          </div>
-        )}
+       {status === 'cancelled' && (
+  <div className="mb-8 p-6 bg-[#FF3366]/10 border border-[#FF3366]/20 text-[#FF3366] rounded-3xl flex items-center gap-4 shadow-sm animate-pulse">
+    <XCircle size={32} className="shrink-0" />
+
+    <div>
+      <h3 className="font-extrabold text-lg uppercase tracking-wide">
+        Request Cancelled
+      </h3>
+
+      <p className="text-sm text-foreground/60 mt-1">
+        This roadside assistance booking has been successfully cancelled.
+        If you still need help, please submit a new request or call our hotline.
+      </p>
+    </div>
+  </div>
+)}
+
+{booking.paymentAmount > 0 && (
+  <div className="mb-8 bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-[#FF3366]/20">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-lg font-black uppercase tracking-wider text-[#FF3366]">
+          Price Estimate
+        </h3>
+
+        <p className="text-sm text-foreground/50 mt-1">
+          Estimated service amount
+        </p>
+      </div>
+
+      <div className="text-right">
+        <div className="text-4xl font-black text-[#FF3366]">
+          ₹{booking.paymentAmount?.toLocaleString()}
+        </div>
+
+        <div className="text-xs text-foreground/50 mt-1">
+          Final amount confirmed by dispatcher
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+          {/* Left Column */}
+  <div className="lg:col-span-2 space-y-8">
+
           {/* Map Section */}
           <div className="lg:col-span-2 bg-[#0B0F19] rounded-3xl h-[340px] lg:h-[500px] relative overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
             {booking && status === 'in-progress' && subStatus === 'leaving_hub' && (
@@ -624,7 +659,89 @@ function TrackingContent() {
               technicianLocation={booking.technicianLocation || null}
             />
           </div>
+          {/* Timeline */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-800">
 
+  <h3 className="font-bold text-lg mb-8">
+    Tracking Status
+  </h3>
+
+  <div className="relative">
+
+    {/* Progress Line */}
+    <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-full">
+      <div
+        className="h-1 bg-primary rounded-full transition-all duration-700"
+        style={{
+          width: `${
+            ((steps.filter(s => s.completed).length - 1) /
+              (steps.length - 1)) *
+            100
+          }%`
+        }}
+      />
+    </div>
+
+    <div className="flex justify-between relative">
+
+      {steps.map((step, index) => (
+        <div
+          key={index}
+          className="flex flex-col items-center text-center w-24"
+        >
+
+          {/* Circle */}
+          <div
+            className={`
+              z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 bg-white dark:bg-gray-900
+
+              ${
+                step.completed
+                  ? "border-primary bg-primary text-white"
+                  : step.current
+                  ? "border-primary text-primary animate-pulse"
+                  : "border-gray-300 dark:border-gray-600 text-gray-400"
+              }
+            `}
+          >
+            {step.completed ? (
+              <CheckCircle2 size={18} />
+            ) : (
+              <CircleDashed size={18} />
+            )}
+          </div>
+
+          {/* Title */}
+          <p
+            className={`
+              mt-3 text-xs font-bold
+
+              ${
+                step.completed || step.current
+                  ? "text-foreground"
+                  : "text-foreground/40"
+              }
+            `}
+          >
+            {step.title}
+          </p>
+
+          {/* Time */}
+          <p className="text-[10px] text-foreground/50 mt-1">
+            {step.time}
+          </p>
+
+        </div>
+      ))}
+
+    </div>
+
+  </div>
+
+</div>
+            </div>
+
+            {/* Right Sidebar */}
           <div className="space-y-8">
             {/* Cancellation option */}
             {secondsRemaining !== null && secondsRemaining > 0 && (
@@ -967,7 +1084,7 @@ function TrackingContent() {
               )}
             </div>
 
-            {/* Timeline */}
+            {/* Timeline
             <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-800">
               <h3 className="font-bold text-lg mb-6">Tracking Status</h3>
               <div className="space-y-6">
@@ -992,7 +1109,7 @@ function TrackingContent() {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
