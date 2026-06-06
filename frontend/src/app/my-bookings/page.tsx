@@ -156,7 +156,7 @@ export default function MyBookingsPage() {
   const pastBookings = bookings.filter(b => b.status.toLowerCase() === "completed" || b.status.toLowerCase() === "cancelled");
 
   return (
-    <div className="min-h-screen bg-[#0A0D14] text-foreground pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden selection:bg-primary/30 selection:text-primary-foreground">
+    <div className="min-h-screen bg-background text-foreground pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden selection:bg-primary/30 selection:text-primary-foreground">
       {/* Decorative Blur Orbs */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[450px] h-[450px] rounded-full bg-orange-500/5 blur-[150px] pointer-events-none" />
@@ -170,7 +170,7 @@ export default function MyBookingsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-md mx-auto"
           >
-            <div className="glass-panel border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <div className="glass-panel border border-black/5 dark:border-white/10 rounded-3xl p-8 shadow-2xl dark:shadow-none relative overflow-hidden bg-white/60 dark:bg-gray-900/60">
               <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary to-orange-500" />
               
               <div className="flex justify-center mb-6">
@@ -200,7 +200,7 @@ export default function MyBookingsPage() {
                       onChange={(e) => setPhoneInput(e.target.value)}
                       placeholder="+91 XXXXX XXXXX"
                       required
-                      className="w-full bg-[#111622] border border-white/10 hover:border-white/20 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-2xl py-4 pl-12 pr-4 text-foreground placeholder:text-foreground/20 font-bold transition-all text-lg tracking-wider"
+                      className="w-full bg-gray-50 dark:bg-[#111622] border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 rounded-2xl py-4 pl-12 pr-4 text-foreground placeholder:text-foreground/30 font-bold transition-all text-lg tracking-wider"
                     />
                   </div>
                 </div>
@@ -252,7 +252,7 @@ export default function MyBookingsPage() {
                   <span>Registered: {storedPhone}</span>
                   <button 
                     onClick={handleLogoutPhone}
-                    className="text-primary hover:underline font-bold text-xs uppercase tracking-widest pl-2 border-l border-white/10"
+                    className="text-primary hover:underline font-bold text-xs uppercase tracking-widest pl-2 border-l border-gray-200 dark:border-white/10"
                   >
                     Change Phone
                   </button>
@@ -263,7 +263,7 @@ export default function MyBookingsPage() {
                 <button
                   onClick={() => fetchBookings(storedPhone)}
                   disabled={isLoading}
-                  className="px-4 py-2.5 rounded-xl glass-panel border border-white/10 hover:bg-white/5 transition-colors font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-xl bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 transition-colors font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw size={14} className={isLoading ? "animate-spin text-primary" : ""} />
                   Refresh List
@@ -282,7 +282,7 @@ export default function MyBookingsPage() {
               /* Loading Skeleton Screen */
               <div className="space-y-6">
                 {[1, 2].map((i) => (
-                  <div key={i} className="glass-panel border border-white/5 rounded-3xl p-6 animate-pulse space-y-4">
+                  <div key={i} className="glass-panel border border-black/5 dark:border-white/5 rounded-3xl p-6 animate-pulse space-y-4 bg-white/30 dark:bg-[#111622]/30">
                     <div className="h-6 w-1/3 bg-white/5 rounded-lg" />
                     <div className="h-4 w-2/3 bg-white/5 rounded-lg" />
                     <div className="h-10 w-24 bg-white/5 rounded-lg" />
@@ -299,11 +299,11 @@ export default function MyBookingsPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center glass-panel border border-white/10 rounded-3xl p-16 relative overflow-hidden"
+                className="text-center glass-panel bg-white/50 dark:bg-gray-900/50 border border-black/5 dark:border-white/10 rounded-3xl p-16 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/30 via-orange-500/30 to-primary/30" />
                 
-                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6 text-foreground/40">
+                <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center mx-auto mb-6 text-foreground/40">
                   <Car size={36} />
                 </div>
                 
@@ -321,7 +321,7 @@ export default function MyBookingsPage() {
                   </Link>
                   <button
                     onClick={handleLogoutPhone}
-                    className="px-8 py-3.5 rounded-2xl glass-panel border border-white/10 hover:bg-white/5 font-bold uppercase tracking-wider text-xs transition-colors"
+                    className="px-8 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 font-bold uppercase tracking-wider text-xs transition-colors"
                   >
                     Try Another Number
                   </button>
@@ -343,7 +343,7 @@ export default function MyBookingsPage() {
                         <motion.div
                           key={b.id}
                           layoutId={b.id}
-                          className="glass-panel border-2 border-emerald-500/20 hover:border-emerald-500/40 rounded-3xl p-6 relative overflow-hidden shadow-xl shadow-emerald-500/5 transition-all"
+                          className="glass-panel bg-white/40 dark:bg-gray-900/40 border-2 border-emerald-500/20 hover:border-emerald-500/40 rounded-3xl p-6 relative overflow-hidden shadow-md dark:shadow-none transition-all"
                         >
                           <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
                           
@@ -408,7 +408,7 @@ export default function MyBookingsPage() {
                           </div>
 
                           {/* Live Dispatcher Ticker / Steps */}
-                          <div className="bg-[#111622] border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="bg-gray-50 dark:bg-[#111622] border border-gray-150 dark:border-white/5 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                                 <Clock size={20} className="animate-spin" />
@@ -447,7 +447,7 @@ export default function MyBookingsPage() {
                     {pastBookings.map((b) => (
                       <div
                         key={b.id}
-                        className="glass-panel border border-white/10 hover:border-white/15 rounded-2xl p-5 relative overflow-hidden transition-all"
+                        className="glass-panel bg-white/40 dark:bg-gray-900/40 border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/15 rounded-2xl p-5 relative overflow-hidden transition-all"
                       >
                         {/* Upper row */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4.5 border-b border-white/5 pb-3">
