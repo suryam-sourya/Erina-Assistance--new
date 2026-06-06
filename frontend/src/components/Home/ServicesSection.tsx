@@ -108,7 +108,7 @@ export default function ServicesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: service.delay }}
-              className="group glass-panel rounded-2xl p-7 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 border border-transparent dark:border-white/5 flex flex-col"
+              className="group glass-panel rounded-2xl p-7 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 border border-black/10 dark:border-white/10 hover:border-primary/40 dark:hover:border-primary/40 flex flex-col"
             >
               {/* Header: Icon + ETA badge */}
               <div className="flex items-start justify-between mb-5">
@@ -136,7 +136,7 @@ export default function ServicesSection() {
               <p className="text-sm text-foreground/60 mb-6 leading-relaxed flex-grow">{service.description}</p>
 
               {/* Footer: Price + CTA */}
-              <div className="flex items-center justify-between mt-auto pt-4 border-t border-foreground/5">
+              <div className="flex items-center justify-between mt-auto pt-4 border-t border-black/5 dark:border-white/10">
                 <div>
                   <span className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider block">Starting at</span>
                   <span className="text-lg font-black text-foreground">{service.price}</span>
