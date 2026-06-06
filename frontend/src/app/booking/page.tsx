@@ -219,10 +219,9 @@ if (
       return;
     }
 
-    // Enforce rigorous digit-only 10-digit mobile number check
-    const cleanedPhone = phone.replace(/\D/g, "");
-    if (cleanedPhone.length < 10) {
-      setErrorMessage('Please enter a valid 10-digit mobile number.');
+    // Enforce required check
+    if (!phone.trim()) {
+      setErrorMessage('Please enter your mobile number.');
       setSubmitStatus('error');
       return;
     }
@@ -401,13 +400,9 @@ if (
                     <input 
                       type="text" 
                       required
-                      placeholder="Enter 10-digit mobile" 
+                      placeholder="Enter mobile number" 
                       value={phone}
-                      onChange={(e) => {
-                        // Sanitize live: allow digits only and cap at 10 digits max
-                        const digits = e.target.value.replace(/\D/g, "").substring(0, 10);
-                        setPhone(digits);
-                      }}
+                      onChange={(e) => setPhone(e.target.value)}
                       className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground" 
                     />
                   </div>

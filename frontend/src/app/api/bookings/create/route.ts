@@ -63,15 +63,15 @@ export async function POST(req: Request) {
 
     // ── Strict Input Sanitization & Validation ───────────────────────────
     
-    // 1. Phone number validation: digits only, must contain 10 digits
-    const cleanedPhone = rawPhone ? rawPhone.replace(/\D/g, "") : "";
-    if (!cleanedPhone || cleanedPhone.length < 10) {
+    // 1. Phone number validation: required check only
+    const cleanedPhone = rawPhone ? rawPhone.trim() : "";
+    if (!cleanedPhone) {
       return NextResponse.json({
         success: false,
-        error: "Invalid phone number. Must be a valid 10-digit mobile number.",
+        error: "Phone number is required.",
       }, { status: 400 });
     }
-    const finalPhone = cleanedPhone.substring(cleanedPhone.length - 10); // Standardize to last 10 digits
+    const finalPhone = cleanedPhone;
 
     // 2. Vehicle license plate validation: uppercase, clean spaces/hyphens
     const cleanedPlate = rawVehicleNumber ? rawVehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase() : "";
