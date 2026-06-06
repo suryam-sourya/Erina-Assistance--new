@@ -394,25 +394,11 @@ serviceTypes:
   );
 }
 
-// refresh UI instantly
-window.location.reload();
+await fetchBookings();
 
 setShowNewTicketModal(false);
 
-alert(
-  "Ticket Created Successfully"
-);
-  // refresh booking list
-  setShowNewTicketModal(false);
-  alert("Ticket Created Successfully");
-
-  setShowNewTicketModal(
-    false
-  );
-
-  alert(
-    "Ticket Created Successfully"
-  );
+alert("Ticket Created Successfully");
 
 } catch (error: any) {
 
