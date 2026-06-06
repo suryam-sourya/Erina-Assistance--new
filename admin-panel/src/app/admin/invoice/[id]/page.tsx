@@ -637,7 +637,7 @@ export default function InvoicePage() {
   leading-5
 "
     >
-      📍 View Shared Location
+       View Shared Location
     </a>
   ) : (
     <p
