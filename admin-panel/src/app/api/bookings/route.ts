@@ -4,6 +4,45 @@ import Booking from "@/backend/models/Booking";
 
 export const dynamic = "force-dynamic";
 
+async function checkAndAutoCancelBooking(booking: any) {
+  if (!booking) return;
+  const statusUpper = (booking.status || "").toUpperCase();
+  if (statusUpper !== "COMPLETED" && statusUpper !== "CANCELLED") {
+    const createdAtTime = new Date(booking.createdAt).getTime();
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    if (createdAtTime < oneHourAgo) {
+      booking.status = "CANCELLED";
+      booking.paymentStatus = "CANCELLED";
+      if (!booking.timeline) {
+        booking.timeline = {};
+      }
+      booking.timeline.cancelledAt = new Date();
+      await booking.save();
+
+      // Sync cancellation to Cloud Firestore
+      try {
+        const { db } = await import("@/frontend/lib/firebase");
+        const { doc, updateDoc } = await import("firebase/firestore");
+        if (db && typeof db.app !== 'undefined') {
+          await updateDoc(doc(db, "active_bookings", booking._id.toString()), {
+            status: "cancelled",
+            timeline: {
+              confirmedAt: booking.timeline.confirmedAt ? booking.timeline.confirmedAt.toISOString() : new Date(booking.createdAt).toISOString(),
+              assignedAt: booking.timeline.assignedAt ? booking.timeline.assignedAt.toISOString() : null,
+              enRouteAt: booking.timeline.enRouteAt ? booking.timeline.enRouteAt.toISOString() : null,
+              arrivedAt: booking.timeline.arrivedAt ? booking.timeline.arrivedAt.toISOString() : null,
+              completedAt: booking.timeline.completedAt ? booking.timeline.completedAt.toISOString() : null,
+              cancelledAt: booking.timeline.cancelledAt.toISOString(),
+            }
+          });
+        }
+      } catch (fsErr) {
+        console.warn("Firestore auto-cancellation sync failed in admin API:", fsErr);
+      }
+    }
+  }
+}
+
 export async function GET() {
   try {
     await connectDB();
@@ -12,6 +51,10 @@ export async function GET() {
     const activeBookings = await Booking.find({
       status: { $nin: ["COMPLETED", "CANCELLED"] }
     }).sort({ createdAt: -1 });
+
+    for (const b of activeBookings) {
+      await checkAndAutoCancelBooking(b);
+    }
 
     // Limit historical completed/cancelled cases to the most recent 50 to maintain high speed
     const recentArchived = await Booking.find({
