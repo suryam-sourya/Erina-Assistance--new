@@ -427,6 +427,9 @@ export default function InvoicePage() {
 
   const isCompleted = invoice.booking.status === "completed";
   const { company, customer, booking, vehicle, terms, payment } = invoice;
+  const isGoogleMapsLink =
+  customer.address?.startsWith("http://") ||
+  customer.address?.startsWith("https://");
   
   // Dynamic client-side math recalculation for live preview
   const computedInvoice = recalculateInvoice(lineItems);
@@ -615,9 +618,42 @@ export default function InvoicePage() {
                   <span className="font-semibold">{customer.phone || "—"}</span>
                 </div>
                 <div className="flex items-start gap-2 text-foreground/50 text-xs print:text-gray-600">
-                  <MapPin size={11} className="shrink-0 mt-0.5" />
-                  <span className="font-semibold">{customer.address || "Bengaluru"}</span>
-                </div>
+  <MapPin
+    size={11}
+    className="shrink-0 mt-1"
+  />
+
+  {isGoogleMapsLink ? (
+    <a
+      href={customer.address}
+      target="_blank"
+      rel="noopener noreferrer"
+     className="
+  font-semibold
+  text-cyan-400
+  hover:text-cyan-300
+  underline
+  break-all
+  leading-5
+"
+    >
+       View Shared Location
+    </a>
+  ) : (
+    <p
+      className="
+        font-semibold
+        break-words
+        leading-5
+        max-w-full
+        line-clamp-3
+      "
+      title={customer.address}
+    >
+      {customer.address || "Bengaluru"}
+    </p>
+  )}
+</div>
               </div>
             )}
           </div>
