@@ -14,6 +14,7 @@ import {
   ChevronDown,
   AlertCircle, 
   CheckCircle2, 
+  XCircle,
   RefreshCw, 
   Car, 
   Search, 
@@ -394,6 +395,211 @@ function ActiveBookingCard({ b }: { b: Booking }) {
   );
 }
 
+function PastBookingCard({ b }: { b: Booking }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const bookingDate = new Date(b.createdAt).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+
+  const bookingTime = new Date(b.createdAt).toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  });
+
+  const maskedPhone = b.phone.length > 2 
+    ? "*".repeat(b.phone.length - 2) + b.phone.slice(-2) 
+    : b.phone;
+
+  const statusLabel = getStatusLabel(b.status, b.subStatus);
+
+  return (
+    <motion.div
+      layoutId={b.id}
+      className="glass-panel bg-white/40 dark:bg-gray-900/40 border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/15 rounded-2xl p-5 relative overflow-hidden transition-all shadow-md"
+    >
+      {/* Upper row */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4.5 border-b border-gray-150 dark:border-white/5 pb-3">
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-[10px] text-foreground/35 font-bold">CASE: {b.id.substring(0, 8).toUpperCase()}</span>
+            <span className="text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-white/5 text-foreground/55 border border-white/10 flex items-center gap-1">
+              <Calendar size={10} />
+              {bookingDate}
+            </span>
+            <span className={getStatusBadgeClass(b.status)}>
+              {statusLabel}
+            </span>
+          </div>
+          <h4 className="text-base font-extrabold text-foreground/80 mt-1 uppercase">{b.serviceLabel}</h4>
+        </div>
+
+        <div className="text-right">
+          {b.paymentAmount !== undefined && (
+            <div className="font-bold text-foreground">
+              ₹{b.paymentAmount.toLocaleString("en-IN")}
+            </div>
+          )}
+          <div className="text-[10px] text-foreground/45 mt-0.5 uppercase tracking-wider font-semibold">
+            {b.paymentMethod === "ONLINE" ? "ONLINE CARD GATEWAY" : "PAY ON DELIVERY"}
+          </div>
+        </div>
+      </div>
+
+      {/* Summary specifications details */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-foreground/60">
+        <div className="flex items-center gap-1.5">
+          <Car size={13} className="text-foreground/30 shrink-0" />
+          <span className="truncate">{b.vehicleType} {b.vehicleNumber && `(${b.vehicleNumber})`}</span>
+        </div>
+        
+        <div className="flex items-center gap-1.5">
+          <MapPin size={13} className="text-foreground/30 shrink-0" />
+          <span className="truncate leading-none">{b.address}</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 sm:justify-end">
+          {b.status.toLowerCase() === 'cancelled' ? (
+            <>
+              <XCircle size={13} className="text-rose-500 shrink-0" />
+              <span className="text-rose-400 font-bold">Incident Cancelled</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+              <span className="text-emerald-400 font-bold">Incident Resolved</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Collapse Trigger Link */}
+      {!isExpanded && (
+        <div className="border-t border-gray-100 dark:border-white/5 mt-4 pt-3 flex justify-end">
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="text-primary hover:text-primary-hover font-bold text-[10px] uppercase tracking-widest flex items-center gap-1 cursor-pointer select-none"
+          >
+            <span>More Info</span>
+            <ChevronDown size={12} />
+          </button>
+        </div>
+      )}
+
+      {/* Expanded Details Section */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-gray-100 dark:border-white/5 mt-4 pt-4"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] gap-6 text-xs text-foreground/80">
+              {/* Col 1: Booking Details */}
+              <div className="space-y-3">
+                <h5 className="font-extrabold text-[10px] uppercase tracking-wider text-foreground/50 flex items-center gap-1.5 mb-3">
+                  <Calendar size={12} className="text-primary" />
+                  Booking Details
+                </h5>
+                <div className="space-y-1.5">
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Service Type</span>
+                    <span className="font-bold text-foreground">: {b.serviceLabel}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Booking Date</span>
+                    <span className="font-bold text-foreground">: {bookingDate}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Booking Time</span>
+                    <span className="font-bold text-foreground">: {bookingTime}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Customer Name</span>
+                    <span className="font-bold text-foreground">: {b.customerName}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Contact Number</span>
+                    <span className="font-bold text-foreground">: {maskedPhone}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vertical Separator */}
+              <div className="hidden md:block w-px bg-gray-150 dark:bg-white/5 self-stretch" />
+
+              {/* Col 2: Dispatch Details */}
+              <div className="space-y-3">
+                <h5 className="font-extrabold text-[10px] uppercase tracking-wider text-foreground/50 flex items-center gap-1.5 mb-3">
+                  <Compass size={12} className="text-primary" />
+                  Resolution Details
+                </h5>
+                <div className="space-y-1.5">
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Final Status</span>
+                    <span className={`font-bold ${
+                      b.status.toLowerCase() === 'completed' ? 'text-emerald-500' : 'text-rose-500'
+                    }`}>: {statusLabel}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Operator/Tech</span>
+                    <span className="font-bold text-foreground">: {b.technicianName || "Assigned Agent"}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Live Tracking</span>
+                    <span className="font-bold text-foreground/40">: Expired (Past Incident)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vertical Separator */}
+              <div className="hidden md:block w-px bg-gray-150 dark:bg-white/5 self-stretch" />
+
+              {/* Col 3: Payment Details */}
+              <div className="space-y-3">
+                <h5 className="font-extrabold text-[10px] uppercase tracking-wider text-foreground/50 flex items-center gap-1.5 mb-3">
+                  <CreditCard size={12} className="text-primary" />
+                  Billing Details
+                </h5>
+                <div className="space-y-1.5">
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Amount Charged</span>
+                    <span className="font-bold text-foreground">: ₹{b.paymentAmount?.toLocaleString("en-IN") || "0"}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Payment Mode</span>
+                    <span className="font-bold text-foreground">: {b.paymentMethod === "ONLINE" ? "Card / Netbanking" : "Cash / UPI"}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Billing Status</span>
+                    <span className="font-bold text-emerald-500">: {b.paymentStatus || "Completed"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Less Info Button */}
+            <div className="flex justify-end pt-3 border-t border-gray-100 dark:border-white/5 mt-4">
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="text-primary hover:text-primary-hover font-bold text-[10px] uppercase tracking-widest flex items-center gap-1 cursor-pointer select-none"
+              >
+                <span>Less Info</span>
+                <ChevronUp size={12} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 export default function MyBookingsPage() {
   const [phoneInput, setPhoneInput] = useState("");
   const [storedPhone, setStoredPhone] = useState<string | null>(null);
@@ -679,60 +885,7 @@ export default function MyBookingsPage() {
 
                   <div className="grid gap-5">
                     {pastBookings.map((b) => (
-                      <div
-                        key={b.id}
-                        className="glass-panel bg-white/40 dark:bg-gray-900/40 border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/15 rounded-2xl p-5 relative overflow-hidden transition-all"
-                      >
-                        {/* Upper row */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4.5 border-b border-white/5 pb-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-[10px] text-foreground/35 font-bold">CASE: {b.id.substring(0, 8).toUpperCase()}</span>
-                              <span className="text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-white/5 text-foreground/55 border border-white/10 flex items-center gap-1">
-                                <Calendar size={10} />
-                                {new Date(b.createdAt).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric"
-                                })}
-                              </span>
-                              <span className={getStatusBadgeClass(b.status)}>
-                                {getStatusLabel(b.status, b.subStatus)}
-                              </span>
-                            </div>
-                            <h4 className="text-base font-extrabold text-foreground/80 mt-1 uppercase">{b.serviceLabel}</h4>
-                          </div>
-
-                          <div className="text-right">
-                            {b.paymentAmount !== undefined && (
-                              <div className="font-bold text-foreground">
-                                ₹{b.paymentAmount.toLocaleString("en-IN")}
-                              </div>
-                            )}
-                            <div className="text-[10px] text-foreground/45 mt-0.5 uppercase tracking-wider font-semibold">
-                              {b.paymentMethod === "ONLINE" ? "ONLINE CARD GATEWAY" : "PAY ON DELIVERY"}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Summary specifications details */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-foreground/60 mb-2">
-                          <div className="flex items-center gap-1.5">
-                            <Car size={13} className="text-foreground/30 shrink-0" />
-                            <span className="truncate">{b.vehicleType} {b.vehicleNumber && `(${b.vehicleNumber})`}</span>
-                          </div>
-                          
-                          <div className="flex items-center gap-1.5">
-                            <MapPin size={13} className="text-foreground/30 shrink-0" />
-                            <span className="truncate leading-none">{b.address}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 sm:justify-end">
-                            <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                            <span className="text-emerald-400 font-bold">Incident Resolved</span>
-                          </div>
-                        </div>
-                      </div>
+                      <PastBookingCard key={b.id} b={b} />
                     ))}
                   </div>
                 </div>
