@@ -22,6 +22,12 @@ export const metadata: Metadata = {
   title: "Erina Assistance | 24/7 AI-Powered Roadside Help in Bangalore",
   description:
     "India's smartest roadside assistance. Get emergency towing, flat tyre repair, battery jumpstart, fuel delivery & EV charging in Bangalore within 30 minutes. 24/7 live tracking, verified technicians.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Erina RSA",
+    statusBarStyle: "black-translucent",
+  },
   keywords: [
     "roadside assistance bangalore",
     "24/7 towing service",
@@ -145,6 +151,22 @@ export default function RootLayout({
           <Footer />
           <EmergencyButton />
         </ThemeProvider>
+        <Script id="register-sw" strategy="lazyOnload">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(
+                  function(registration) {
+                    console.log('[Service Worker] Registration successful with scope: ', registration.scope);
+                  },
+                  function(err) {
+                    console.log('[Service Worker] Registration failed: ', err);
+                  }
+                );
+              });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );
