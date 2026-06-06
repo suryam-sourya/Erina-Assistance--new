@@ -105,7 +105,9 @@ export async function POST(req: Request) {
       lockout: "LOCKOUT",
       engine: "ENGINE",
       accident: "ACCIDENT",
-      urgentbattery:"URGENT_BATTERY",
+      urgentbattery: "URGENT_BATTERY",
+      urgent_battery: "URGENT_BATTERY",
+      "urgent battery": "URGENT_BATTERY",
       other: "OTHER",
     };
     const officialServiceType = SERVICE_MAP[rawServiceType.toLowerCase()] || "OTHER";

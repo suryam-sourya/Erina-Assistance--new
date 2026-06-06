@@ -169,7 +169,7 @@ export default function ServicesSection() {
             <div className="relative h-10 w-28 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
               <Image src="/partner-luminous.png" alt="Luminous" fill className="object-contain" />
             </div> */}
-            {['CASTROL', 'MRF', 'AMARON', 'EXIDE'].map((brand) => (
+            {['LUMINOUS', 'AMARON', 'EXIDE'].map((brand) => (
               <span key={brand} className="text-lg font-black text-foreground/15 hover:text-foreground/40 transition-colors tracking-widest">
                 {brand}
               </span>
