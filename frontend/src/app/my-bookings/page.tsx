@@ -10,6 +10,8 @@ import {
   MapPin, 
   CreditCard, 
   ChevronRight, 
+  ChevronUp,
+  ChevronDown,
   AlertCircle, 
   CheckCircle2, 
   RefreshCw, 
@@ -21,7 +23,13 @@ import {
   Info,
   DollarSign,
   Wrench,
-  Clock
+  Clock,
+  Truck,
+  Zap,
+  Droplet,
+  Key,
+  Compass,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -43,6 +51,347 @@ interface Booking {
   createdAt: string;
   estimatedArrivalTime?: string | null;
   technicianName?: string | null;
+}
+
+// Module-level Helper Functions
+const getStatusBadgeClass = (status: string) => {
+  const s = status.toLowerCase();
+  if (s === "completed") return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+  if (s === "emergency" || s === "cancelled") return "bg-rose-500/10 text-rose-400 border border-rose-500/20";
+  if (s === "pending") return "bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse";
+  return "bg-sky-500/10 text-sky-400 border border-sky-500/20"; // assigned, in_progress, en_route
+};
+
+const getStatusLabel = (status: string, subStatus: string | null) => {
+  const s = status.toLowerCase();
+  if (s === "completed") return "Resolved Successfully";
+  if (s === "cancelled") return "Cancelled";
+  if (s === "pending") return "Searching for Motorist";
+  if (s === "emergency") return "High Priority Rescue Queue";
+  
+  if (s === "assigned") {
+    if (subStatus === "collecting_tools") return "Technician Gathering Tools";
+    return "Technician Assigned";
+  }
+  if (s === "in_progress" || s === "en_route") {
+    if (subStatus === "nearly_there") return "Technician Approaching Site";
+    return "Technician En Route";
+  }
+  return status;
+};
+
+const getServiceIcon = (serviceType: string) => {
+  const type = serviceType?.toLowerCase() || '';
+  if (type.includes('towing') && type.includes('car')) {
+    return {
+      icon: <Truck size={26} />,
+      bgColor: 'bg-rose-50 dark:bg-rose-950/20',
+      textColor: 'text-rose-500'
+    };
+  }
+  if (type.includes('towing') || type.includes('bike') || type.includes('assistance')) {
+    return {
+      icon: <Wrench size={26} />,
+      bgColor: 'bg-red-50 dark:bg-red-950/20',
+      textColor: 'text-red-500'
+    };
+  }
+  if (type.includes('battery')) {
+    return {
+      icon: <Zap size={26} />,
+      bgColor: 'bg-amber-50 dark:bg-amber-950/20',
+      textColor: 'text-amber-500'
+    };
+  }
+  if (type.includes('fuel')) {
+    return {
+      icon: <Droplet size={26} />,
+      bgColor: 'bg-emerald-50 dark:bg-emerald-950/20',
+      textColor: 'text-emerald-500'
+    };
+  }
+  if (type.includes('lockout')) {
+    return {
+      icon: <Key size={26} />,
+      bgColor: 'bg-purple-50 dark:bg-purple-950/20',
+      textColor: 'text-purple-500'
+    };
+  }
+  if (type.includes('ev')) {
+    return {
+      icon: <Zap size={26} />,
+      bgColor: 'bg-cyan-50 dark:bg-cyan-950/20',
+      textColor: 'text-cyan-500'
+    };
+  }
+  return {
+    icon: <Sparkles size={26} />,
+    bgColor: 'bg-blue-50 dark:bg-blue-950/20',
+    textColor: 'text-blue-500'
+  };
+};
+
+function ActiveBookingCard({ b }: { b: Booking }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const bookingDate = new Date(b.createdAt).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+
+  const bookingTime = new Date(b.createdAt).toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  });
+
+  const maskedPhone = b.phone.length > 2 
+    ? "*".repeat(b.phone.length - 2) + b.phone.slice(-2) 
+    : b.phone;
+
+  const statusLabel = getStatusLabel(b.status, b.subStatus);
+
+  let dispatcherPhase = "Active Rescue Monitoring";
+  const s = b.status.toLowerCase();
+  if (s === "pending" || s === "emergency") {
+    dispatcherPhase = "Allocation in Progress";
+  } else if (s === "assigned") {
+    dispatcherPhase = "Dispatch Route Preparation";
+  } else if (s === "in_progress" || s === "en_route") {
+    dispatcherPhase = "Technician En Route";
+  }
+
+  const serviceIconInfo = getServiceIcon(b.serviceType);
+
+  return (
+    <motion.div
+      layoutId={b.id}
+      className="glass-panel bg-white dark:bg-gray-900/80 border border-gray-150 dark:border-gray-800 rounded-3xl p-6 relative overflow-hidden shadow-lg transition-all"
+    >
+      <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+      
+      {/* Top Row: Ticket Info, status indicator and live track button */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 border-b border-gray-100 dark:border-gray-800/80 pb-4">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-foreground/45 uppercase tracking-wider font-bold">Ticket</span>
+            <span className="font-mono text-sm font-black text-foreground">{b.id.substring(0, 8).toUpperCase()}</span>
+          </div>
+          
+          <div className="hidden sm:block w-px h-8 bg-gray-150 dark:bg-gray-800" />
+          
+          <div className="flex flex-col">
+            <span className="text-[10px] text-foreground/45 uppercase tracking-wider font-bold">Status</span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className={`w-2 h-2 rounded-full ${
+                b.status.toLowerCase() === 'emergency' ? 'bg-rose-500 animate-pulse' :
+                b.status.toLowerCase() === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+              }`} />
+              <span className={`text-xs font-bold ${
+                b.status.toLowerCase() === 'emergency' ? 'text-rose-500' :
+                b.status.toLowerCase() === 'pending' ? 'text-amber-500' : 'text-emerald-500'
+              }`}>{statusLabel}</span>
+            </div>
+          </div>
+        </div>
+
+        <Link
+          href={`/tracking?id=${b.id}`}
+          className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all cursor-pointer group"
+        >
+          <Compass size={14} className="animate-spin text-white" />
+          <span>Track Live Rescue Map</span>
+          <ChevronRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      </div>
+
+      {/* Main Service Block */}
+      <div className="flex items-start gap-4">
+        {/* Service Type Circular Icon */}
+        <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 shadow-sm ${serviceIconInfo.bgColor} ${serviceIconInfo.textColor}`}>
+          {serviceIconInfo.icon}
+        </div>
+        
+        <div className="flex-grow space-y-4">
+          <h4 className="text-base font-extrabold text-primary tracking-wide uppercase mt-1">
+            {b.serviceLabel}
+          </h4>
+          
+          {/* Middle Grid: Detail blocks */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-150 dark:border-gray-800 flex items-center justify-center text-primary/70 shrink-0">
+                <Car size={18} />
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[9px] uppercase font-bold text-foreground/45 tracking-widest block">Vehicle</span>
+                <span className="text-xs font-bold text-foreground block uppercase leading-tight">{b.vehicleType}</span>
+                {b.vehicleNumber && (
+                  <span className="text-[10px] font-mono font-bold text-foreground/60 block">
+                    {b.vehicleNumber}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-150 dark:border-gray-800 flex items-center justify-center text-primary/70 shrink-0">
+                <MapPin size={18} />
+              </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[9px] uppercase font-bold text-foreground/45 tracking-widest block">Dispatch Location</span>
+                <span className="text-xs font-semibold text-foreground/80 line-clamp-2 leading-relaxed block">{b.address}</span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-150 dark:border-gray-800 flex items-center justify-center text-primary/70 shrink-0">
+                <CreditCard size={18} />
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[9px] uppercase font-bold text-foreground/45 tracking-widest block">Payment Setup</span>
+                <span className="text-xs font-bold text-foreground block leading-tight">
+                  {b.paymentMethod === "ONLINE" ? "Paid Online (Simulation)" : "Pay on Delivery (Cash/UPI)"}
+                </span>
+                {b.paymentAmount !== undefined && (
+                  <span className="text-xs font-bold text-emerald-500 block mt-0.5">
+                    Amount Billed: ₹{b.paymentAmount.toLocaleString("en-IN")}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Collapse Trigger Link */}
+      {!isExpanded && (
+        <div className="border-t border-gray-100 dark:border-gray-800/80 mt-5 pt-3 flex justify-end">
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="text-primary hover:text-primary-hover font-bold text-xs uppercase tracking-widest flex items-center gap-1 cursor-pointer select-none"
+          >
+            <span>More Info</span>
+            <ChevronDown size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Expanded Details Section */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-gray-100 dark:border-gray-800/80 mt-5 pt-5"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] gap-6 text-sm text-foreground/85">
+              {/* Col 1: Booking Details */}
+              <div className="space-y-3">
+                <h5 className="font-extrabold text-xs uppercase tracking-wider text-foreground/50 flex items-center gap-1.5 mb-4">
+                  <Calendar size={14} className="text-primary" />
+                  Booking Details
+                </h5>
+                <div className="space-y-2 text-xs">
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Service Type</span>
+                    <span className="font-bold text-foreground">: {b.serviceLabel}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Booking Date</span>
+                    <span className="font-bold text-foreground">: {bookingDate}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Booking Time</span>
+                    <span className="font-bold text-foreground">: {bookingTime}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Customer Name</span>
+                    <span className="font-bold text-foreground">: {b.customerName}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Contact Number</span>
+                    <span className="font-bold text-foreground">: {maskedPhone}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vertical Separator */}
+              <div className="hidden md:block w-px bg-gray-150 dark:bg-gray-800/80 self-stretch" />
+
+              {/* Col 2: Dispatch Details */}
+              <div className="space-y-3">
+                <h5 className="font-extrabold text-xs uppercase tracking-wider text-foreground/50 flex items-center gap-1.5 mb-4">
+                  <Compass size={14} className="text-primary animate-pulse" />
+                  Dispatch Details
+                </h5>
+                <div className="space-y-2 text-xs">
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Current Status</span>
+                    <span className={`font-bold ${
+                      b.status.toLowerCase() === 'emergency' ? 'text-rose-500' :
+                      b.status.toLowerCase() === 'pending' ? 'text-amber-500' : 'text-emerald-500'
+                    }`}>: {statusLabel}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Dispatcher Phase</span>
+                    <span className="font-bold text-foreground">: {dispatcherPhase}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Live Session</span>
+                    <span className="font-bold text-emerald-500">: Open</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">ETA</span>
+                    <span className="font-bold text-foreground">: {b.estimatedArrivalTime || "Calculating..."}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vertical Separator */}
+              <div className="hidden md:block w-px bg-gray-150 dark:bg-gray-800/80 self-stretch" />
+
+              {/* Col 3: Payment Details */}
+              <div className="space-y-3">
+                <h5 className="font-extrabold text-xs uppercase tracking-wider text-foreground/50 flex items-center gap-1.5 mb-4">
+                  <CreditCard size={14} className="text-primary" />
+                  Payment Details
+                </h5>
+                <div className="space-y-2 text-xs">
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Amount</span>
+                    <span className="font-bold text-foreground">: ₹{b.paymentAmount?.toLocaleString("en-IN") || "0"}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Payment Method</span>
+                    <span className="font-bold text-foreground">: {b.paymentMethod === "ONLINE" ? "Card / Netbanking" : "Cash / UPI"}</span>
+                  </div>
+                  <div className="grid grid-cols-[100px_1fr] gap-2">
+                    <span className="text-foreground/50">Payment Status</span>
+                    <span className="font-bold text-foreground">: {b.paymentStatus || "Pending"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Less Info Button */}
+            <div className="flex justify-end pt-5 border-t border-gray-100 dark:border-gray-800/80 mt-5">
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="text-primary hover:text-primary-hover font-bold text-xs uppercase tracking-widest flex items-center gap-1 cursor-pointer select-none"
+              >
+                <span>Less Info</span>
+                <ChevronUp size={14} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
 }
 
 export default function MyBookingsPage() {
@@ -126,31 +475,7 @@ export default function MyBookingsPage() {
     setPhoneInput("");
   };
 
-  const getStatusBadgeClass = (status: string) => {
-    const s = status.toLowerCase();
-    if (s === "completed") return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-    if (s === "emergency" || s === "cancelled") return "bg-rose-500/10 text-rose-400 border border-rose-500/20";
-    if (s === "pending") return "bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse";
-    return "bg-sky-500/10 text-sky-400 border border-sky-500/20"; // assigned, in_progress, en_route
-  };
-
-  const getStatusLabel = (status: string, subStatus: string | null) => {
-    const s = status.toLowerCase();
-    if (s === "completed") return "Resolved Successfully";
-    if (s === "cancelled") return "Cancelled";
-    if (s === "pending") return "Searching for Motorist";
-    if (s === "emergency") return "High Priority Rescue Queue";
-    
-    if (s === "assigned") {
-      if (subStatus === "collecting_tools") return "Technician Gathering Tools";
-      return "Technician Assigned";
-    }
-    if (s === "in_progress" || s === "en_route") {
-      if (subStatus === "nearly_there") return "Technician Approaching Site";
-      return "Technician En Route";
-    }
-    return status;
-  };
+  // Removed class-level getStatusBadgeClass and getStatusLabel (now at module scope)
 
   const activeBookings = bookings.filter(b => b.status.toLowerCase() !== "completed" && b.status.toLowerCase() !== "cancelled");
   const pastBookings = bookings.filter(b => b.status.toLowerCase() === "completed" || b.status.toLowerCase() === "cancelled");
@@ -340,98 +665,7 @@ export default function MyBookingsPage() {
 
                     <div className="grid gap-6">
                       {activeBookings.map((b) => (
-                        <motion.div
-                          key={b.id}
-                          layoutId={b.id}
-                          className="glass-panel bg-white/40 dark:bg-gray-900/40 border-2 border-emerald-500/20 hover:border-emerald-500/40 rounded-3xl p-6 relative overflow-hidden shadow-md dark:shadow-none transition-all"
-                        >
-                          <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
-                          
-                          {/* Top Row: Ticket Info and live track button */}
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 border-b border-white/5 pb-4">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs text-foreground/45 font-bold">TICKET: {b.id.substring(0, 8).toUpperCase()}</span>
-                                <span className={getStatusBadgeClass(b.status)}>
-                                  {getStatusLabel(b.status, b.subStatus)}
-                                </span>
-                              </div>
-                              <h4 className="text-lg font-black text-primary mt-1.5 uppercase">{b.serviceLabel}</h4>
-                            </div>
-
-                            <Link
-                              href={`/tracking?id=${b.id}`}
-                              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-[#070A0F] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all cursor-pointer group"
-                            >
-                              <span>Track Live Rescue Map</span>
-                              <ChevronRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-                            </Link>
-                          </div>
-
-                          {/* Middle Grid: Detail blocks */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-5">
-                            <div className="space-y-1">
-                              <span className="text-[10px] uppercase font-bold text-foreground/45 tracking-widest block">Stranded Vehicle</span>
-                              <div className="flex items-center gap-2 font-bold text-foreground/80">
-                                <Car size={16} className="text-primary/70" />
-                                <span>{b.vehicleType}</span>
-                              </div>
-                              {b.vehicleNumber && (
-                                <span className="text-xs font-mono font-bold bg-white/5 text-foreground/70 border border-white/10 px-2 py-0.5 rounded-md inline-block mt-1">
-                                  {b.vehicleNumber}
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-[10px] uppercase font-bold text-foreground/45 tracking-widest block">Dispatch Location</span>
-                              <div className="flex items-start gap-1.5 font-bold text-foreground/80">
-                                <MapPin size={16} className="text-primary/70 shrink-0 mt-0.5" />
-                                <span className="line-clamp-2 leading-relaxed text-xs">{b.address}</span>
-                              </div>
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-[10px] uppercase font-bold text-foreground/45 tracking-widest block">Payment Setup</span>
-                              <div className="flex items-center gap-2 font-bold text-foreground/80">
-                                <CreditCard size={16} className="text-primary/70" />
-                                <span>
-                                  {b.paymentMethod === "ONLINE" ? "Paid Online (Simulation)" : "Pay on Delivery (Cash/UPI)"}
-                                </span>
-                              </div>
-                              {b.paymentAmount !== undefined && (
-                                <span className="text-xs font-bold text-emerald-400 block mt-1.5">
-                                  Amount Billed: ₹{b.paymentAmount.toLocaleString("en-IN")}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Live Dispatcher Ticker / Steps */}
-                          <div className="bg-gray-50 dark:bg-[#111622] border border-gray-150 dark:border-white/5 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                                <Clock size={20} className="animate-spin" />
-                              </div>
-                              <div>
-                                <h5 className="font-bold text-xs uppercase tracking-wider text-foreground/75">
-                                  {b.technicianName ? `Responder: ${b.technicianName}` : "Dispatcher Allocation Phase"}
-                                </h5>
-                                <p className="text-[11px] text-foreground/45 mt-0.5">
-                                  {b.estimatedArrivalTime 
-                                    ? `Estimated Arrival Time: ${b.estimatedArrivalTime}`
-                                    : "Matching closest certified motorist mechanic team..."}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="text-right">
-                              <span className="text-[10px] uppercase font-bold text-primary tracking-widest animate-pulse">
-                                Live Session Open
-                              </span>
-                            </div>
-                          </div>
-                        </motion.div>
+                        <ActiveBookingCard key={b.id} b={b} />
                       ))}
                     </div>
                   </div>
