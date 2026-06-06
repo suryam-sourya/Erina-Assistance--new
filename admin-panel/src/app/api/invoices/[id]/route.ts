@@ -138,8 +138,76 @@ export async function GET(
     const serviceKey = (obj.serviceType || "OTHER").toUpperCase().replace(/-/g, "_");
     
     let serviceLineItems: ServiceLineItem[] = [];
+    if (
+  (!obj.soldServices || obj.soldServices.length === 0) &&
+  obj.serviceTypes &&
+  obj.serviceTypes.length > 0
+) {
 
-    if (obj.soldServices && obj.soldServices.length > 0) {
+  const serviceCount =
+  obj.serviceTypes.length || 1;
+
+const perServiceAmount =
+  round2(
+    (obj.paymentAmount || 0) /
+    serviceCount
+  );
+  
+  serviceLineItems = obj.serviceTypes.map(
+    (service: string) => {
+
+      const key = service
+        .toUpperCase()
+        .replace(/-/g, "_");
+
+      const base = extractBase(
+        perServiceAmount,
+        SERVICE_GST_RATE
+      );
+
+      const cgst = round2(
+        base * (SERVICE_GST_RATE / 2)
+      );
+
+      const sgst = round2(
+        base * (SERVICE_GST_RATE / 2)
+      );
+
+      return {
+        type: "service",
+        description:
+          SERVICE_LABELS[key] ||
+          key,
+
+        detail:
+          SERVICE_DESCRIPTIONS[key] ||
+          "",
+
+        hsnCode:
+          SERVICE_SAC_CODE,
+
+        quantity: 1,
+
+        unitPrice:
+          perServiceAmount,
+
+        base,
+        cgst,
+        sgst,
+
+        gstRate:
+          SERVICE_GST_RATE,
+
+        amount:
+          perServiceAmount,
+
+        serviceType:
+          key,
+      };
+    }
+  );
+}
+   else  if (obj.soldServices && obj.soldServices.length > 0) {
       serviceLineItems = obj.soldServices.map((s: SoldServiceItem) => {
         const gstRate   = s.gstRate ?? 0.18;
         const lineTotal = round2(s.unitPrice * s.quantity);
