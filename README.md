@@ -159,7 +159,7 @@ npm test
 
 Both applications are configured for production deployment on **Vercel**:
 * **Frontend Customer Production URL:** [https://frontend-zeta-cyan-18.vercel.app](https://frontend-zeta-cyan-18.vercel.app)
-* **Admin Panel Production URL:** [https://admin-panel-psi-pearl.vercel.app](https://admin-panel-psi-pearl.vercel.app)
+
 
 Deploy updates by running the following command in either folder:
 ```bash
