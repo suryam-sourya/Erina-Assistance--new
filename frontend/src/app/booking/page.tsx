@@ -93,8 +93,8 @@ export default function BookingPage() {
 
   // Auto-fetch customer profile and populate form
   useEffect(() => {
-    // 1. Pre-fill from localStorage if available
-    if (typeof window !== 'undefined') {
+    // 1. Pre-fill from localStorage if available (only if user is signed in)
+    if (user && typeof window !== 'undefined') {
       const savedPhone = localStorage.getItem('erina_user_phone');
       if (savedPhone && !phone) {
         setPhone(savedPhone);
