@@ -34,16 +34,22 @@ describe('Footer', () => {
   });
 
   describe('Social Icons', () => {
-    it('renders the Facebook icon with correct image', () => {
+    it('renders the Facebook icon with correct image and URL', () => {
       const fbIcon = screen.getByAltText('Facebook') as HTMLImageElement;
       expect(fbIcon).toBeInTheDocument();
       expect(fbIcon.src).toContain('facebook.png');
+      const link = fbIcon.closest('a');
+      expect(link).toHaveAttribute('href', 'https://www.facebook.com/share/1BHEn3zBxx/');
+      expect(link).toHaveAttribute('target', '_blank');
     });
 
-    it('renders the LinkedIn icon with correct image', () => {
+    it('renders the LinkedIn icon with correct image and URL', () => {
       const liIcon = screen.getByAltText('LinkedIn') as HTMLImageElement;
       expect(liIcon).toBeInTheDocument();
       expect(liIcon.src).toContain('linkedin.png');
+      const link = liIcon.closest('a');
+      expect(link).toHaveAttribute('href', 'https://www.linkedin.com/company/erina-assistance/');
+      expect(link).toHaveAttribute('target', '_blank');
     });
 
     it('renders the WhatsApp icon with correct image', () => {

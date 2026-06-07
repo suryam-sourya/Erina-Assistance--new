@@ -54,10 +54,10 @@ export default function Footer() {
               India&apos;s smartest roadside assistance platform. AI-powered dispatch, live GPS tracking, and verified technicians — available 24/7 across Bangalore.
             </p>
             <div className="flex items-center space-x-4 pt-2">
-              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
+              <a href="https://www.facebook.com/share/1BHEn3zBxx/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
                 <Image src="/facebook.png" alt="Facebook" fill className="object-contain" />
               </a>
-              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
+              <a href="https://www.linkedin.com/company/erina-assistance/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
                 <Image src="/linkedin.png" alt="LinkedIn" fill className="object-contain" />
               </a>
               <a href="https://www.instagram.com/erinaassistance?igsh=dTFnMmh4NDJqcTRx" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hover:scale-110 transition-transform w-7 h-7 flex items-center justify-center rounded-lg bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-md shadow-pink-500/10">
