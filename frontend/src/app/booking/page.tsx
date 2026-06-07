@@ -638,51 +638,18 @@ if (
                 </div>
               </div>
 
-              {/* Select Payment Method Grid */}
+              {/* Select Payment Method */}
               <div className="space-y-3">
                 <label className="block text-sm font-semibold text-foreground">Select Payment Method</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Option 1: POD */}
-                  <div 
-                    onClick={() => setPaymentMethod('PAY_ON_DELIVERY')}
-                    className={`rounded-2xl border p-4 cursor-pointer transition-all relative flex items-center gap-3.5 ${
-                      paymentMethod === 'PAY_ON_DELIVERY'
-                        ? 'border-primary bg-primary/5 text-primary shadow-md shadow-primary/5'
-                        : 'border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-850 hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground/80'
-                    }`}
-                  >
-                    <div className={`p-2.5 rounded-xl ${paymentMethod === 'PAY_ON_DELIVERY' ? 'bg-primary/10' : 'bg-gray-200 dark:bg-gray-800'}`}>
-                      <Wallet size={18} />
-                    </div>
-                    <div>
-                      <h4 className="font-extrabold text-sm text-foreground">Pay on Delivery</h4>
-                      <p className="text-[10px] text-foreground/45 mt-0.5 font-semibold">Cash/UPI on-scene to tech</p>
-                    </div>
-                    {paymentMethod === 'PAY_ON_DELIVERY' && (
-                      <span className="absolute top-0 right-0 w-3 h-3 rounded-bl-lg bg-primary" />
-                    )}
+                <div className="rounded-2xl border p-4 relative flex items-center gap-3.5 border-primary bg-primary/5 text-primary shadow-md shadow-primary/5">
+                  <div className="p-2.5 rounded-xl bg-primary/10">
+                    <Wallet size={18} />
                   </div>
-
-                  {/* Option 2: Online Pay Now */}
-                  <div 
-                    onClick={() => setPaymentMethod('ONLINE')}
-                    className={`rounded-2xl border p-4 cursor-pointer transition-all relative flex items-center gap-3.5 ${
-                      paymentMethod === 'ONLINE'
-                        ? 'border-primary bg-primary/5 text-primary shadow-md shadow-primary/5'
-                        : 'border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-850 hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground/80'
-                    }`}
-                  >
-                    <div className={`p-2.5 rounded-xl ${paymentMethod === 'ONLINE' ? 'bg-primary/10' : 'bg-gray-200 dark:bg-gray-800'}`}>
-                      <CreditCard size={18} />
-                    </div>
-                    <div>
-                      <h4 className="font-extrabold text-sm text-foreground">Pay Now (Simulated)</h4>
-                      <p className="text-[10px] text-foreground/45 mt-0.5 font-semibold">Netbanking / Card Gate</p>
-                    </div>
-                    {paymentMethod === 'ONLINE' && (
-                      <span className="absolute top-0 right-0 w-3 h-3 rounded-bl-lg bg-primary" />
-                    )}
+                  <div>
+                    <h4 className="font-extrabold text-sm text-foreground">Pay on Delivery</h4>
+                    <p className="text-[10px] text-foreground/45 mt-0.5 font-semibold">Cash/UPI on-scene to tech</p>
                   </div>
+                  <span className="absolute top-0 right-0 w-3 h-3 rounded-bl-lg bg-primary" />
                 </div>
               </div>
 
