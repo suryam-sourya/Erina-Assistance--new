@@ -227,15 +227,29 @@ if (
     }
 
     // Enforce rigorous vehicle license plate check (Indian registration format)
-    const cleanedPlate = vehicleNumber.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-    const standardRegex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{1,4}$/;
-    const bhRegex = /^[0-9]{2}BH[0-9]{4}[A-Z]{2}$/;
+    if (vehicleType !== "Other") {
+  const cleanedPlate = vehicleNumber
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase();
 
-    if (!standardRegex.test(cleanedPlate) && !bhRegex.test(cleanedPlate)) {
-      setErrorMessage('Please enter a valid Indian vehicle number (e.g. KA03MY1234 or 22BH1234AA).');
-      setSubmitStatus('error');
-      return;
-    }
+  const standardRegex =
+    /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{1,4}$/;
+
+  const bhRegex =
+    /^[0-9]{2}BH[0-9]{4}[A-Z]{2}$/;
+
+  if (
+    !standardRegex.test(cleanedPlate) &&
+    !bhRegex.test(cleanedPlate)
+  ) {
+    setErrorMessage(
+      "Please enter a valid Indian vehicle number (e.g. KA03MY1234 or 22BH1234AA)."
+    );
+
+    setSubmitStatus("error");
+    return;
+  }
+}
 
     // Intercept checkout for payment simulation
     if (paymentMethod === 'ONLINE' && !isPaymentBypassed) {
@@ -266,8 +280,8 @@ if (
           serviceType: selectedIssue.toLowerCase().replace(' ', '_'),
           description:selectedIssue === "Other"? issueDescription: `${selectedIssue} emergency breakdown assistance near ${locationName}`,
           vehicleType,
-          vehicleNumber,
-          vehiclePlate: vehicleNumber,
+          vehicleNumber:vehicleType === "Other"? "": vehicleNumber,
+          vehiclePlate:vehicleType === "Other"? "": vehicleNumber,
           status: isPriority ? 'emergency' : 'pending',
           location: coordinates || { lat: 12.9928671, lng: 77.7529829 },
           address: locationName || 'Erina Hub, Bangalore',
@@ -423,23 +437,32 @@ if (
                       <option>Two-Wheeler</option>
                       <option>Commercial Vehicle</option>
                       <option>Electric Vehicle (EV)</option>
+                      <option>Other</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">Vehicle Number</label>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="e.g. KA03MY1234" 
-                      value={vehicleNumber}
-                      onChange={(e) => {
-                        // Sanitize live: alphanumeric only, force uppercase, cap at 10 chars max
-                        const plate = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().substring(0, 10);
-                        setVehicleNumber(plate);
-                      }}
-                      className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all uppercase text-foreground" 
-                    />
-                  </div>
+                  {vehicleType !== "Other" && (
+  <div>
+    <label className="block text-sm font-semibold text-foreground mb-2">
+      Vehicle Number
+    </label>
+
+    <input
+      type="text"
+      required
+      placeholder="e.g. KA03MY1234"
+      value={vehicleNumber}
+      onChange={(e) => {
+        const plate = e.target.value
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toUpperCase()
+          .substring(0, 10);
+
+        setVehicleNumber(plate);
+      }}
+      className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all uppercase text-foreground"
+    />
+  </div>
+)}
                 </div>
               </div>
 

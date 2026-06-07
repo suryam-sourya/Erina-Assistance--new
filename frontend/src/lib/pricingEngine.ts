@@ -31,6 +31,7 @@ export interface PricingConfig {
     twoWheeler: number;
     commercial: number;
     ev: number;
+    other: number;
   };
   nightSurcharge: number;
   peakHourSurcharge: number;
@@ -109,6 +110,7 @@ const VEHICLE_KEY_MAP: Record<string, keyof PricingConfig['vehicleMultipliers']>
   'two-wheeler':           'twoWheeler',
   'commercial vehicle':    'commercial',
   'electric vehicle (ev)': 'ev',
+  'other':                   'other',
 };
 
 // ── Main calculator ────────────────────────────────────────────────────────
@@ -184,6 +186,7 @@ export const DEFAULT_PRICING: PricingConfig = {
     twoWheeler: 0.7,
     commercial: 2.5,
     ev:         1.4,
+    other:      1.0,
   },
   nightSurcharge:     1.5,
   peakHourSurcharge:  1.25,
