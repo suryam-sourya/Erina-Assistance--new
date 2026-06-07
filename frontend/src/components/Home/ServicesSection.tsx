@@ -21,7 +21,7 @@ const services = [
     description: 'Two-wheeler breakdown support including towing, flat tyre repair and on-spot servicing.',
     icon: { type: 'image', src: '/service-bike.png' },
     eta: '~20 min',
-    price: '₹700',
+    price: '₹400',
     delay: 0.15,
   },
   {
@@ -30,8 +30,17 @@ const services = [
     description: 'Instant jumpstart for dead batteries to get you moving again fast.',
     icon: { type: 'lucide', component: <Zap size={28} />, color: 'from-yellow-500 to-yellow-600' },
     eta: '~15 min',
-    price: '₹900',
+    price: '₹300',
     delay: 0.2,
+  },
+  {
+    id: 'urgent-battery',
+    title: 'Urgent Battery',
+    description: 'Emergency battery replacement & jumpstart at your location',
+    icon: { type: 'lucide', component: <Zap size={28} />, color: 'from-orange-500 to-red-500' },
+    eta: '~25 min',
+    price: '₹3,000',
+    delay: 0.3,
   },
   {
     id: 'fuel',
@@ -51,24 +60,16 @@ const services = [
     price: '₹500',
     delay: 0.3,
   },
-  {
-    id: 'ev',
-    title: 'EV Assistance',
-    description: 'Mobile charging stations for electric vehicles stranded without charge.',
-    icon: { type: 'lucide', component: <PlugZap size={28} />, color: 'from-cyan-500 to-cyan-600' },
-    eta: '~30 min',
-    price: '₹600',
-    delay: 0.35,
-  },
-  {
-    id: 'urgent-battery',
-    title: 'Urgent Battery',
-    description: 'Emergency battery replacement & jumpstart at your location',
-    icon: { type: 'lucide', component: <Zap size={28} />, color: 'from-orange-500 to-red-500' },
-    eta: '~25 min',
-    price: '₹3,000',
-    delay: 0.3,
-  }
+  // {
+  //   id: 'ev',
+  //   title: 'EV Assistance',
+  //   description: 'Mobile charging stations for electric vehicles stranded without charge.',
+  //   icon: { type: 'lucide', component: <PlugZap size={28} />, color: 'from-cyan-500 to-cyan-600' },
+  //   eta: '~30 min',
+  //   price: '₹600',
+  //   delay: 0.35,
+  // },
+  
 ];
 
 export default function ServicesSection() {
