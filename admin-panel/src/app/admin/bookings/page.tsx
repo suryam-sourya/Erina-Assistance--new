@@ -682,21 +682,22 @@ alert("Ticket Created Successfully");
                                 </span>
                               )}
                             </div>
-                            {booking.status?.toLowerCase() !== 'cancelled' && (
-                              <button
+                            {booking.status?.toLowerCase() !== 'cancelled' &&
+                                booking.invoiceStatus !== 'FINAL' && (
+                            <button
                                 type="button"
                                 onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedBooking(booking);
-                                  setCustomServicePrice(getServicePrice(booking));
-                                  setIsEditingService(true);
-                                }}
-                                className="p-1.5 bg-white/5 hover:bg-white/10 text-foreground/45 hover:text-white rounded-lg transition-all border border-white/5 cursor-pointer flex items-center justify-center flex-shrink-0"
-                                title="Modify Booking Service"
-                              >
-                                <Wrench size={10} />
-                              </button>
-                            )}
+                                e.stopPropagation();
+                                setSelectedBooking(booking);
+                                setCustomServicePrice(getServicePrice(booking));
+                                setIsEditingService(true);
+                                  }}
+                          className="p-1.5 bg-white/5 hover:bg-white/10 text-foreground/45 hover:text-white rounded-lg transition-all border border-white/5 cursor-pointer flex items-center justify-center flex-shrink-0"
+                           title="Modify Booking Service"
+                            >
+                            <Wrench size={10} />
+                            </button>
+              )}
                           </div>
                         </td>
 
@@ -1576,6 +1577,9 @@ alert("Ticket Created Successfully");
 
               <option>
                 Bike
+              </option>
+              <option>
+                Other
               </option>
             </select>
           </div>

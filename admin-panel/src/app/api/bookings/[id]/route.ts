@@ -25,6 +25,23 @@ export async function PUT(
         error: "Booking not found",
       }, { status: 404 });
     }
+    if (
+  existingBooking.invoiceStatus === "FINAL" &&
+  (
+    body.serviceType ||
+    body.serviceLabel ||
+    body.paymentAmount
+  )
+) {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        "Invoice finalized. Service cannot be modified."
+    },
+    { status: 400 }
+  );
+}
 
     // Clone request body to safely manipulate properties
     const updateData = { ...body };

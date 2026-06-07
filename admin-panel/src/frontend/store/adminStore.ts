@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export interface Booking {
   id: string;           // ticketId (e.g. RSA-4851) if available, else MongoDB _id
   mongoId?: string;     // Always the raw MongoDB _id — use this for API calls
+  invoiceStatus?: "DRAFT" | "FINAL";
   customerName: string;
   customerPhone: string;
   serviceType:
@@ -543,6 +544,7 @@ await fetch(
       const mappedBookings: Booking[] = data.map((b: any) => ({
         id: b.id || b._id,
         mongoId: b._id?.toString() || b.id,   // Always keep raw MongoDB _id
+        invoiceStatus: b.invoiceStatus || "DRAFT",
         customerName: b.customerName || "Customer",
         customerPhone: b.phone || "",
         serviceType:(b.serviceType ||"other").toLowerCase() as Booking['serviceType'],
