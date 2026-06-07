@@ -79,6 +79,37 @@ export default function BookingsManagement() {
   const [copiedBookingId, setCopiedBookingId] = useState<string | null>(null);
   const [customServicePrice, setCustomServicePrice] = useState<number>(0);
 
+  // Razorpay payment link state
+  const [generatingLinkId, setGeneratingLinkId] = useState<string | null>(null);
+  const [copiedPaymentLinkId, setCopiedPaymentLinkId] = useState<string | null>(null);
+
+  const handleGeneratePaymentLink = async (bookingId: string) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    const targetId = booking?.mongoId || bookingId;
+
+    setGeneratingLinkId(bookingId);
+    try {
+      const response = await fetch('/api/payments/create-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookingId: targetId }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to generate payment link.");
+      }
+      alert("Razorpay payment link generated successfully!");
+      await fetchBookings();
+    } catch (err: any) {
+      console.error(err);
+      alert(`Error: ${err.message || "Failed to generate payment link."}`);
+    } finally {
+      setGeneratingLinkId(null);
+    }
+  };
+
   // ── Add Products Sold ────────────────────────────────────────────────
   const [sellProductsBooking, setSellProductsBooking] = useState<Booking | null>(null);
   const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
@@ -733,7 +764,7 @@ alert("Ticket Created Successfully");
                         </td>
 
                         {/* Payment */}
-                        <td className="py-4 px-5">
+                        <td className="py-4 px-5" onClick={(e) => e.stopPropagation()}>
                           <div className="text-white font-bold">₹{booking.paymentAmount.toLocaleString('en-IN')}</div>
                           <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 block ${
                             booking.paymentStatus?.toLowerCase() === 'completed'
@@ -744,6 +775,51 @@ alert("Ticket Created Successfully");
                           }`}>
                             {booking.paymentStatus}
                           </span>
+
+                          {/* Payment Link Generation & Sharing */}
+                          {booking.status?.toLowerCase() !== 'completed' &&
+                           booking.status?.toLowerCase() !== 'cancelled' &&
+                           booking.paymentStatus?.toLowerCase() !== 'completed' && (
+                            <div className="mt-2 flex flex-col gap-1.5 max-w-[130px]">
+                              {!booking.paymentLink ? (
+                                <button
+                                  onClick={() => handleGeneratePaymentLink(booking.id)}
+                                  disabled={generatingLinkId === booking.id}
+                                  className="w-full flex items-center justify-center gap-1 px-2.5 py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {generatingLinkId === booking.id ? "Generating..." : "Generate Link"}
+                                </button>
+                              ) : (() => {
+                                const cleanPhone = booking.customerPhone?.replace(/\D/g, '') || '';
+                                const whatsappPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+                                const messageText = `Hello ${booking.customerName || 'Customer'}, here is the secure payment link for your Erina Roadside Assistance request: ${booking.paymentLink}. Thank you!`;
+                                return (
+                                  <div className="flex gap-1 w-full">
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(booking.paymentLink || '');
+                                        setCopiedPaymentLinkId(booking.id);
+                                        setTimeout(() => setCopiedPaymentLinkId(null), 2000);
+                                      }}
+                                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer"
+                                      title="Copy payment link"
+                                    >
+                                      {copiedPaymentLinkId === booking.id ? "Copied!" : "Copy"}
+                                    </button>
+                                    <a
+                                      href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(messageText)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer text-center"
+                                      title="Send payment link on WhatsApp"
+                                    >
+                                      WhatsApp
+                                    </a>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
                         </td>
 
                         {/* Actions */}

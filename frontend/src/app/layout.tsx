@@ -143,6 +143,10 @@ export default function RootLayout({
             </Script>
           </>
         )}
+        <Script
+          src="https://t.contentsquare.net/uxa/2c6cb86d6f5b3.js"
+          strategy="afterInteractive"
+        />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <Navbar />
           <main className="flex-grow">

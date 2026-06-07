@@ -53,6 +53,8 @@ export interface Booking {
     quantity: number;
     unitPrice: number;
   }[];
+  paymentLink?: string | null;
+  paymentLinkId?: string | null;
 }
 
 export interface Technician {
@@ -561,6 +563,8 @@ await fetch(
         isPriority: b.isPriority || false,
         vehicleType: b.vehicleType || (b.vehicle?.type ? (b.vehicle.type.toLowerCase() === 'car' ? 'Car (Hatchback/Sedan)' : b.vehicle.type) : "Car (Hatchback/Sedan)"),
         distanceKm: b.distanceKm || 10,
+        paymentLink: b.paymentLink || null,
+        paymentLinkId: b.paymentLinkId || null,
       }));
 
       // Calculate payments based on completed bookings

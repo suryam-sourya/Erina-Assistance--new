@@ -304,16 +304,21 @@ function TrackingContent() {
                 unsubscribeFirestore = onSnapshot(doc(db, "active_bookings", data.booking.id), (docSnap) => {
                   if (docSnap.exists()) {
                     const activeData = docSnap.data();
-                    setBooking({
+                    setBooking((prev: any) => ({
+                      ...prev,
                       ...activeData,
-                      customerPhone: activeData.customerPhone || '',
-                      location: activeData.location || { lat: 12.9928671, lng: 77.7529829 },
-                      serviceLabel: activeData.serviceLabel || 'Roadside Rescue',
-                      vehiclePlate: activeData.vehiclePlate || '',
-                      vehicleName: activeData.vehicleName || 'Vehicle',
-                      phone: activeData.customerPhone || '',
-                      technicianPhone: activeData.technicianPhone || null
-                    });
+                      customerPhone: activeData.customerPhone || prev?.customerPhone || '',
+                      location: activeData.location || prev?.location || { lat: 12.9928671, lng: 77.7529829 },
+                      serviceLabel: activeData.serviceLabel || prev?.serviceLabel || 'Roadside Rescue',
+                      vehiclePlate: activeData.vehiclePlate || prev?.vehiclePlate || '',
+                      vehicleName: activeData.vehicleName || prev?.vehicleName || 'Vehicle',
+                      phone: activeData.customerPhone || prev?.customerPhone || '',
+                      technicianPhone: activeData.technicianPhone || prev?.technicianPhone || null,
+                      paymentLink: prev?.paymentLink || activeData.paymentLink || null,
+                      paymentLinkId: prev?.paymentLinkId || activeData.paymentLinkId || null,
+                      paymentAmount: prev?.paymentAmount !== undefined ? prev.paymentAmount : (activeData.paymentAmount || 0),
+                      paymentStatus: prev?.paymentStatus || activeData.paymentStatus || 'PENDING'
+                    }));
                   }
                 });
               }
@@ -354,16 +359,21 @@ function TrackingContent() {
             if (docSnap.exists()) {
               const activeData = docSnap.data();
               // Format structure for compatibility with frontend view variables
-              setBooking({
+              setBooking((prev: any) => ({
+                ...prev,
                 ...activeData,
-                customerPhone: activeData.customerPhone || '',
-                location: activeData.location || { lat: 12.9928671, lng: 77.7529829 },
-                serviceLabel: activeData.serviceLabel || 'Roadside Rescue',
-                vehiclePlate: activeData.vehiclePlate || '',
-                vehicleName: activeData.vehicleName || 'Vehicle',
-                phone: activeData.customerPhone || '',
-                technicianPhone: activeData.technicianPhone || null
-              });
+                customerPhone: activeData.customerPhone || prev?.customerPhone || '',
+                location: activeData.location || prev?.location || { lat: 12.9928671, lng: 77.7529829 },
+                serviceLabel: activeData.serviceLabel || prev?.serviceLabel || 'Roadside Rescue',
+                vehiclePlate: activeData.vehiclePlate || prev?.vehiclePlate || '',
+                vehicleName: activeData.vehicleName || prev?.vehicleName || 'Vehicle',
+                phone: activeData.customerPhone || prev?.customerPhone || '',
+                technicianPhone: activeData.technicianPhone || prev?.technicianPhone || null,
+                paymentLink: prev?.paymentLink || activeData.paymentLink || null,
+                paymentLinkId: prev?.paymentLinkId || activeData.paymentLinkId || null,
+                paymentAmount: prev?.paymentAmount !== undefined ? prev.paymentAmount : (activeData.paymentAmount || 0),
+                paymentStatus: prev?.paymentStatus || activeData.paymentStatus || 'PENDING'
+              }));
               setLoading(false);
               setError('');
             } else {
@@ -710,6 +720,45 @@ function TrackingContent() {
                 ))}
               </div>
             </div>
+
+            {/* Pay Online CTA Banner */}
+            {booking?.paymentLink && booking.paymentStatus?.toLowerCase() !== 'completed' && (
+              <div className="bg-gradient-to-r from-violet-600/10 via-indigo-600/10 to-blue-600/10 dark:from-violet-500/15 dark:via-indigo-500/15 dark:to-blue-500/15 border border-violet-500/30 rounded-3xl p-6 shadow-xl space-y-4 relative overflow-hidden backdrop-blur-md">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-violet-500/20 text-violet-400 flex items-center justify-center font-black text-xl shrink-0 border border-violet-500/30">
+                    💳
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm uppercase tracking-wider text-foreground">
+                      Pay Online Now
+                    </h3>
+                    <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
+                      A secure Razorpay payment link has been generated for your service. You can pay online safely using Card, UPI, Netbanking, or Wallet.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-violet-500/10">
+                  <div>
+                    <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-extrabold block">
+                      Total Amount
+                    </span>
+                    <span className="text-lg font-black text-foreground">
+                      ₹{booking.paymentAmount?.toLocaleString("en-IN") || "0"}
+                    </span>
+                  </div>
+                  <a
+                    href={booking.paymentLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-violet-600/20 hover:shadow-violet-600/35 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    Pay Safely Online
+                  </a>
+                </div>
+              </div>
+            )}
 
           </div>
 
