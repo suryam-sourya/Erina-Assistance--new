@@ -200,7 +200,7 @@ export default function SuccessStoriesSection() {
           /* Stories Grid */
           <motion.div 
             layout 
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            className="flex md:grid md:grid-cols-2 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none pb-6 md:pb-0 scrollbar-none"
           >
             <AnimatePresence mode="popLayout">
               {filteredStories.map((story) => (
@@ -211,7 +211,7 @@ export default function SuccessStoriesSection() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.4 }}
-                  className="glass-panel hover:bg-light-hover dark:hover:bg-gray-800/80 border border-black/5 dark:border-white/5 rounded-3xl p-8 flex flex-col justify-between shadow-lg hover:shadow-2xl transition-all duration-300 relative group overflow-hidden"
+                  className="w-[85vw] sm:w-[450px] md:w-auto shrink-0 md:shrink-1 snap-start glass-panel hover:bg-light-hover dark:hover:bg-gray-800/80 border border-black/5 dark:border-white/5 rounded-3xl p-8 flex flex-col justify-between shadow-lg hover:shadow-2xl transition-all duration-300 relative group overflow-hidden"
                 >
                   {/* Visual Accent Corner */}
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/10 to-transparent rounded-tr-3xl pointer-events-none group-hover:scale-110 transition-transform" />

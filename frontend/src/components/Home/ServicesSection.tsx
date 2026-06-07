@@ -100,7 +100,7 @@ export default function ServicesSection() {
         </div>
 
         {/* Service Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex lg:grid lg:grid-cols-3 md:grid md:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible md:overflow-x-visible snap-x snap-mandatory lg:snap-none md:snap-none pb-6 lg:pb-0 md:pb-0 scrollbar-none">
           {services.map((service) => (
             <motion.div
               key={service.id}
@@ -108,7 +108,7 @@ export default function ServicesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: service.delay }}
-              className="group glass-panel rounded-2xl p-7 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 border border-black/10 dark:border-white/10 hover:border-primary/40 dark:hover:border-primary/40 flex flex-col"
+              className="w-[85vw] sm:w-[350px] lg:w-auto md:w-auto shrink-0 lg:shrink-1 md:shrink-1 snap-start group glass-panel rounded-2xl p-7 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1.5 border border-black/10 dark:border-white/10 hover:border-primary/40 dark:hover:border-primary/40 flex flex-col"
             >
               {/* Header: Icon + ETA badge */}
               <div className="flex items-start justify-between mb-5">
