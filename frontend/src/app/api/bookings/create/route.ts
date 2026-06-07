@@ -113,8 +113,8 @@ export async function POST(req: Request) {
     const officialServiceType = SERVICE_MAP[rawServiceType.toLowerCase()] || "OTHER";
 
     // Map location coordinates {lat, lng} to GeoJSON Point coordinates: [longitude, latitude]
-    let longitude = 77.5946; // Default Bangalore Lng
-    let latitude = 12.9716;  // Default Bangalore Lat
+    let longitude = 77.7529829; // Default Erina Hub Lng
+    let latitude = 12.9928671;  // Default Erina Hub Lat
     
     if (location && typeof location === "object") {
       const latVal = Number(location.lat);

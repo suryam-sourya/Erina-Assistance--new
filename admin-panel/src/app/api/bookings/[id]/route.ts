@@ -192,7 +192,7 @@ export async function PUT(
       location: obj.location?.address || obj.address || "Bengaluru",
       coordinates: obj.location?.coordinates && Array.isArray(obj.location.coordinates) && obj.location.coordinates.length >= 2
         ? { lat: obj.location.coordinates[1], lng: obj.location.coordinates[0] }
-        : { lat: 12.9716, lng: 77.5946 },
+        : { lat: 12.9928671, lng: 77.7529829 },
       timeline: obj.timeline || {
         confirmedAt: obj.createdAt || new Date(),
         assignedAt: obj.technicianId ? (obj.createdAt || new Date()) : null,
@@ -268,7 +268,7 @@ export async function GET(
       location: obj.location?.address || obj.address || "Bengaluru",
       coordinates: obj.location?.coordinates && Array.isArray(obj.location.coordinates) && obj.location.coordinates.length >= 2
         ? { lat: obj.location.coordinates[1], lng: obj.location.coordinates[0] }
-        : { lat: 12.9716, lng: 77.5946 },
+        : { lat: 12.9928671, lng: 77.7529829 },
       timeline: obj.timeline || {
         confirmedAt: obj.createdAt || new Date(),
         assignedAt: obj.technicianId ? (obj.createdAt || new Date()) : null,

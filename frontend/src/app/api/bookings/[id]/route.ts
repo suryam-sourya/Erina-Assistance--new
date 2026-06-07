@@ -99,7 +99,7 @@ export async function GET(
       serviceLabel: serviceLabels[obj.serviceType || ""] || obj.serviceLabel || "Roadside Help",
       location: obj.location?.coordinates && Array.isArray(obj.location.coordinates) && obj.location.coordinates.length >= 2
         ? { lat: obj.location.coordinates[1], lng: obj.location.coordinates[0] } // [longitude, latitude] to {lat, lng}
-        : (obj.location || { lat: 12.9716, lng: 77.5946 }),
+        : (obj.location || { lat: 12.9928671, lng: 77.7529829 }),
       timeline: obj.timeline || {
         confirmedAt: obj.createdAt || new Date(),
         assignedAt: obj.technicianId ? (obj.createdAt || new Date()) : null,

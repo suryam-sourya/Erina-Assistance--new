@@ -106,8 +106,8 @@ function TrackingContent() {
     // Kadugodi Ops Central Hub Coordinates
     const HUB_LAT = 12.9902;
     const HUB_LNG = 77.7602;
-    const targetLat = booking.location?.lat || booking.location?.coordinates?.[1] || 12.9716;
-    const targetLng = booking.location?.lng || booking.location?.coordinates?.[0] || 77.5946;
+    const targetLat = booking.location?.lat || booking.location?.coordinates?.[1] || 12.9928671;
+    const targetLng = booking.location?.lng || booking.location?.coordinates?.[0] || 77.7529829;
 
     const runSimulation = async () => {
       try {
@@ -307,7 +307,7 @@ function TrackingContent() {
                     setBooking({
                       ...activeData,
                       customerPhone: activeData.customerPhone || '',
-                      location: activeData.location || { lat: 12.9716, lng: 77.5946 },
+                      location: activeData.location || { lat: 12.9928671, lng: 77.7529829 },
                       serviceLabel: activeData.serviceLabel || 'Roadside Rescue',
                       vehiclePlate: activeData.vehiclePlate || '',
                       vehicleName: activeData.vehicleName || 'Vehicle',
@@ -357,7 +357,7 @@ function TrackingContent() {
               setBooking({
                 ...activeData,
                 customerPhone: activeData.customerPhone || '',
-                location: activeData.location || { lat: 12.9716, lng: 77.5946 },
+                location: activeData.location || { lat: 12.9928671, lng: 77.7529829 },
                 serviceLabel: activeData.serviceLabel || 'Roadside Rescue',
                 vehiclePlate: activeData.vehiclePlate || '',
                 vehicleName: activeData.vehicleName || 'Vehicle',
@@ -621,8 +621,8 @@ function TrackingContent() {
               )}
 
               <TrackingLiveMap 
-                customerLat={booking.location?.lat || booking.location?.coordinates?.[1] || 12.9716}
-                customerLng={booking.location?.lng || booking.location?.coordinates?.[0] || 77.5946}
+                customerLat={booking.location?.lat || booking.location?.coordinates?.[1] || 12.9928671}
+                customerLng={booking.location?.lng || booking.location?.coordinates?.[0] || 77.7529829}
                 status={booking.status}
                 subStatus={booking.subStatus || null}
                 technicianName={booking.technicianName}

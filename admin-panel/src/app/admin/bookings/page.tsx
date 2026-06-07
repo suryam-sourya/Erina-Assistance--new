@@ -358,12 +358,12 @@ serviceTypes:
             lat:
               Number(
                 ticketForm.latitude
-              ) || 12.9716,
+              ) || 12.9928671,
 
             lng:
               Number(
                 ticketForm.longitude
-              ) || 77.5946,
+              ) || 77.7529829,
 
             address:
               ticketForm.address,
@@ -1080,8 +1080,8 @@ alert("Ticket Created Successfully");
                                 <div className="flex-1 min-h-[280px]">
                                   <LiveTrackingMap 
                                     bookingId={booking.id}
-                                    customerLat={booking.coordinates?.lat || 12.9716}
-                                    customerLng={booking.coordinates?.lng || 77.5946}
+                                    customerLat={booking.coordinates?.lat || 12.9928671}
+                                    customerLng={booking.coordinates?.lng || 77.7529829}
                                     status={booking.status}
                                     subStatus={booking.subStatus || null}
                                     technicianName={booking.technicianName}

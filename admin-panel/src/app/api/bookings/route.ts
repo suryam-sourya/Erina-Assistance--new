@@ -234,10 +234,10 @@ export async function GET() {
             }
           : {
               lat:
-                12.9716,
+                12.9928671,
 
               lng:
-                77.5946,
+                77.7529829,
             },
 
       createdTime:

@@ -557,7 +557,7 @@ await fetch(
         createdTime: b.createdAt ? new Date(b.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just Now",
         location: b.address || (b.location?.lat ? `${b.location.lat}, ${b.location.lng}` : "Unknown Location"),
         imageUrl: b.imageUrl || null,
-        coordinates: b.coordinates || { lat: 12.9716, lng: 77.5946 },
+        coordinates: b.coordinates || { lat: 12.9928671, lng: 77.7529829 },
         isPriority: b.isPriority || false,
         vehicleType: b.vehicleType || (b.vehicle?.type ? (b.vehicle.type.toLowerCase() === 'car' ? 'Car (Hatchback/Sedan)' : b.vehicle.type) : "Car (Hatchback/Sedan)"),
         distanceKm: b.distanceKm || 10,
@@ -909,7 +909,7 @@ await get().fetchTechnicians();
       status: 'emergency',
       paymentStatus: 'pending',
       paymentAmount: serviceType === 'towing' ? 6000 : 2500,
-      location: { lat: 12.9716, lng: 77.5946 },
+      location: { lat: 12.9928671, lng: 77.7529829 },
       address: location,
     };
 

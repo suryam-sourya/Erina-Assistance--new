@@ -11,8 +11,8 @@ interface MapSelectorProps {
 
 export default function MapSelector({
   onLocationSelect,
-  initialLat = 12.9716, // Bangalore Lat
-  initialLng = 77.5946  // Bangalore Lng
+  initialLat = 12.9928671, // Erina Hub Lat
+  initialLng = 77.7529829  // Erina Hub Lng
 }: MapSelectorProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
