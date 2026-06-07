@@ -25,6 +25,7 @@ export interface VehicleMultipliers {
   twoWheeler: number;   // Two-Wheeler
   commercial: number;   // Commercial Vehicle
   ev: number;           // Electric Vehicle (EV)
+  other: number;        // Other Vehicles
 }
 
 export interface PricingConfig {
@@ -61,6 +62,7 @@ export const DEFAULT_PRICING: PricingConfig = {
     twoWheeler: 0.7,
     commercial: 2.5,
     ev:         1.4,
+    other:      1.0,
   },
   nightSurcharge:     1.5,
   peakHourSurcharge:  1.25,
