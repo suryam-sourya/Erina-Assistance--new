@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Navigation } from "lucide-react";
+import "leaflet/dist/leaflet.css";
 
 interface MapSelectorProps {
   onLocationSelect: (lat: number, lng: number, address: string) => void;
