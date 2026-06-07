@@ -137,10 +137,10 @@ export default function AdminLogin() {
             </div>
             <div className="flex flex-col text-left">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold tracking-tight text-white font-sans leading-none">ERINA</span>
+                <span className="text-2xl font-black italic tracking-wide text-[#EE5C23] leading-none">ERINA</span>
                 <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider shrink-0">Ops</span>
               </div>
-              <span className="text-[10px] text-foreground/45 uppercase tracking-widest font-semibold mt-0.5 leading-none">ASSISTANCE</span>
+              <span className="text-[10px] font-black italic tracking-widest text-[#B01A2B] leading-none mt-0.5">ASSISTANCE</span>
             </div>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold uppercase tracking-widest text-[9px]">

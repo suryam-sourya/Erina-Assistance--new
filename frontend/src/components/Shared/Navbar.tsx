@@ -113,14 +113,10 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className={`text-xl font-bold tracking-tight transition-colors group-hover:text-primary duration-300 ${
-                    isHome && !isScrolled ? 'text-white' : 'text-foreground'
-                  }`}>ERINA</span>
+                  <span className="text-xl font-black italic tracking-wide text-[#EE5C23]">ERINA</span>
                   <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">BETA</span>
                 </div>
-                <span className={`text-[10px] uppercase tracking-widest font-semibold mt-0.5 leading-none transition-colors ${
-                  isHome && !isScrolled ? 'text-white/60' : 'text-foreground/50'
-                }`}>ASSISTANCE</span>
+                <span className="text-[10px] font-black italic tracking-widest text-[#B01A2B] leading-none mt-0.5">ASSISTANCE</span>
               </div>
             </Link>
           </div>

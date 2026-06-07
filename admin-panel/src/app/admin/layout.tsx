@@ -167,10 +167,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div className="flex flex-col text-left">
               <div className="flex items-center gap-1.5">
-                <span className="text-base font-bold tracking-tight text-white font-sans transition-colors group-hover:text-primary duration-300 leading-none">ERINA</span>
+                <span className="text-base font-black italic tracking-wide text-[#EE5C23] leading-none">ERINA</span>
                 <span className="text-[7px] bg-primary/20 text-primary border border-primary/30 px-1 py-0.2 rounded-full font-bold uppercase tracking-widest shrink-0">Ops</span>
               </div>
-              <span className="text-[8px] text-foreground/45 uppercase tracking-widest font-semibold mt-0.5 leading-none">ASSISTANCE</span>
+              <span className="text-[8px] font-black italic tracking-widest text-[#B01A2B] leading-none mt-0.5">ASSISTANCE</span>
             </div>
           </Link>
           {/* Mobile Close Button */}
