@@ -313,12 +313,17 @@ const handleCreateTicket =
     e.preventDefault();
 
     // Required fields validation
-    if (
-      !ticketForm.customerName ||
-      !ticketForm.phone ||
-      !ticketForm.vehicleNumber ||
-      !ticketForm.address
-    ) {
+   if (
+  !ticketForm.customerName ||
+  !ticketForm.phone ||
+  !ticketForm.address ||
+  (
+    (
+  ticketForm.vehicleType !== "Other" &&
+  !ticketForm.vehicleNumber
+)
+  )
+) {
       alert(
         "Please fill all required fields"
       );
@@ -340,6 +345,49 @@ const handleCreateTicket =
       );
       return;
     }
+    // Vehicle Number Validation
+if (
+   ticketForm.vehicleType !== "Other"
+) {
+  const cleanedPlate =
+    ticketForm.vehicleNumber
+      .replace(
+        /[^a-zA-Z0-9]/g,
+        ""
+      )
+      .toUpperCase();
+
+  // Must be exactly 10 characters
+  if (
+  cleanedPlate.length < 8 ||
+  cleanedPlate.length > 11
+) {
+  alert(
+    "Please enter a valid Indian vehicle number."
+  );
+  return;
+}
+
+  const standardRegex =
+    /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{1,4}$/;
+
+  const bhRegex =
+    /^[0-9]{2}BH[0-9]{4}[A-Z]{2}$/;
+
+  if (
+    !standardRegex.test(
+      cleanedPlate
+    ) &&
+    !bhRegex.test(
+      cleanedPlate
+    )
+  ) {
+    alert(
+      "Please enter a valid Indian vehicle number (e.g. KA03MY1234 or 22BH1234AA)"
+    );
+    return;
+  }
+}
 
     try {
 
@@ -1597,20 +1645,38 @@ alert("Ticket Created Successfully");
               Vehicle Number
             </label>
 
-            <input
-              placeholder="UP78AB1234"
-              value={
-                ticketForm.vehicleNumber
-              }
-              onChange={(e)=>
-                setTicketForm({
-                  ...ticketForm,
-                  vehicleNumber:
-                    e.target.value
-                })
-              }
-              className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white uppercase"
-            />
+           <input
+ placeholder={
+  ticketForm.vehicleType === "Other"
+    ? "Not Required"
+    : "UP78AB1234"
+}
+  value={
+    ticketForm.vehicleNumber
+  }
+  disabled={
+    ticketForm.vehicleType === "Other"
+  }
+  onChange={(e)=>
+    setTicketForm({
+      ...ticketForm,
+      vehicleNumber:
+        e.target.value.toUpperCase()
+    })
+  }
+  className={`
+    w-full
+    p-4
+    rounded-2xl
+    border
+    uppercase
+    ${
+      ticketForm.vehicleType === "Other"
+        ? "bg-white/5 text-white/40 border-white/5 cursor-not-allowed"
+        : "bg-white/5 border-white/10 text-white"
+    }
+  `}
+/>
           </div>
         </div>
 
