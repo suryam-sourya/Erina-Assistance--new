@@ -220,11 +220,29 @@ if (
     }
 
     // Enforce required check
-    if (!phone.trim()) {
-      setErrorMessage('Please enter your mobile number.');
-      setSubmitStatus('error');
-      return;
-    }
+   const cleanedPhone = phone.replace(/\D/g, "");
+
+if (!cleanedPhone) {
+  setErrorMessage("Please enter your mobile number.");
+  setSubmitStatus("error");
+  return;
+}
+
+if (!/^[6-9]\d{9}$/.test(cleanedPhone)) {
+  setErrorMessage(
+    "Please enter a valid 10-digit Indian mobile number."
+  );
+  setSubmitStatus("error");
+  return;
+}
+
+if (/^(\d)\1{9}$/.test(cleanedPhone)) {
+  setErrorMessage(
+    "Invalid mobile number. Repeated digits are not allowed."
+  );
+  setSubmitStatus("error");
+  return;
+}
 
     // Enforce rigorous vehicle license plate check (Indian registration format)
     if (vehicleType !== "Other") {
@@ -416,7 +434,13 @@ if (
                       required
                       placeholder="Enter mobile number" 
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                         .replace(/\D/g, "")
+                         .slice(0, 10);
+
+                        setPhone(value);
+                      }}
                       className="w-full px-5 py-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground" 
                     />
                   </div>
