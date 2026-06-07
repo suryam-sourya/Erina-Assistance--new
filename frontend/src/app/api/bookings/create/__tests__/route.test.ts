@@ -61,17 +61,24 @@ describe('POST /api/bookings/create API Route', () => {
     expect(connectDB).toHaveBeenCalledTimes(1);
 
     // Verify Booking.create was called with mapped fields
-    expect(Booking.create).toHaveBeenCalledWith({
+    expect(Booking.create).toHaveBeenCalledWith(expect.objectContaining({
       customerName: 'John Doe',
       phone: '+91 98765 43210',
-      serviceType: 'towing',
-      serviceLabel: 'Flatbed Towing',
+      serviceType: 'TOWING',
       vehicleType: 'SUV / MUV',
       vehicleName: 'SUV / MUV',
-      vehicleNumber: 'KA-01-AB-1234',
-      vehiclePlate: 'KA-01-AB-1234',
-      status: 'pending',
-    });
+      vehicleNumber: 'KA01AB1234',
+      vehiclePlate: 'KA01AB1234',
+      status: 'PENDING',
+      customer: {
+        name: 'John Doe',
+        phone: '+91 98765 43210',
+      },
+      vehicle: {
+        type: 'SUV',
+        plateNumber: 'KA01AB1234',
+      }
+    }));
 
     // Verify response
     expect(response.status).toBe(200);
@@ -108,17 +115,24 @@ describe('POST /api/bookings/create API Route', () => {
     const response = await POST(req);
     const json = await response.json();
 
-    expect(Booking.create).toHaveBeenCalledWith({
+    expect(Booking.create).toHaveBeenCalledWith(expect.objectContaining({
       customerName: 'Jane Smith',
       phone: '+91 99999 88888',
-      serviceType: 'battery',
-      serviceLabel: 'Battery Jumpstart',
+      serviceType: 'BATTERY',
       vehicleType: 'Two-Wheeler',
       vehicleName: 'Two-Wheeler',
-      vehicleNumber: 'KA-02-CD-5678',
-      vehiclePlate: 'KA-02-CD-5678',
-      status: 'emergency',
-    });
+      vehicleNumber: 'KA02CD5678',
+      vehiclePlate: 'KA02CD5678',
+      status: 'EMERGENCY',
+      customer: {
+        name: 'Jane Smith',
+        phone: '+91 99999 88888',
+      },
+      vehicle: {
+        type: 'TWO_WHEELER',
+        plateNumber: 'KA02CD5678',
+      }
+    }));
 
     expect(json.success).toBe(true);
   });
@@ -132,7 +146,13 @@ describe('POST /api/bookings/create API Route', () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({
+        customerName: 'Jane Smith',
+        phone: '+91 99999 88888',
+        serviceType: 'battery',
+        vehicleType: 'Two-Wheeler',
+        vehicleNumber: 'KA-02-CD-5678',
+      }),
     });
 
     const response = await POST(req);

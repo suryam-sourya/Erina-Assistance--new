@@ -25,7 +25,7 @@ describe('GET /api/bookings/[id] API Route', () => {
   });
 
   it('should successfully fetch and return a single booking', async () => {
-    const mockId = 'mock-booking-id';
+    const mockId = '507f1f77bcf86cd799439011';
     const mockBooking = {
       toObject: () => ({
         _id: { toString: () => mockId },
@@ -56,7 +56,7 @@ describe('GET /api/bookings/[id] API Route', () => {
   });
 
   it('should return 404 if booking is not found', async () => {
-    const mockId = 'nonexistent-id';
+    const mockId = '507f1f77bcf86cd799439011';
     (Booking.findById as jest.Mock).mockResolvedValue(null);
 
     const req = new Request(`http://localhost/api/bookings/${mockId}`, {
@@ -73,7 +73,7 @@ describe('GET /api/bookings/[id] API Route', () => {
   });
 
   it('should handle database errors and return 500 status', async () => {
-    const mockId = 'mock-id';
+    const mockId = '507f1f77bcf86cd799439011';
     const mockError = new Error('Connection refused');
     (Booking.findById as jest.Mock).mockRejectedValue(mockError);
 

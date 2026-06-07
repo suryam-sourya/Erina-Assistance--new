@@ -50,7 +50,7 @@ describe('Navbar', () => {
   describe('Logo', () => {
     it('renders the brand logo with correct src', () => {
       const logos = screen.getAllByAltText('Erina Assistance');
-      const brandLogo = logos.find(img => (img as HTMLImageElement).src.includes('logo-icon.png'));
+      const brandLogo = logos.find(img => (img as HTMLImageElement).src.includes('logo-full.png'));
       expect(brandLogo).toBeDefined();
     });
   });
