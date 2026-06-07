@@ -175,14 +175,30 @@ export default function TrackingLiveMap({
         });
 
         hubMarkerRef.current = L.marker([HUB_LAT, HUB_LNG], { icon: hubIcon })
-          .addTo(mapInstance)
-          .bindPopup("<b>Erina Ops Central Hub</b><br>Kadugodi Station");
+  .addTo(mapInstance)
+  .bindTooltip(
+    "<b>Erina Ops Central Hub</b><br>Kadugodi Station",
+    {
+      permanent: true,
+      direction: "top",
+      offset: [0, -15],
+      opacity: 1,
+    }
+  );
 
         customerMarkerRef.current = L.marker([customerLat, customerLng], {
-          icon: customerIcon,
-        })
-          .addTo(mapInstance)
-          .bindPopup("<b>Your Breakdown Site</b>");
+  icon: customerIcon,
+})
+  .addTo(mapInstance)
+  .bindTooltip(
+    "<b>Your Breakdown Site</b>",
+    {
+      permanent: true,
+      direction: "top",
+      offset: [0, -15],
+      opacity: 1,
+    }
+  );
       }
 
       const map = mapRef.current;
