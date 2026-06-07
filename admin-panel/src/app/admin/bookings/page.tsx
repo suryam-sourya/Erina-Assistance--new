@@ -1171,10 +1171,27 @@ alert("Ticket Created Successfully");
             <div className="bg-background/50 border border-white/5 rounded-xl p-4 mb-5 flex flex-col gap-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-foreground/45 font-bold uppercase tracking-wider">Sector Location</span>
-                <span className="text-white font-bold flex items-center gap-1">
-                  <MapPin size={12} className="text-red-500" />
-                  {selectedBooking.location}
-                </span>
+                <div className="text-white font-bold flex items-start gap-2 max-w-[500px]">
+  <MapPin
+    size={12}
+    className="text-red-500 mt-1 shrink-0"
+  />
+
+  {selectedBooking.location?.startsWith("http") ? (
+    <a
+      href={selectedBooking.location}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-cyan-400 hover:text-cyan-300 underline break-all"
+    >
+      View Shared Location
+    </a>
+  ) : (
+    <span className="break-words">
+      {selectedBooking.location}
+    </span>
+  )}
+</div>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-foreground/45 font-bold uppercase tracking-wider">Requester</span>
