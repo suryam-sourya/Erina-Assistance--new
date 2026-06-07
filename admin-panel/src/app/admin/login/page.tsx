@@ -137,10 +137,20 @@ export default function AdminLogin() {
             </div>
             <div className="flex flex-col text-left">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-black italic tracking-wide text-[#EE5C23] leading-none">ERINA</span>
+                <span 
+                  className="text-2xl italic tracking-wide bg-gradient-to-b from-[#FFA500] to-[#EE5C23] bg-clip-text text-transparent leading-none"
+                  style={{ fontFamily: 'Impact, sans-serif' }}
+                >
+                  ERINA
+                </span>
                 <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider shrink-0">Ops</span>
               </div>
-              <span className="text-[10px] font-black italic tracking-widest text-[#B01A2B] leading-none mt-0.5">ASSISTANCE</span>
+              <span 
+                className="text-[10px] italic tracking-[0.15em] text-[#B01A2B] leading-none mt-0.5"
+                style={{ fontFamily: 'Impact, sans-serif' }}
+              >
+                ASSISTANCE
+              </span>
             </div>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold uppercase tracking-widest text-[9px]">
