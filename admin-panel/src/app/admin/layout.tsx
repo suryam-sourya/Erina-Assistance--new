@@ -158,30 +158,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Brand Header */}
         <div className="p-6 border-b border-border flex items-center justify-between gap-3">
           <Link href="/admin" className="flex items-center gap-2.5 group">
-            <div className="h-9 w-9 relative transition-transform group-hover:scale-105 duration-300 shrink-0">
+            <div className="h-9 w-32 relative transition-transform group-hover:scale-105 duration-300 shrink-0">
               <img
-                src="/logo-icon.png"
+                src="/logo-full.png"
                 alt="Erina Assistance"
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="flex flex-col text-left">
-              <div className="flex items-center gap-1.5">
-                <span 
-                  className="text-base italic tracking-wide bg-gradient-to-b from-[#FFA500] to-[#EE5C23] bg-clip-text text-transparent leading-none"
-                  style={{ fontFamily: 'Impact, sans-serif' }}
-                >
-                  ERINA
-                </span>
-                <span className="text-[7px] bg-primary/20 text-primary border border-primary/30 px-1 py-0.2 rounded-full font-bold uppercase tracking-widest shrink-0">Ops</span>
-              </div>
-              <span 
-                className="text-[8px] italic tracking-[0.15em] text-[#B01A2B] leading-none mt-0.5"
-                style={{ fontFamily: 'Impact, sans-serif' }}
-              >
-                ASSISTANCE
-              </span>
-            </div>
+            <span className="text-[7px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest shrink-0">Ops</span>
           </Link>
           {/* Mobile Close Button */}
           <button 

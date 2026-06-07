@@ -128,30 +128,14 @@ export default function AdminLogin() {
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8 text-center">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-11 w-11 relative transition-transform hover:scale-105 duration-300 shrink-0">
+            <div className="h-11 w-36 relative transition-transform hover:scale-105 duration-300 shrink-0">
               <img
-                src="/logo-icon.png"
+                src="/logo-full.png"
                 alt="Erina Assistance"
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="flex flex-col text-left">
-              <div className="flex items-center gap-2">
-                <span 
-                  className="text-2xl italic tracking-wide bg-gradient-to-b from-[#FFA500] to-[#EE5C23] bg-clip-text text-transparent leading-none"
-                  style={{ fontFamily: 'Impact, sans-serif' }}
-                >
-                  ERINA
-                </span>
-                <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider shrink-0">Ops</span>
-              </div>
-              <span 
-                className="text-[10px] italic tracking-[0.15em] text-[#B01A2B] leading-none mt-0.5"
-                style={{ fontFamily: 'Impact, sans-serif' }}
-              >
-                ASSISTANCE
-              </span>
-            </div>
+            <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0">Ops</span>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold uppercase tracking-widest text-[9px]">
             Dispatcher Operations Hub

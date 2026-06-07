@@ -40,31 +40,15 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative h-9 w-9">
+              <div className="relative h-10 w-36">
                 <Image
-                  src="/logo-icon.png"
+                  src="/logo-full.png"
                   alt="Erina Assistance"
                   fill
                   className="object-contain"
                 />
               </div>
-              <div className="flex flex-col text-left">
-                <div className="flex items-center gap-2">
-                  <span 
-                    className="text-xl italic tracking-wide bg-gradient-to-b from-[#FFA500] to-[#EE5C23] bg-clip-text text-transparent"
-                    style={{ fontFamily: 'Impact, sans-serif' }}
-                  >
-                    ERINA
-                  </span>
-                  <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">BETA</span>
-                </div>
-                <span 
-                  className="text-[10px] italic tracking-[0.15em] text-[#B01A2B] leading-none mt-0.5"
-                  style={{ fontFamily: 'Impact, sans-serif' }}
-                >
-                  ASSISTANCE
-                </span>
-              </div>
+              <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">BETA</span>
             </Link>
             <p className="text-sm text-gray-400 mt-4 leading-relaxed">
               India&apos;s smartest roadside assistance platform. AI-powered dispatch, live GPS tracking, and verified technicians — available 24/7 across Bangalore.
