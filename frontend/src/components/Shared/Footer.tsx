@@ -129,7 +129,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Erina Assistance Pvt. Ltd. All rights reserved.
           </p>
           <div className="flex gap-6 text-xs text-gray-500">
-            <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link href="#" className="hover:text-white transition-colors">Refund Policy</Link>
           </div>
