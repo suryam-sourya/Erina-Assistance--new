@@ -23,6 +23,13 @@ export async function POST(req: Request) {
       }, { status: 404 });
     }
 
+    if (booking.invoiceStatus !== "FINAL") {
+      return NextResponse.json({
+        success: false,
+        error: "Please finalize the invoice (final bill) before generating a payment link.",
+      }, { status: 400 });
+    }
+
     // If a payment link already exists, return it directly to avoid duplicate links
     if (booking.paymentLink) {
       return NextResponse.json({

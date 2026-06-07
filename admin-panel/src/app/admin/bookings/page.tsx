@@ -782,15 +782,23 @@ alert("Ticket Created Successfully");
                            booking.status?.toLowerCase() !== 'cancelled' &&
                            booking.paymentStatus?.toLowerCase() !== 'completed' && (
                             <div className="mt-2 flex flex-col gap-1.5 max-w-[130px]">
-                              {!booking.paymentLink ? (
-                                <button
-                                  onClick={() => handleGeneratePaymentLink(booking.id)}
-                                  disabled={generatingLinkId === booking.id}
-                                  className="w-full flex items-center justify-center gap-1 px-2.5 py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {generatingLinkId === booking.id ? "Generating..." : "Generate Link"}
-                                </button>
-                              ) : (() => {
+                              {!booking.paymentLink ? (() => {
+                                const isInvoiceFinalized = booking.invoiceStatus === 'FINAL';
+                                return (
+                                  <button
+                                    onClick={() => isInvoiceFinalized && handleGeneratePaymentLink(booking.id)}
+                                    disabled={generatingLinkId === booking.id || !isInvoiceFinalized}
+                                    className={`w-full flex items-center justify-center gap-1 px-2.5 py-1 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all ${
+                                      isInvoiceFinalized 
+                                        ? "bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 cursor-pointer shadow-sm shadow-violet-500/5"
+                                        : "bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed opacity-60"
+                                    }`}
+                                    title={isInvoiceFinalized ? "Generate payment link" : "Please finalize the invoice first"}
+                                  >
+                                    {generatingLinkId === booking.id ? "Generating..." : isInvoiceFinalized ? "Generate Link" : "Need Final Bill"}
+                                  </button>
+                                );
+                              })() : (() => {
                                 const cleanPhone = booking.customerPhone?.replace(/\D/g, '') || '';
                                 const whatsappPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
                                 const messageText = `Hello ${booking.customerName || 'Customer'}, here is the secure payment link for your Erina Roadside Assistance request: ${booking.paymentLink}. Thank you!`;
