@@ -157,16 +157,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         
         {/* Brand Header */}
         <div className="p-6 border-b border-border flex items-center justify-between gap-3">
-          <Link href="/admin" className="flex items-center gap-2.5 group">
-            <div className="h-9 w-32 relative transition-transform group-hover:scale-105 duration-300 shrink-0">
-              <img
-                src="/logo-full.png"
-                alt="Erina Assistance"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <span className="text-[7px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest shrink-0">Ops</span>
-          </Link>
+         <Link
+  href="/admin"
+  className="flex items-center gap-3 group"
+>
+  <img
+    src="/logo-full.png"
+    alt="Erina Assistance"
+    className="
+      h-12
+      w-auto
+      object-contain
+      transition-transform
+      group-hover:scale-105
+    "
+  />
+
+  <span className="
+    text-[7px]
+    bg-primary/20
+    text-primary
+    border border-primary/30
+    px-1.5 py-0.5
+    rounded-full
+    font-bold
+    uppercase
+    tracking-widest
+  ">
+    OPS
+  </span>
+</Link>
           {/* Mobile Close Button */}
           <button 
             onClick={() => setIsMobileMenuOpen(false)}
