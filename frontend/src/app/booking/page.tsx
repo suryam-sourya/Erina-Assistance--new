@@ -712,14 +712,21 @@ if (/^(\d)\1{9}$/.test(cleanedPhone)) {
                     </div>
                     {priceBreakdown.timeSurcharge > 1 && (
                       <div className="flex justify-between text-foreground/60">
-                        <span>{priceBreakdown.surchargeLabel}</span>
-                        <span className="font-semibold text-warning">{priceBreakdown.timeSurcharge}×</span>
+                          <span>{priceBreakdown.surchargeLabel}</span>
+                           <span className="font-semibold text-warning">
+                             +₹{Math.round(
+                             priceBreakdown.subtotal *
+                            (priceBreakdown.timeSurcharge - 1)
+                            )}
+                          </span>
                       </div>
                     )}
                     {isPriority && (
                       <div className="flex justify-between text-foreground/60">
                         <span>Emergency priority</span>
-                        <span className="font-semibold text-emergency">{priceBreakdown.emergencySurcharge}×</span>
+                        <span className="font-semibold text-emergency">
+                          +₹{Math.round(priceBreakdown.subtotal * (priceBreakdown.emergencySurcharge - 1))}
+                        </span>
                       </div>
                     )}
                   </div>

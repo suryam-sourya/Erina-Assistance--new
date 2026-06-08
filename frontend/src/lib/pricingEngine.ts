@@ -178,7 +178,7 @@ export const DEFAULT_PRICING: PricingConfig = {
     accident: 2500,
     other:     750,
   },
-  ratePerKm: 120,
+  ratePerKm: 10,
   vehicleMultipliers: {
     hatchback:  1.0,
     suv:        1.3,
