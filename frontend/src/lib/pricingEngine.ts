@@ -168,9 +168,9 @@ export function calculatePrice(params: {
 export const DEFAULT_PRICING: PricingConfig = {
   serviceBaseFees: {
     towing:   1800,
-    battery:   900,
+    battery:   300,
     urgentBattery: 3000,
-    flatTyre:  700,
+    flatTyre:  400,
     fuel:      200,
     lockout:   500,
     ev:        600,
