@@ -483,7 +483,7 @@ if (/^(\d)\1{9}$/.test(cleanedPhone)) {
         const plate = e.target.value
           .replace(/[^a-zA-Z0-9]/g, "")
           .toUpperCase()
-          .substring(0, 10);
+          .substring(0, 11);
 
         setVehicleNumber(plate);
       }}

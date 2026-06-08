@@ -148,6 +148,9 @@ export default function MapSelector({
 
     // Dynamically load Leaflet client-side to prevent Node SSR window crashes
     import("leaflet").then((L) => {
+      if (mapRef.current) {
+    return;
+  }
       // Fix default Leaflet icon paths in Webpack/Next.js
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
