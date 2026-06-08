@@ -237,6 +237,7 @@ if (!/^[6-9]\d{9}$/.test(cleanedPhone)) {
 }
 
 if (/^(\d)\1{9}$/.test(cleanedPhone)) {
+  alert("Invalid mobile number.");
   setErrorMessage(
     "Invalid mobile number. Repeated digits are not allowed."
   );
@@ -260,6 +261,9 @@ if (/^(\d)\1{9}$/.test(cleanedPhone)) {
     !standardRegex.test(cleanedPlate) &&
     !bhRegex.test(cleanedPlate)
   ) {
+    alert(
+  "Please enter a valid vehicle number."
+);
     setErrorMessage(
       "Please enter a valid Indian vehicle number (e.g. KA03MY1234 or 22BH1234AA)."
     );
