@@ -23,7 +23,7 @@ import Booking from "@/backend/models/Booking";
 const COMPANY = {
   name: "Erina Roadside Assistance Services Pvt. Ltd.",
   shortName: "Erina Assistance",
-  address: "Shop No. 02, Dinnur Main Road, Kadugodi Colony, Bengaluru — 560067, Karnataka, India",
+  address: "Shop No.02,Dinnur Main Road,Bengaluru — 560067 ",
   gstin: "29AAFCE8436B1Z3",
   support: "support@erinaassistance.in",
   phone: "+91-90358 18604",

@@ -622,7 +622,7 @@ alert("Ticket Created Successfully");
 </option>
 
 <option value="urgent_battery">
-  Urgent Battery
+  Buy Battery
 </option>
 
 <option value="ev">

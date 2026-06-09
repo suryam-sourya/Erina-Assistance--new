@@ -30,6 +30,10 @@ import {
   Save,
   FileEdit,
   AlertTriangle,
+  Mail,
+  User,
+  UserCog,
+  
 } from "lucide-react";
 import Link from "next/link";
 
@@ -400,7 +404,7 @@ export default function InvoicePage() {
       <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <p className="text-foreground/40 text-xs font-bold uppercase tracking-widest">Loading Invoice...</p>
+          <p className="text-gray-600 text-xs font-bold uppercase tracking-widest">Loading Invoice...</p>
         </div>
       </div>
     );
@@ -413,7 +417,7 @@ export default function InvoicePage() {
         <div className="text-center space-y-4">
           <FileText size={40} className="text-foreground/20 mx-auto" />
           <h2 className="text-white font-black text-xl uppercase tracking-wider">Invoice Not Found</h2>
-          <p className="text-foreground/40 text-sm">{error || "This invoice does not exist."}</p>
+          <p className="text-gray-600 text-sm">{error || "This invoice does not exist."}</p>
           <Link
             href="/admin/bookings"
             className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary/20 transition-all"
@@ -455,13 +459,13 @@ export default function InvoicePage() {
         <div className="flex items-center gap-3">
           <Link
             href="/admin/bookings"
-            className="flex items-center gap-2 text-foreground/50 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors"
+            className="flex items-center gap-2 text-gray-700 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors"
           >
             <ArrowLeft size={14} />
             Bookings
           </Link>
           <span className="text-foreground/20">/</span>
-          <span className="text-foreground/50 text-xs font-bold uppercase tracking-wider">Invoice</span>
+          <span className="text-gray-700 text-xs font-bold uppercase tracking-wider">Invoice</span>
           <span className="text-foreground/20">/</span>
           <span className="text-primary text-xs font-bold font-mono">{invoice.invoiceNumber}</span>
         </div>
@@ -481,7 +485,7 @@ export default function InvoicePage() {
               <button
                 onClick={() => handleSave("DRAFT")}
                 disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-gray-300 font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
               >
                 <Save size={14} />
                 {saving ? "Saving..." : "Save Draft"}
@@ -515,64 +519,100 @@ export default function InvoicePage() {
       {/* ── Main Invoice Paper ─────────────────────────────────────────── */}
       <div
         id="invoice-paper"
-        className="
-          max-w-3xl mx-auto
-          bg-card border border-white/8
-          rounded-2xl overflow-hidden
-          print:bg-white print:border-0 print:rounded-none print:shadow-none print:max-w-none print:mx-0
-        "
+       className="
+       relative
+max-w-6xl
+mx-auto
+bg-white
+rounded-3xl
+overflow-hidden
+shadow-2xl
+border
+border-gray-200
+print:max-w-none
+print:shadow-none
+print:border-0
+"
       >
+        
         {/* ── Header Band ──────────────────────────────────────────────── */}
         <div className="
-          bg-gradient-to-r from-primary/15 via-primary/8 to-transparent
+          bg-white
           border-b border-white/8 px-8 py-7
-          print:bg-black print:border-b-2 print:border-black print:py-6
+         print:bg-white print:border-b-2 print:border-black print:py-6
         ">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
-
+         <div className="relative z-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
             {/* Company Branding */}
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Shield size={20} className="text-primary print:hidden" />
-                <h1 className="text-xl font-black text-white uppercase tracking-widest print:text-black print:text-2xl">
-                  {company.shortName}
-                </h1>
-              </div>
-              <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-600 print:text-xs">
-                Roadside Assistance Services Pvt. Ltd.
-              </p>
-              <div className="mt-3 space-y-0.5">
-                {company.address.split(",").slice(0, 2).map((line, i) => (
-                  <p key={i} className="text-[10px] text-foreground/50 print:text-gray-600 print:text-xs">{line.trim()}</p>
-                ))}
-                <p className="text-[10px] text-primary/80 font-bold print:text-gray-700 print:text-xs">
-                  GSTIN: {company.gstin}
-                </p>
-              </div>
-            </div>
+<div className="space-y-3">
+  <img
+    src="/logo-full.png"
+    alt="Erina Assistance"
+    className="h-30 w-auto object-contain"
+  />
+
+  <p className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+    Roadside Assistance Services Pvt. Ltd.
+  </p>
+
+  <div className="space-y-1 text-sm text-gray-600">
+   <div className="flex items-start gap-2 text-gray-700">
+  <MapPin
+    size={16}
+    className="text-orange-600 mt-1 shrink-0"
+  />
+
+  <span>{company.address}</span>
+</div>
+    <div className="flex items-center gap-2 text-gray-700">
+  <Phone
+    size={16}
+    className="text-orange-600 shrink-0"
+  />
+  <span>{company.phone}</span>
+</div>
+
+<div className="flex items-center gap-2 text-gray-700">
+  <Mail
+    size={16}
+    className="text-orange-600 shrink-0"
+  />
+  <span>{company.support}</span>
+</div>
+    <p className="font-bold text-red-600">
+      GSTIN: {company.gstin}
+    </p>
+  </div>
+</div>
 
             {/* Invoice Meta */}
-            <div className="text-left sm:text-right space-y-1.5 print:text-right">
-              <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest print:text-gray-500 print:text-xs">
-                {invoice.invoiceStatus === "DRAFT" ? "Draft Invoice" : "Tax Invoice"}
-              </p>
-              <p className="text-lg font-black text-white font-mono print:text-black print:text-xl">
-                {invoice.invoiceNumber}
-              </p>
-              <div className="mt-2 space-y-0.5">
-                <p className="text-[10px] text-foreground/45 print:text-gray-600 print:text-xs">
-                  <span className="font-bold text-foreground/60">Date:</span> {formatDate(invoice.invoiceDate)}
-                </p>
-                <p className="text-[10px] text-foreground/45 print:text-gray-600 print:text-xs">
-                  <span className="font-bold text-foreground/60">Time:</span> {formatTime(invoice.invoiceDate)}
-                </p>
-                {booking.ticketId && (
-                  <p className="text-[10px] text-primary/80 font-bold font-mono print:text-gray-700 print:text-xs">
-                    Ticket: {booking.ticketId}
-                  </p>
-                )}
-              </div>
-            </div>
+            <div className="relative z-20 text-right space-y-4">
+                <h2 className="text-4xl font-black text-gray-800">
+                   TAX INVOICE
+              </h2>
+
+  <div className="inline-block bg-gradient-to-r from-orange-500 to-red-600 text-white px-5 py-3 rounded-xl font-black text-lg">
+    {invoice.invoiceNumber}
+  </div>
+
+  <div className="space-y-2 text-sm text-gray-700">
+    <p>
+      <strong>Date:</strong>{" "}
+      {formatDate(invoice.invoiceDate)}
+    </p>
+
+    <p>
+      <strong>Time:</strong>{" "}
+      {formatTime(invoice.invoiceDate)}
+    </p>
+
+    {booking.ticketId && (
+      <p>
+        <strong>Ticket:</strong>{" "}
+        {booking.ticketId}
+      </p>
+    )}
+  </div>
+</div>
 
           </div>
         </div>
@@ -580,124 +620,140 @@ export default function InvoicePage() {
         {/* ── Billing Details Grid ──────────────────────────────────────── */}
         <div className="px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6 border-b border-white/5 print:border-b print:border-gray-200">
 
-          {/* Bill To */}
-          <div className="space-y-3">
-            <p className="text-[9px] text-foreground/35 font-black uppercase tracking-widest print:text-gray-500 print:text-[10px]">
-              Bill To
-            </p>
-            {invoice.invoiceStatus === "DRAFT" ? (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-bold focus:outline-none focus:border-primary/50"
-                  placeholder="Customer Name"
-                />
-                <input
-                  type="text"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
-                  placeholder="Phone Number"
-                />
-                <textarea
-                  value={customerAddress}
-                  onChange={(e) => setCustomerAddress(e.target.value)}
-                  className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 h-16 resize-none"
-                  placeholder="Billing Address"
-                />
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                <p className="text-sm font-black text-white uppercase tracking-wide print:text-black print:text-base">
-                  {customer.name}
-                </p>
-                <div className="flex items-center gap-2 text-foreground/50 text-xs print:text-gray-600">
-                  <Phone size={11} className="shrink-0" />
-                  <span className="font-semibold">{customer.phone || "—"}</span>
-                </div>
-                <div className="flex items-start gap-2 text-foreground/50 text-xs print:text-gray-600">
-  <MapPin
-    size={11}
-    className="shrink-0 mt-1"
+          <div className="border rounded-2xl overflow-hidden bg-white shadow-sm">
+  <p className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-3 font-black uppercase tracking-wider text-sm">
+    BILL TO
+  </p>
+
+{invoice.invoiceStatus === "DRAFT" ? ( <div className="p-7 min-h-[180px] space-y-4">
+
+
+  <div className="flex items-center gap-3">
+    <div className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center bg-gray-50 shrink-0">
+  <User
+    size={16}
+    className="text-gray-500"
+  />
+</div>
+
+    <input
+      type="text"
+      value={customerName}
+      onChange={(e) => setCustomerName(e.target.value)}
+      className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-black font-bold focus:outline-none focus:border-orange-500"
+      placeholder="Customer Name"
+    />
+  </div>
+
+  <div className="flex items-center gap-3">
+    <Phone size={16} className="text-orange-600 shrink-0" />
+
+    <input
+      type="text"
+      value={customerPhone}
+      onChange={(e) => setCustomerPhone(e.target.value)}
+      className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:border-orange-500"
+      placeholder="Phone Number"
+    />
+  </div>
+
+  <div className="flex items-start gap-3">
+    <MapPin size={16} className="text-orange-600 shrink-0 mt-1" />
+
+    <textarea
+      value={customerAddress}
+      onChange={(e) => setCustomerAddress(e.target.value)}
+      className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:border-orange-500 h-16 resize-none"
+      placeholder="Billing Address"
+    />
+  </div>
+
+</div>
+
+
+) : ( <div className="p-7 min-h-[180px]">
+
+
+ <div className="flex items-center gap-2 mb-4">
+  <User
+    size={15}
+    className="text-orange-600 shrink-0"
   />
 
-  {isGoogleMapsLink ? (
-    <a
-      href={customer.address}
-      target="_blank"
-      rel="noopener noreferrer"
-     className="
-  font-semibold
-  text-cyan-400
-  hover:text-cyan-300
-  underline
-  break-all
-  leading-5
-"
-    >
-       View Shared Location
-    </a>
-  ) : (
-    <p
-      className="
-        font-semibold
-        break-words
-        leading-5
-        max-w-full
-        line-clamp-3
-      "
-      title={customer.address}
-    >
-      {customer.address || "Bengaluru"}
-    </p>
-  )}
+  <p className="text-2xl font-black text-black">
+    {customer.name}
+  </p>
 </div>
-              </div>
-            )}
-          </div>
+
+  <div className="flex items-center gap-2 text-gray-700 mb-3">
+    <Phone size={15} className="text-orange-600 shrink-0" />
+    <span className="font-semibold">
+      {customer.phone || "—"}
+    </span>
+  </div>
+
+  <div className="flex items-start gap-2 text-gray-700">
+    <MapPin size={15} className="text-orange-600 shrink-0 mt-1" />
+
+    {isGoogleMapsLink ? (
+      <a
+        href={customer.address}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold text-red-600 hover:text-red-700 underline break-all"
+      >
+        View Shared Location
+      </a>
+    ) : (
+      <p
+        className="font-semibold break-words leading-5"
+        title={customer.address}
+      >
+        {customer.address || "Bengaluru"}
+      </p>
+    )}
+  </div>
+
+</div>
+
+
+)}
+
+</div>
+
+
 
           {/* Vehicle & Service */}
-          <div className="space-y-3">
-            <p className="text-[9px] text-foreground/35 font-black uppercase tracking-widest print:text-gray-500 print:text-[10px]">
-              Vehicle &amp; Service
-            </p>
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-foreground/55 text-xs print:text-gray-600">
-                <Car size={11} className="shrink-0" />
-                <span className="font-semibold">{vehicle.name || vehicle.type || "Vehicle"}</span>
-                {vehicle.plate && (
-                  <span className="px-1.5 py-0.5 bg-white/5 border border-white/8 rounded font-mono text-[9px] text-foreground/40 uppercase print:border print:border-gray-300 print:text-gray-500">
-                    {vehicle.plate}
-                  </span>
-                )}
+          <div className="border rounded-2xl overflow-hidden bg-white shadow-sm">
+            <p className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-3 font-black uppercase tracking-wider text-sm">
+  VEHICLE & SERVICE
+</p>
+            <div className="p-5">
+              <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
+                <Car size={18} className="text-orange-600 shrink-0" />
+                <span className="font-semibold text-base text-gray-800"> {vehicle.name || vehicle.type || "Vehicle"} </span> {vehicle.plate && ( <span className="font-semibold text-base text-gray-700"> {vehicle.plate} </span> )}
               </div>
-              <div className="flex items-center gap-2 text-foreground/55 text-xs print:text-gray-600">
-                <Wrench size={11} className="shrink-0" />
-                <span className="font-bold text-white print:text-black">
-                  {invoice.invoiceStatus === "DRAFT" 
-                    ? (lineItems.find(i => i.type === "service")?.description || booking.serviceLabel) 
-                    : booking.serviceLabel}
-                </span>
+              <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
+                <Wrench size={18} className="text-orange-600 shrink-0" />
+                <span className="font-bold text-lg text-black"> {invoice.invoiceStatus === "DRAFT" ? ( lineItems.find(i => i.type === "service") ?.description || booking.serviceLabel ) : booking.serviceLabel} </span>
               </div>
               {booking.technicianName && (
-                <div className="flex items-center gap-2 text-foreground/50 text-xs print:text-gray-600">
-                  <Building2 size={11} className="shrink-0" />
-                  <span className="font-semibold">Technician: {booking.technicianName}</span>
+                <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
+                 <Building2 size={18} className="text-orange-600 shrink-0" />
+                  <span className="font-semibold text-base"> Technician: {booking.technicianName} </span>
                   {booking.technicianPhone && (
-                    <span className="text-foreground/35 font-mono text-[9px]">({booking.technicianPhone})</span>
+                    <span className="text-gray-600 font-medium"> ({booking.technicianPhone}) </span>
                   )}
                 </div>
               )}
-              <div className="flex items-center gap-2 text-foreground/50 text-xs print:text-gray-600">
-                <Calendar size={11} className="shrink-0" />
-                <span className="font-semibold">Dispatched: {formatDate(invoice.invoiceDate)}</span>
+              <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
+                <Calendar size={18} className="text-orange-600 shrink-0" />
+                <span className="font-semibold text-base"> Dispatched: {formatDate(invoice.invoiceDate)} </span>
               </div>
-              <div className="flex items-center gap-2 text-foreground/50 text-xs print:text-gray-600">
-                <Hash size={11} className="shrink-0" />
-                <span className="font-mono font-bold">{booking.id.slice(-8).toUpperCase()}</span>
-                <span className="text-foreground/30 text-[9px]">Ref ID</span>
+              <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
+                <Hash size={18} className="text-orange-600 shrink-0" />
+                <span className="font-mono font-bold text-base text-black"> {booking.id.slice(-8).toUpperCase()} </span>
+                <span className="text-gray-500 text-sm"> Ref ID </span>
               </div>
             </div>
           </div>
@@ -708,14 +764,32 @@ export default function InvoicePage() {
         <div className="px-8 py-6 print:py-4">
           <table className="w-full text-xs print:text-sm">
             <thead>
-              <tr className="border-b border-white/8 print:border-b print:border-gray-300">
-                <th className="py-3 text-left text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]"># Description</th>
-                <th className="py-3 text-center text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">HSN/SAC</th>
-                <th className="py-3 text-center text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">Qty</th>
-                <th className="py-3 text-right text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">Rate (₹)</th>
-                <th className="py-3 text-right text-[9px] font-black text-foreground/35 uppercase tracking-widest print:text-gray-500 print:text-[11px]">{invoice.invoiceStatus === "DRAFT" ? "GST / Actions" : "Amount (₹)"}</th>
-              </tr>
-            </thead>
+  <tr className="bg-gradient-to-r from-orange-500 to-red-600 text-white">
+
+    <th className="py-4 pl-6 text-left text-sm font-black text-white uppercase tracking-wider rounded-tl-2xl">
+      # Description
+    </th>
+
+    <th className="py-4 text-center text-sm font-black text-white uppercase tracking-wider">
+      HSN/SAC
+    </th>
+
+    <th className="py-4 text-center text-sm font-black text-white uppercase tracking-wider">
+      Qty
+    </th>
+
+    <th className="py-4 text-right text-sm font-black text-white uppercase tracking-wider">
+      Rate (₹)
+    </th>
+
+    <th className="py-4 pr-6 text-right text-sm font-black text-white uppercase tracking-wider rounded-tr-2xl">
+      {invoice.invoiceStatus === "DRAFT"
+        ? "GST / Actions"
+        : "Amount (₹)"}
+    </th>
+
+  </tr>
+</thead>
             <tbody>
               {invoice.invoiceStatus === "DRAFT" ? (
                 // DRAFT (Editable) mode
@@ -731,7 +805,7 @@ export default function InvoicePage() {
                                 <select
                                   value={item.serviceType || "OTHER"}
                                   onChange={(e) => handleServiceSelect(i, e.target.value)}
-                                  className="bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 font-bold shrink-0"
+                                  className="bg-white border-gray-300 text-black border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-black focus:outline-none focus:border-primary/50 font-bold shrink-0"
                                 >
                                   {PREDEFINED_SERVICES.map(s => (
                                     <option key={s.value} value={s.value}>{s.label}</option>
@@ -741,14 +815,14 @@ export default function InvoicePage() {
                                   type="text"
                                   value={item.description}
                                   onChange={(e) => handleItemChange(i, "description", e.target.value)}
-                                  className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 font-bold"
+                                  className="w-full bg-white border-gray-300 text-black border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-black focus:outline-none focus:border-primary/50 font-bold"
                                   placeholder="Service Title"
                                 />
                               </div>
                               <textarea
                                 value={item.detail || ""}
                                 onChange={(e) => handleItemChange(i, "detail", e.target.value)}
-                                className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50 h-12 resize-none"
+                                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-orange-500 h-16 resize-none"
                                 placeholder="Service details/description..."
                               />
                             </div>
@@ -758,7 +832,7 @@ export default function InvoicePage() {
                                 type="text"
                                 value={item.description}
                                 onChange={(e) => handleItemChange(i, "description", e.target.value)}
-                                className="w-full bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 font-bold"
+                                className="w-full bg-white border-gray-300 text-black border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-black focus:outline-none focus:border-primary/50 font-bold"
                                 placeholder="Product Name"
                               />
                               <div className="flex gap-2 mt-1.5">
@@ -766,14 +840,14 @@ export default function InvoicePage() {
                                   type="text"
                                   value={item.brand || ""}
                                   onChange={(e) => handleItemChange(i, "brand", e.target.value)}
-                                  className="w-1/2 bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50"
+                                  className="w-1/2 bg-white border-gray-300 text-black border border-gray-300 rounded-lg px-2.5 py-1 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50"
                                   placeholder="Brand (e.g. Exide)"
                                 />
                                 <input
                                   type="text"
                                   value={item.sku || ""}
                                   onChange={(e) => handleItemChange(i, "sku", e.target.value)}
-                                  className="w-1/2 bg-[#161B26] border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50"
+                                  className="w-1/2 bg-white border-gray-300 text-black border border-gray-300 rounded-lg px-2.5 py-1 text-[10px] text-foreground/70 focus:outline-none focus:border-primary/50"
                                   placeholder="SKU"
                                 />
                               </div>
@@ -785,7 +859,7 @@ export default function InvoicePage() {
                             type="text"
                             value={item.hsnCode || ""}
                             onChange={(e) => handleItemChange(i, "hsnCode", e.target.value)}
-                            className="w-16 bg-[#161B26] border border-white/10 rounded-lg px-2 py-1.5 text-center text-xs text-white font-mono focus:outline-none focus:border-primary/50"
+                            className="w-16 bg-white border-gray-300 text-black border border-gray-300 rounded-lg px-2 py-1.5 text-center text-xs text-black font-mono focus:outline-none focus:border-primary/50"
                             placeholder="HSN/SAC"
                           />
                         </td>
@@ -795,18 +869,18 @@ export default function InvoicePage() {
                             min="1"
                             value={item.quantity}
                             onChange={(e) => handleItemChange(i, "quantity", parseInt(e.target.value) || 1)}
-                            className="w-12 bg-[#161B26] border border-white/10 rounded-lg px-2 py-1.5 text-center text-xs text-white font-bold focus:outline-none focus:border-primary/50"
+                            className="w-12 bg-white border-gray-300 text-black border border-gray-300 rounded-lg px-2 py-1.5 text-center text-xs text-black font-bold focus:outline-none focus:border-primary/50"
                           />
                         </td>
                         <td className="py-4 text-right">
                           <div className="relative inline-block">
-                            <span className="absolute left-2.5 top-1.5 text-foreground/40 text-xs">₹</span>
+                            <span className="absolute left-2.5 top-1.5 text-gray-600 text-xs">₹</span>
                             <input
                               type="number"
                               min="0"
                               value={item.unitPrice}
                               onChange={(e) => handleItemChange(i, "unitPrice", parseFloat(e.target.value) || 0)}
-                              className="w-24 bg-[#161B26] border border-white/10 rounded-lg pl-6 pr-2.5 py-1.5 text-right text-xs text-white font-semibold focus:outline-none focus:border-primary/50"
+                              className="w-24 bg-white border-gray-300 text-black border border-gray-300 rounded-lg pl-6 pr-2.5 py-1.5 text-right text-xs text-black font-semibold focus:outline-none focus:border-primary/50"
                             />
                           </div>
                         </td>
@@ -815,7 +889,7 @@ export default function InvoicePage() {
                             <select
                               value={item.gstRate}
                               onChange={(e) => handleItemChange(i, "gstRate", parseFloat(e.target.value))}
-                              className="bg-[#161B26] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                              className="bg-white border-gray-300 text-black border border-gray-300 rounded-lg px-2 py-1.5 text-xs text-black focus:outline-none focus:border-primary/50"
                             >
                               <option value="0.28">28%</option>
                               <option value="0.18">18%</option>
@@ -842,7 +916,7 @@ export default function InvoicePage() {
                         <button
                           type="button"
                           onClick={handleAddService}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-red-600 border border-cyan-500/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                         >
                           <Plus size={13} /> Add Service Line Item
                         </button>
@@ -861,25 +935,43 @@ export default function InvoicePage() {
                 // FINAL (Read-only) mode
                 <>
                   {lineItems.map((item, i) => (
-                    <tr key={i} className="border-b border-white/5 print:border-b print:border-gray-100">
-                      <td className="py-5 pr-4">
-                        <p className="font-bold text-white text-xs print:text-black print:text-sm">{item.description}</p>
-                        <p className="text-foreground/40 text-[10px] mt-1 leading-relaxed print:text-gray-500 print:text-xs">
-                          {item.detail}
-                        </p>
-                        {booking.isPriority && (
-                          <span className="inline-flex mt-1.5 items-center gap-1 px-2 py-0.5 bg-emergency/10 text-emergency border border-emergency/20 rounded-full text-[9px] font-black uppercase tracking-wider print:border print:border-red-300 print:text-red-600">
-                            🚨 Priority / Emergency Call
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-5 text-center text-foreground/40 font-mono text-[10px] print:text-gray-500">
-                        {item.hsnCode || item.sacCode || "—"}
-                      </td>
-                      <td className="py-5 text-center text-foreground/50 font-bold print:text-gray-600">{item.quantity}</td>
-                      <td className="py-5 text-right text-foreground/60 font-semibold print:text-gray-600">₹{fmt(item.unitPrice)}</td>
-                      <td className="py-5 text-right text-white font-black print:text-black">₹{fmt(item.amount)}</td>
-                    </tr>
+                    <tr key={i} className="border-b border-gray-200">
+
+  <td className="py-6 pr-4">
+    <p className="font-bold text-black text-xl">
+      {item.description
+        ?.replace(/_/g, " ")
+        ?.replace(/\b\w/g, (c) => c.toUpperCase())}
+    </p>
+
+    <p className="text-gray-700 text-base mt-3 leading-7 font-medium">
+      {item.detail}
+    </p>
+
+    {booking.isPriority && (
+      <span className="inline-flex mt-3 items-center gap-1 px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold">
+        🚨 Priority / Emergency Call
+      </span>
+    )}
+  </td>
+
+  <td className="py-6 text-center text-gray-600 font-mono text-base font-semibold">
+    {item.hsnCode || item.sacCode || "—"}
+  </td>
+
+  <td className="py-6 text-center text-gray-700 text-lg font-bold">
+    {item.quantity}
+  </td>
+
+  <td className="py-6 pr-8 text-right text-gray-800 text-lg font-semibold">
+    ₹{fmt(item.unitPrice)}
+  </td>
+
+  <td className="py-6 pr-8 text-right text-black text-xl font-black">
+    ₹{fmt(item.amount)}
+  </td>
+
+</tr>
                   ))}
                 </>
               )}
@@ -889,75 +981,113 @@ export default function InvoicePage() {
 
         {/* ── Tax & Total Summary ──────────────────────────────────────── */}
         <div className="px-8 pb-6 print:pb-4">
-          <div className="flex justify-end">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50">
+  <h3 className="font-bold text-orange-600 mb-4 uppercase">
+    Notes & Terms
+  </h3>
+
+  <ul className="space-y-2 text-sm text-gray-700">
+    {terms.map((note, i) => (
+      <li key={i}>
+        {i + 1}. {note}
+      </li>
+    ))}
+  </ul>
+</div>
+<div className="ml-auto w-full max-w-md space-y-0">
             <div className="w-full max-w-xs space-y-0">
-              <div className="flex justify-between items-center py-2 border-b border-white/5 print:border-b print:border-gray-100">
-                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">Subtotal (excl. GST)</span>
-                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(taxData.subtotal)}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5 print:border-b print:border-gray-100">
-                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
-                  CGST {taxData.cgstRate !== undefined && taxData.cgstRate !== null ? `@ ${(taxData.cgstRate * 100).toFixed(1)}%` : ""}
-                </span>
-                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(taxData.cgst)}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/8 print:border-b print:border-gray-200">
-                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
-                  SGST {taxData.sgstRate !== undefined && taxData.sgstRate !== null ? `@ ${(taxData.sgstRate * 100).toFixed(1)}%` : ""}
-                </span>
-                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(taxData.sgst)}</span>
-              </div>
-              <div className="flex justify-between items-center py-4 mt-1">
-                <span className="text-sm font-black text-white uppercase tracking-wider print:text-black print:text-base">Grand Total</span>
-                <span className="text-xl font-black text-primary print:text-black print:text-2xl">₹{fmt(taxData.grandTotal)}</span>
-              </div>
-              <div className={`flex items-center justify-between p-3 rounded-xl border print:border print:rounded-none ${
-                payment.status === "completed"
-                  ? "bg-success/8 border-success/20 print:border-green-300"
-                  : "bg-warning/8 border-warning/20 print:border-yellow-300"
-              }`}>
-                <span className="text-[9px] font-black uppercase tracking-widest text-foreground/45 print:text-gray-500">Payment Status</span>
-                <span className={`text-[10px] font-black uppercase tracking-wider ${
-                  payment.status === "completed" ? "text-success print:text-green-600" : "text-warning print:text-yellow-600"
-                }`}>
-                  {payment.status === "completed" ? "✓ Paid" : "⏳ Pending"}
-                </span>
-              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-200">
+  <span className="text-sm font-semibold text-gray-700">
+    Subtotal (excl. GST)
+  </span>
+
+  <span className="text-base font-bold text-gray-900">
+    ₹{fmt(taxData.subtotal)}
+  </span>
+</div>
+
+<div className="flex justify-between items-center py-3 border-b border-gray-200">
+  <span className="text-sm font-semibold text-gray-700">
+    CGST {taxData.cgstRate !== undefined && taxData.cgstRate !== null
+      ? `@ ${(taxData.cgstRate * 100).toFixed(1)}%`
+      : ""}
+  </span>
+
+  <span className="text-base font-bold text-gray-900">
+    ₹{fmt(taxData.cgst)}
+  </span>
+</div>
+
+<div className="flex justify-between items-center py-3 border-b border-gray-200">
+  <span className="text-sm font-semibold text-gray-700">
+    SGST {taxData.sgstRate !== undefined && taxData.sgstRate !== null
+      ? `@ ${(taxData.sgstRate * 100).toFixed(1)}%`
+      : ""}
+  </span>
+
+  <span className="text-base font-bold text-gray-900">
+    ₹{fmt(taxData.sgst)}
+  </span>
+</div>
+             <div className="mt-6 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl p-5 flex justify-between items-center">
+  <span className="font-black text-xl uppercase">
+    Grand Total
+  </span>
+
+  <span className="font-black text-3xl">
+    ₹{fmt(taxData.grandTotal)}
+  </span>
+</div>
+              <div className="mt-4 border-2 border-green-300 rounded-xl p-4 flex justify-between items-center bg-green-50">
+  <span className="font-bold uppercase text-gray-700">
+    Payment Status
+  </span>
+
+  <span className="font-black text-green-600 uppercase">
+    {payment.status === "completed"
+      ? "✓ PAID"
+      : "PENDING"}
+  </span>
+</div>
+            </div>
             </div>
           </div>
         </div>
 
-        {/* ── Notes & Terms ─────────────────────────────────────────────── */}
-        <div className="mx-8 mb-6 p-5 bg-white/2 border border-white/5 rounded-xl print:border print:border-gray-200 print:bg-gray-50 print:rounded-none">
-          <p className="text-[9px] text-foreground/35 font-black uppercase tracking-widest mb-2 print:text-gray-500">
+        {/* ── Notes & Terms ───────────────────────────────────────────────
+        <div className="mx-8 mb-6 p-5 bg-gray-50 border border-white/5 rounded-xl print:border print:border-gray-200 print:bg-gray-50 print:rounded-none">
+          <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-2 print:text-gray-500">
             Notes &amp; Terms
           </p>
           <ul className="space-y-1">
             {terms.map((note, i) => (
-              <li key={i} className="text-[9px] text-foreground/40 print:text-gray-500 print:text-[10px] leading-relaxed">
+              <li key={i} className="text-[9px] text-gray-600 print:text-gray-500 print:text-[10px] leading-relaxed">
                 {i + 1}. {note}
               </li>
             ))}
           </ul>
-        </div>
+        </div> */}
 
         {/* ── Footer ────────────────────────────────────────────────────── */}
-        <div className="
-          px-8 py-5 border-t border-white/5
-          bg-gradient-to-r from-white/2 to-transparent
-          flex flex-col sm:flex-row items-center justify-between gap-3
-          print:border-t print:border-gray-300 print:bg-gray-50
-        ">
-          <div className="flex items-center gap-2">
-            <Shield size={14} className="text-primary/50 print:hidden" />
-            <p className="text-[9px] text-foreground/30 font-bold uppercase tracking-wider print:text-gray-400 print:text-[10px]">
-              {company.name} — Bengaluru
-            </p>
-          </div>
-          <p className="text-[9px] text-foreground/25 font-mono print:text-gray-400 print:text-[10px]">
-            {invoice.invoiceNumber} • {formatDate(invoice.invoiceDate)}
-          </p>
-        </div>
+        <div className="px-8 py-6 bg-white">
+
+  <div className="flex items-center justify-center gap-4">
+
+    <div className="w-24 border-t border-red-400" />
+
+    <p className="text-[30px] font-medium tracking-wide text-black">
+      THANK YOU FOR CHOOSING{" "}
+      <span className="font-bold text-orange-600">
+        ERINA ASSISTANCE!
+      </span>
+    </p>
+
+    <div className="w-24 border-t border-red-400" />
+
+  </div>
+
+</div>
 
       </div>
 
