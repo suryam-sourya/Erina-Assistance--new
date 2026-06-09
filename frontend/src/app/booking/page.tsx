@@ -504,8 +504,8 @@ if (/^(\d)\1{9}$/.test(cleanedPhone)) {
                   {[
                     { id: 'Towing', label: 'Car Towing', desc: 'Flatbed dispatch', icon: Truck, hoverAnim: { x: [0, 4, 0] }, activeColor: 'border-primary bg-primary/5 text-primary' },
                     { id: 'Flat Tyre', label: 'Flat Tyre', desc: 'Puncture rescue', icon: Wrench, hoverAnim: { rotate: [0, 35, 0] }, activeColor: 'border-secondary bg-secondary/5 text-secondary' },
-                    { id: 'Battery', label: 'Battery Check', desc: 'Jumpstart & swap', icon: BatteryCharging, hoverAnim: { scale: [1, 1.12, 1] }, activeColor: 'border-yellow-500 bg-yellow-500/5 text-yellow-500' },
-                    {id: 'Urgent Battery',label: 'Urgent Battery',desc: 'Fast battery replacement',icon: BatteryCharging,hoverAnim: { scale: [1, 1.12, 1] },activeColor:'border-orange-500 bg-orange-500/5 text-orange-500'},
+                    { id: 'Battery', label: 'Battery Jumpstart', desc: 'Jumpstart & swap', icon: BatteryCharging, hoverAnim: { scale: [1, 1.12, 1] }, activeColor: 'border-yellow-500 bg-yellow-500/5 text-yellow-500' },
+                    {id: 'Urgent Battery',label: 'Buy Battery',desc: 'Fast battery replacement',icon: BatteryCharging,hoverAnim: { scale: [1, 1.12, 1] },activeColor:'border-orange-500 bg-orange-500/5 text-orange-500'},
                     { id: 'Fuel', label: 'Fuel Delivery', desc: 'Emergency fuel', icon: Fuel, hoverAnim: { y: [0, -3, 0] }, activeColor: 'border-emerald-500 bg-emerald-500/5 text-emerald-400' },
                     { id: 'Lockout', label: 'Lockout', desc: 'Unlock keys', icon: Key, hoverAnim: { rotate: [0, -20, 20, 0] }, activeColor: 'border-blue-500 bg-blue-500/5 text-blue-400' },
                     // { id: 'Engine', label: 'Engine Failure', desc: 'Overheating & noise', icon: Activity, hoverAnim: { scale: [1, 1.08, 0.95, 1.05, 1] }, activeColor: 'border-red-500 bg-red-500/5 text-red-400' },
