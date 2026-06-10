@@ -99,6 +99,12 @@ interface InvoiceData {
     isPriority: boolean;
     technicianName: string | null;
     technicianPhone: string | null;
+    scrapBatteryExchange?: {
+      isExchanged: boolean;
+      brand: string;
+      condition: string;
+      discountValue: number;
+    } | null;
   };
   vehicle: {
     type: string;
@@ -162,7 +168,7 @@ function round2(value: number): number {
 /**
  * Recalculate pre-tax bases, CGST, SGST, and grand total based on current input values.
  */
-function recalculateInvoice(localLineItems: InvoiceLineItem[]) {
+function recalculateInvoice(localLineItems: InvoiceLineItem[], scrapDiscount = 0) {
   let subtotal = 0;
   let cgst = 0;
   let sgst = 0;
@@ -210,7 +216,7 @@ function recalculateInvoice(localLineItems: InvoiceLineItem[]) {
       cgst: round2(cgst),
       sgst: round2(sgst),
       totalGst: round2(cgst + sgst),
-      grandTotal: round2(subtotal + cgst + sgst),
+      grandTotal: Math.max(0, round2(subtotal + cgst + sgst - scrapDiscount)),
       cgstRate: uniformRate !== null ? uniformRate / 2 : null,
       sgstRate: uniformRate !== null ? uniformRate / 2 : null,
     }
@@ -444,7 +450,8 @@ export default function InvoicePage() {
   customer.address?.startsWith("https://");
   
   // Dynamic client-side math recalculation for live preview
-  const computedInvoice = recalculateInvoice(lineItems);
+  const scrapDiscountVal = booking.scrapBatteryExchange?.isExchanged ? (booking.scrapBatteryExchange.discountValue || 0) : 0;
+  const computedInvoice = recalculateInvoice(lineItems, scrapDiscountVal);
   const taxData = invoice.invoiceStatus === "DRAFT" ? computedInvoice.tax : invoice.tax;
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -1013,78 +1020,51 @@ export default function InvoicePage() {
         </div>
 
         {/* ── Tax & Total Summary ──────────────────────────────────────── */}
-        <div className="px-8 pb-6 print:pb-2 print:block">
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border ">
-          <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50">
+        <div className="px-8 pb-6 print:pb-4">
+          <div className="flex justify-end">
+            <div className="w-full max-w-xs space-y-0">
+              <div className="flex justify-between items-center py-2 border-b border-white/5 print:border-b print:border-gray-100">
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">Subtotal (excl. GST)</span>
+                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(taxData.subtotal)}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5 print:border-b print:border-gray-100">
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
+                  CGST {taxData.cgstRate !== undefined && taxData.cgstRate !== null ? `@ ${(taxData.cgstRate * 100).toFixed(1)}%` : ""}
+                </span>
+                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(taxData.cgst)}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/8 print:border-b print:border-gray-200">
+                <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider print:text-gray-500 print:text-xs">
+                  SGST {taxData.sgstRate !== undefined && taxData.sgstRate !== null ? `@ ${(taxData.sgstRate * 100).toFixed(1)}%` : ""}
+                </span>
+                <span className="text-xs text-foreground/60 font-bold print:text-gray-600">₹{fmt(taxData.sgst)}</span>
+              </div>
+              
+              {booking.scrapBatteryExchange?.isExchanged && booking.scrapBatteryExchange.discountValue > 0 && (
+                <div className="flex justify-between items-center py-2 border-b border-white/8 print:border-b print:border-gray-200">
+                  <span className="text-[10px] text-yellow-500 font-bold uppercase tracking-wider print:text-gray-600 print:text-xs">
+                    Less: Scrap Battery Exchange ({booking.scrapBatteryExchange.brand})
+                  </span>
+                  <span className="text-xs text-yellow-500 font-bold print:text-gray-600">-₹{fmt(booking.scrapBatteryExchange.discountValue)}</span>
+                </div>
+              )}
 
-  <h3 className="font-bold text-orange-600 mb-4 uppercase">
-    Notes & Terms
-  </h3>
-
-  <ul className="space-y-2 text-sm text-gray-700">
-    {terms.map((note, i) => (
-      <li key={i}>
-        {i + 1}. {note}
-      </li>
-    ))}
-  </ul>
-</div>
-<div className="ml-auto w-full max-w-md space-y-0">
-            <div className="w-full space-y-0">
-              <div className="flex justify-between items-center py-3 border-b border-gray-200">
-  <span className="text-sm font-semibold text-gray-700">
-    Subtotal (excl. GST)
-  </span>
-
-  <span className="text-sm font-bold text-gray-900">
-    ₹{fmt(taxData.subtotal)}
-  </span>
-</div>
-
-<div className="flex justify-between items-center py-3 border-b border-gray-200">
-  <span className="text-sm font-semibold text-gray-700">
-    CGST {taxData.cgstRate !== undefined && taxData.cgstRate !== null
-      ? `@ ${(taxData.cgstRate * 100).toFixed(1)}%`
-      : ""}
-  </span>
-
-  <span className="text-sm font-bold text-gray-900">
-    ₹{fmt(taxData.cgst)}
-  </span>
-</div>
-
-<div className="flex justify-between items-center py-3 border-b border-gray-200">
-  <span className="text-sm font-semibold text-gray-700">
-    SGST {taxData.sgstRate !== undefined && taxData.sgstRate !== null
-      ? `@ ${(taxData.sgstRate * 100).toFixed(1)}%`
-      : ""}
-  </span>
-
-  <span className="text-sm font-bold text-gray-900">
-    ₹{fmt(taxData.sgst)}
-  </span>
-</div>
-             <div className="mt-6 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl p-5 flex justify-between items-center">
-  <span className="font-black text-xl uppercase">
-    Grand Total
-  </span>
-
-  <span className="font-black text-2xl">
-    ₹{fmt(taxData.grandTotal)}
-  </span>
-</div>
-              <div className="mt-4 border-2 border-green-300 rounded-xl p-4 flex justify-between items-center bg-green-50">
-  <span className="font-bold uppercase text-gray-700">
-    Payment Status
-  </span>
-
-  <span className="font-black text-green-600 uppercase">
-    {payment.status === "completed"
-      ? "✓ PAID"
-      : "PENDING"}
-  </span>
-</div>
-            </div>
+              <div className="flex justify-between items-center py-4 mt-1">
+                <span className="text-sm font-black text-white uppercase tracking-wider print:text-black print:text-base">Grand Total</span>
+                <span className="text-xl font-black text-primary print:text-black print:text-2xl">₹{fmt(taxData.grandTotal)}</span>
+              </div>
+              <div className={`flex items-center justify-between p-3 rounded-xl border print:border print:rounded-none ${
+                payment.status === "completed"
+                  ? "bg-success/8 border-success/20 print:border-green-300"
+                  : "bg-warning/8 border-warning/20 print:border-yellow-300"
+              }`}>
+                <span className="text-[9px] font-black uppercase tracking-widest text-foreground/45 print:text-gray-500">Payment Status</span>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${
+                  payment.status === "completed" ? "text-success print:text-green-600" : "text-warning print:text-yellow-600"
+                }`}>
+                  {payment.status === "completed" ? "✓ Paid" : "⏳ Pending"}
+                </span>
+              </div>
             </div>
           </div>
         </div>

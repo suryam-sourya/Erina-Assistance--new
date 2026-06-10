@@ -10,12 +10,13 @@ export default function HeroSection() {
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
       {/* Background Image with Gradient Overlay */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-dark/95 via-dark/80 to-primary/10 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-dark/90 via-dark/60 to-transparent z-10" />
+        <div className="absolute inset-0 bg-black/20 z-10" />
         <Image
-          src="/hero-bg.jpg"
+          src="/hero-bg.png"
           alt="Roadside Assistance - Erina"
           fill
-          className="object-cover object-center"
+          className="object-cover object-[center_20%] md:object-[center_35%]"
           priority
         />
       </div>

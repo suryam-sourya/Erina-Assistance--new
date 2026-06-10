@@ -3,6 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import { useUserStore } from "@/store/userStore";
+import { calculateDistance } from "@/lib/location";
+
+const ERINA_HUB_LAT = 12.9902;
+const ERINA_HUB_LNG = 77.7602;
+const MAX_SERVICE_RADIUS_KM = 10;
 
 interface MapSelectorProps {
   onLocationSelect: (lat: number, lng: number, address: string) => void;
@@ -15,6 +21,8 @@ export default function MapSelector({
   initialLat = 12.9928671, // Erina Hub Lat
   initialLng = 77.7529829  // Erina Hub Lng
 }: MapSelectorProps) {
+  const { detectedLocation, isServiceable, setLocation } = useUserStore();
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -60,11 +68,21 @@ export default function MapSelector({
       const data = await response.json();
       const formattedAddress = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
       setAddress(formattedAddress);
+      
+      const distanceKm = calculateDistance(lat, lng, ERINA_HUB_LAT, ERINA_HUB_LNG);
+      const serviceable = distanceKm <= MAX_SERVICE_RADIUS_KM;
+      setLocation({ lat, lng, address: formattedAddress }, serviceable);
+
       onLocationSelect(lat, lng, formattedAddress);
     } catch (err) {
       console.error("Reverse geocoding failed:", err);
       const fallback = `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
       setAddress(fallback);
+      
+      const distanceKm = calculateDistance(lat, lng, ERINA_HUB_LAT, ERINA_HUB_LNG);
+      const serviceable = distanceKm <= MAX_SERVICE_RADIUS_KM;
+      setLocation({ lat, lng, address: fallback }, serviceable);
+
       onLocationSelect(lat, lng, fallback);
     }
   };
@@ -159,11 +177,14 @@ export default function MapSelector({
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
+      const startLat = detectedLocation ? detectedLocation.lat : initialLat;
+      const startLng = detectedLocation ? detectedLocation.lng : initialLng;
+
       // 1. Initialize Map
       const mapInstance = L.map(mapContainerRef.current!, {
         zoomControl: false,
         attributionControl: false
-      }).setView([initialLat, initialLng], 14);
+      }).setView([startLat, startLng], 14);
 
       // 2. Add OpenStreetMap Tiles (100% Free Tile Server)
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -171,7 +192,7 @@ export default function MapSelector({
       }).addTo(mapInstance);
 
       // 3. Add Custom Draggable Marker Pin
-      const markerInstance = L.marker([initialLat, initialLng], {
+      const markerInstance = L.marker([startLat, startLng], {
         draggable: true,
       }).addTo(mapInstance);
 
@@ -193,7 +214,7 @@ export default function MapSelector({
       markerRef.current = markerInstance;
 
       // Initial reverse geocode load
-      reverseGeocode(initialLat, initialLng);
+      reverseGeocode(startLat, startLng);
     });
 
     return () => {
@@ -267,9 +288,20 @@ export default function MapSelector({
 
       {/* Selected Address Display */}
       {address && (
-        <div className="text-xs bg-primary/5 border border-primary/15 rounded-xl px-4 py-3 font-semibold text-foreground/80 leading-relaxed flex items-start gap-2">
-          <span className="text-primary">📍</span>
-          <span>{address}</span>
+        <div className={`text-xs border rounded-xl px-4 py-3 font-semibold leading-relaxed flex items-start gap-2 transition-colors ${
+          isServiceable === false 
+            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400' 
+            : 'bg-primary/5 border-primary/15 text-foreground/80'
+        }`}>
+          <span className={isServiceable === false ? "text-red-500" : "text-primary"}>📍</span>
+          <div className="flex flex-col gap-1">
+            <span>{address}</span>
+            {isServiceable === false && (
+              <span className="text-[10px] font-bold tracking-wide uppercase mt-1 opacity-80">
+                ⚠️ Out of Service Area (10km Hub Limit)
+              </span>
+            )}
+          </div>
         </div>
       )}
 

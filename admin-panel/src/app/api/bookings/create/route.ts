@@ -35,6 +35,7 @@ export async function POST(req: Request) {
       imageUrl,
       technicianId,
       technicianName,
+      hasScrapBattery,
     } = body;
 
     const sanitizeString = (val: any, fallback = ""): string => {
@@ -241,6 +242,9 @@ serviceTypes:
       paymentStatus: rawPaymentStatus.toUpperCase(),
       paymentAmount: rawPaymentAmount,
       createdBy: null,
+      scrapBatteryExchange: {
+        isExchanged: !!hasScrapBattery,
+      },
 
       // 2. Flat Compatibilities for frontend/Zustand store (prevent layout crash)
       userId: sanitizeString(userId),

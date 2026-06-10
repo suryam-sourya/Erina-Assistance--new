@@ -90,6 +90,13 @@ zohoInvoiceUrl: {
       lng: { type: Number, default: null },
     },
 
+    scrapBatteryExchange: {
+      isExchanged: { type: Boolean, default: false },
+      brand: { type: String, default: "" },
+      condition: { type: String, default: "" },
+      discountValue: { type: Number, default: 0 }
+    },
+
     // ── Products Sold On-Site ─────────────────────────────────────────────
     // Populated when a technician sells a physical product (e.g. battery, tyre)
     // during the service call. Each entry is a snapshot at time of sale.

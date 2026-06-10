@@ -21,12 +21,12 @@ export default function Footer() {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold">
-              <Clock size={14} className="text-emerald-500" />
+            <div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold">
+              <Clock size={12} className="text-emerald-500" />
               <span>Always Available</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold">
-              <ShieldCheck size={14} className="text-primary" />
+            <div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold">
+              <ShieldCheck size={12} className="text-primary" />
               <span>Verified Technicians</span>
             </div>
           </div>
@@ -50,9 +50,15 @@ export default function Footer() {
               </div>
               <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">BETA</span>
             </Link>
-            <p className="text-sm text-gray-400 mt-4 leading-relaxed">
-              India&apos;s smartest roadside assistance platform. AI-powered dispatch, live GPS tracking, and verified technicians — available 24/7 across Bangalore.
-            </p>
+            <div className="text-[11px] text-gray-400 mt-4 leading-relaxed space-y-1">
+              <p className="font-bold text-gray-200">Erina Assistance Private Limited</p>
+              <p>Shop No. 02, Dinnur Road, Kadugodi</p>
+              <p>Bengaluru Karnataka 560067 India</p>
+              <p>GSTIN: 29AAJCE0215B1Z6</p>
+              <p>07340066655</p>
+              <p><a href="mailto:info@erinaassistance.com" className="hover:text-primary transition-colors">info@erinaassistance.com</a></p>
+              <p><a href="https://erinaassistance.in/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">https://erinaassistance.in/</a></p>
+            </div>
             <div className="flex items-center space-x-4 pt-2">
               <a href="https://www.facebook.com/share/1BHEn3zBxx/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform relative w-7 h-7 block opacity-60 hover:opacity-100">
                 <Image src="/facebook.png" alt="Facebook" fill className="object-contain" />
@@ -71,64 +77,64 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-6 relative inline-block">
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider mb-5 relative inline-block">
               Quick Links
-              <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full" />
+              <span className="absolute -bottom-2 left-0 w-6 h-0.5 bg-primary rounded-full" />
             </h3>
-            <ul className="space-y-3">
-              <li><Link href="/" className="hover:text-primary transition-colors text-sm">Home</Link></li>
-              <li><Link href="/about" className="hover:text-primary transition-colors text-sm">About Us</Link></li>
-              <li><Link href="/membership" className="hover:text-primary transition-colors text-sm">Membership Plans</Link></li>
-              <li><Link href="/partner" className="hover:text-primary transition-colors text-sm">Partner With Us</Link></li>
-              <li><Link href="/contact" className="hover:text-primary transition-colors text-sm">Contact Us</Link></li>
-              <li><Link href="/login" className="hover:text-primary transition-colors text-sm">Customer Login</Link></li>
+            <ul className="space-y-2">
+              <li><Link href="/" className="hover:text-primary transition-colors text-[11px]">Home</Link></li>
+              <li><Link href="/about" className="hover:text-primary transition-colors text-[11px]">About Us</Link></li>
+              <li><Link href="/membership" className="hover:text-primary transition-colors text-[11px]">Membership Plans</Link></li>
+              <li><Link href="/partner" className="hover:text-primary transition-colors text-[11px]">Partner With Us</Link></li>
+              <li><Link href="/contact" className="hover:text-primary transition-colors text-[11px]">Contact Us</Link></li>
+              <li><Link href="/login" className="hover:text-primary transition-colors text-[11px]">Customer Login</Link></li>
             </ul>
           </div>
 
           {/* Services */}
           <div>
-            <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-6 relative inline-block">
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider mb-5 relative inline-block">
               Our Services
-              <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full" />
+              <span className="absolute -bottom-2 left-0 w-6 h-0.5 bg-primary rounded-full" />
             </h3>
-            <ul className="space-y-3">
-              <li><Link href="/booking?service=towing" className="hover:text-primary transition-colors text-sm">Car Towing</Link></li>
-              <li><Link href="/booking?service=bike-towing" className="hover:text-primary transition-colors text-sm">Bike Assistance</Link></li>
-              <li><Link href="/booking?service=battery" className="hover:text-primary transition-colors text-sm">Battery Jumpstart</Link></li>
-              <li><Link href="/booking?service=fuel" className="hover:text-primary transition-colors text-sm">Fuel Delivery</Link></li>
-              <li><Link href="/booking?service=lockout" className="hover:text-primary transition-colors text-sm">Lockout Assistance</Link></li>
-              <li><Link href="/booking?service=ev" className="hover:text-primary transition-colors text-sm">EV Charging</Link></li>
+            <ul className="space-y-2">
+              <li><Link href="/booking?service=towing" className="hover:text-primary transition-colors text-[11px]">Car Towing</Link></li>
+              <li><Link href="/booking?service=bike-towing" className="hover:text-primary transition-colors text-[11px]">Bike Assistance</Link></li>
+              <li><Link href="/booking?service=battery" className="hover:text-primary transition-colors text-[11px]">Battery Jumpstart</Link></li>
+              <li><Link href="/booking?service=fuel" className="hover:text-primary transition-colors text-[11px]">Fuel Delivery</Link></li>
+              <li><Link href="/booking?service=lockout" className="hover:text-primary transition-colors text-[11px]">Lockout Assistance</Link></li>
+              <li><Link href="/booking?service=ev" className="hover:text-primary transition-colors text-[11px]">EV Charging</Link></li>
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-6 relative inline-block">
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider mb-5 relative inline-block">
               Operations Hub
-              <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full" />
+              <span className="absolute -bottom-2 left-0 w-6 h-0.5 bg-primary rounded-full" />
             </h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin size={16} className="text-primary shrink-0 mt-0.5" />
-                <span className="text-sm leading-relaxed">Shop No. 02, Dinnur Main Road, Kadugodi Colony, Opp: Srihalli Cafe, Bengaluru, Karnataka — 560067</span>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-2">
+                <MapPin size={14} className="text-primary shrink-0 mt-0.5" />
+                <span className="text-[11px] leading-relaxed">Shop No. 02, Dinnur Main Road, Kadugodi Colony, Opp: Srihalli Cafe, Bengaluru, Karnataka — 560067</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone size={16} className="text-primary shrink-0" />
-                <a href="tel:+917340066655" className="text-sm hover:text-primary transition-colors font-semibold">+91 73400 66655</a>
+              <li className="flex items-center gap-2">
+                <Phone size={14} className="text-primary shrink-0" />
+                <a href="tel:+917340066655" className="text-[11px] hover:text-primary transition-colors font-semibold">+91 73400 66655</a>
               </li>
-              <li className="flex items-center gap-3">
-                <Mail size={16} className="text-primary shrink-0" />
-                <span className="text-sm">support@erinaassistance.in</span>
+              <li className="flex items-center gap-2">
+                <Mail size={14} className="text-primary shrink-0" />
+                <span className="text-[11px]">support@erinaassistance.in</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} Erina Assistance Pvt. Ltd. All rights reserved.
+        <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
+          <p className="text-[10px] text-gray-500">
+            &copy; {new Date().getFullYear()} Erina Assistance Private Limited. All rights reserved.
           </p>
-          <div className="flex gap-6 text-xs text-gray-500">
+          <div className="flex gap-4 text-[10px] text-gray-500">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link href="/refund" className="hover:text-white transition-colors">Refund Policy</Link>

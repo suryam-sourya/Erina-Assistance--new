@@ -110,8 +110,35 @@ export default function BookingsManagement() {
     }
   };
 
+  const handleMarkPaidCash = async (bookingId: string) => {
+    if (!confirm("Are you sure you want to mark this invoice as paid via Cash?")) return;
+    
+    const booking = bookings.find(b => b.id === bookingId);
+    const targetId = booking?.mongoId || bookingId;
+
+    try {
+      const response = await fetch(`/api/bookings/${targetId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentStatus: "completed",
+          paymentMethod: "cash",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to mark as paid");
+      }
+      alert("Invoice marked as Paid via Cash successfully!");
+      await fetchBookings();
+    } catch (error: any) {
+      console.error(error);
+      alert(`Error: ${error.message || "Failed to mark as paid"}`);
+    }
+  };
   // ── Add Products Sold ────────────────────────────────────────────────
   const [sellProductsBooking, setSellProductsBooking] = useState<Booking | null>(null);
+  const [scrapBattery, setScrapBattery] = useState({ isExchanged: false, brand: '', condition: '', discountValue: 0 });
   const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
   const [selectedItems, setSelectedItems] = useState<{ product: Product; qty: number }[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
@@ -137,6 +164,12 @@ export default function BookingsManagement() {
     setSellError(null);
     setSellSuccess(false);
     setWaiveServiceFee(false);
+    setScrapBattery({
+      isExchanged: booking.scrapBatteryExchange?.isExchanged || false,
+      brand: booking.scrapBatteryExchange?.brand || '',
+      condition: booking.scrapBatteryExchange?.condition || '',
+      discountValue: booking.scrapBatteryExchange?.discountValue || 0,
+    });
     setCatalogLoading(true);
     try {
       const res = await fetch('/api/products?includeInactive=false');
@@ -172,7 +205,8 @@ export default function BookingsManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: selectedItems.map(i => ({ productId: i.product._id, quantity: i.qty })),
-          waiveServiceFee
+          waiveServiceFee,
+          scrapBattery
         }),
       });
       const data = await res.json();
@@ -730,6 +764,13 @@ alert("Ticket Created Successfully");
                                 </span>
                               )}
                             </div>
+                            {booking.scrapBatteryExchange?.isExchanged && (
+                              <div className="mt-1">
+                                <span className="px-2 py-0.5 rounded-sm bg-yellow-500/10 border border-yellow-500/30 text-[9px] text-yellow-500 uppercase font-bold tracking-wider whitespace-nowrap">
+                                  ♻️ Scrap Exchange Requested
+                                </span>
+                              </div>
+                            )}
                             {booking.status?.toLowerCase() !== 'cancelled' &&
                                 booking.invoiceStatus !== 'FINAL' && (
                             <button
@@ -826,53 +867,73 @@ alert("Ticket Created Successfully");
                           </span>
 
                           {/* Payment Link Generation & Sharing */}
-                          {booking.status?.toLowerCase() !== 'completed' &&
-                           booking.status?.toLowerCase() !== 'cancelled' &&
-                           booking.paymentStatus?.toLowerCase() !== 'completed' && (
+                          {booking.status?.toLowerCase() !== 'cancelled' &&
+                           (booking.paymentStatus?.toLowerCase() !== 'completed' || !booking.paymentLink) && (
                             <div className="mt-2 flex flex-col gap-1.5 max-w-[130px]">
                               {!booking.paymentLink ? (() => {
                                 const isInvoiceFinalized = booking.invoiceStatus === 'FINAL';
                                 return (
-                                  <button
-                                    onClick={() => isInvoiceFinalized && handleGeneratePaymentLink(booking.id)}
-                                    disabled={generatingLinkId === booking.id || !isInvoiceFinalized}
-                                    className={`w-full flex items-center justify-center gap-1 px-2.5 py-1 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all ${
-                                      isInvoiceFinalized 
-                                        ? "bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 cursor-pointer shadow-sm shadow-violet-500/5"
-                                        : "bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed opacity-60"
-                                    }`}
-                                    title={isInvoiceFinalized ? "Generate payment link" : "Please finalize the invoice first"}
-                                  >
-                                    {generatingLinkId === booking.id ? "Generating..." : isInvoiceFinalized ? "Generate Link" : "Need Final Bill"}
-                                  </button>
+                                  <div className="flex flex-col gap-1.5 w-full">
+                                    <button
+                                      onClick={() => isInvoiceFinalized && handleGeneratePaymentLink(booking.id)}
+                                      disabled={generatingLinkId === booking.id || !isInvoiceFinalized}
+                                      className={`w-full flex items-center justify-center gap-1 px-2.5 py-1 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all ${
+                                        isInvoiceFinalized 
+                                          ? "bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 cursor-pointer shadow-sm shadow-violet-500/5"
+                                          : "bg-gray-500/10 text-gray-500 border border-gray-500/20 cursor-not-allowed opacity-60"
+                                      }`}
+                                      title={isInvoiceFinalized ? "Generate payment link" : "Please finalize the invoice first"}
+                                    >
+                                      {generatingLinkId === booking.id ? "Generating..." : isInvoiceFinalized ? "Generate Link" : "Need Final Bill"}
+                                    </button>
+                                    
+                                    {isInvoiceFinalized && (
+                                      <button
+                                        onClick={() => handleMarkPaidCash(booking.id)}
+                                        className="w-full flex items-center justify-center gap-1 px-2.5 py-1 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-pointer shadow-sm"
+                                        title="Mark as paid via Cash"
+                                      >
+                                        Mark Paid (Cash)
+                                      </button>
+                                    )}
+                                  </div>
                                 );
                               })() : (() => {
                                 const cleanPhone = booking.customerPhone?.replace(/\D/g, '') || '';
                                 const whatsappPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
                                 const messageText = `Hello ${booking.customerName || 'Customer'}, here is the secure payment link for your Erina Roadside Assistance request: ${booking.paymentLink}. Thank you!`;
                                 return (
-                                  <div className="flex gap-1 w-full">
-                                    <button
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(booking.paymentLink || '');
-                                        setCopiedPaymentLinkId(booking.id);
-                                        setTimeout(() => setCopiedPaymentLinkId(null), 2000);
-                                      }}
-                                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer"
-                                      title="Copy payment link"
-                                    >
-                                      {copiedPaymentLinkId === booking.id ? "Copied!" : "Copy"}
-                                    </button>
-                                    <a
-                                      href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(messageText)}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer text-center"
-                                      title="Send payment link on WhatsApp"
-                                    >
-                                      WhatsApp
-                                    </a>
-                                  </div>
+                                    <div className="flex flex-col gap-1 w-full">
+                                      <div className="flex gap-1 w-full">
+                                        <button
+                                          onClick={() => {
+                                            navigator.clipboard.writeText(booking.paymentLink || '');
+                                            setCopiedPaymentLinkId(booking.id);
+                                            setTimeout(() => setCopiedPaymentLinkId(null), 2000);
+                                          }}
+                                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer"
+                                          title="Copy payment link"
+                                        >
+                                          {copiedPaymentLinkId === booking.id ? "Copied!" : "Copy"}
+                                        </button>
+                                        <a
+                                          href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(messageText)}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all cursor-pointer text-center"
+                                          title="Send payment link on WhatsApp"
+                                        >
+                                          WhatsApp
+                                        </a>
+                                      </div>
+                                      <button
+                                        onClick={() => handleMarkPaidCash(booking.id)}
+                                        className="w-full flex items-center justify-center gap-1 px-2.5 py-1 font-bold rounded-lg text-[9px] uppercase tracking-wider transition-all bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-pointer shadow-sm"
+                                        title="Mark as paid via Cash"
+                                      >
+                                        Mark Paid (Cash)
+                                      </button>
+                                    </div>
                                 );
                               })()}
                             </div>
@@ -2097,6 +2158,38 @@ alert("Ticket Created Successfully");
                     <label htmlFor="waiveServiceFee" className="text-[10px] text-foreground/60 font-semibold cursor-pointer">
                       Waive roadside assistance service fee (Set service charge to ₹0)
                     </label>
+                  </div>
+                  
+                  {/* Scrap Battery Exchange Toggle */}
+                  <div className="border-t border-white/5 pt-3 mt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        type="checkbox"
+                        id="scrapBattery"
+                        checked={scrapBattery.isExchanged}
+                        onChange={(e) => setScrapBattery({ ...scrapBattery, isExchanged: e.target.checked })}
+                        className="rounded border-white/10 bg-background text-yellow-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                      />
+                      <label htmlFor="scrapBattery" className="text-xs text-yellow-500 font-black uppercase tracking-wider cursor-pointer">
+                        ♻️ Scrap Battery Exchange
+                      </label>
+                    </div>
+                    {scrapBattery.isExchanged && (
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        <div>
+                          <label className="text-[9px] font-bold text-foreground/40 uppercase">Brand</label>
+                          <input type="text" value={scrapBattery.brand} onChange={e => setScrapBattery({...scrapBattery, brand: e.target.value})} className="w-full text-xs px-2 py-1.5 rounded-md bg-black/20 border border-white/10 text-white mt-1" placeholder="e.g. Exide" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-foreground/40 uppercase">Condition</label>
+                          <input type="text" value={scrapBattery.condition} onChange={e => setScrapBattery({...scrapBattery, condition: e.target.value})} className="w-full text-xs px-2 py-1.5 rounded-md bg-black/20 border border-white/10 text-white mt-1" placeholder="e.g. Dead" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-foreground/40 uppercase">Discount (₹)</label>
+                          <input type="number" value={scrapBattery.discountValue || ''} onChange={e => setScrapBattery({...scrapBattery, discountValue: Number(e.target.value)})} className="w-full text-xs px-2 py-1.5 rounded-md bg-black/20 border border-white/10 text-white mt-1" placeholder="0" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -89,15 +89,9 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${
-      isScrolled 
-        ? "bg-white/95 dark:bg-[#0B0F19]/95 border-b border-black/5 dark:border-white/5 backdrop-blur-md shadow-sm"
-        : isHome
-          ? "bg-transparent border-b border-transparent"
-          : "bg-white/95 dark:bg-[#0B0F19]/95 border-b border-black/5 dark:border-white/5 backdrop-blur-md shadow-sm"
-    }`}>
+    <nav className="fixed top-0 left-0 right-0 w-full z-50 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-white/10 transition-all duration-300 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-16 gap-6">
 
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
@@ -107,7 +101,7 @@ export default function Navbar() {
                   src="/logo-full.png"
                   alt="Erina Assistance"
                   fill
-                  className="object-contain"
+                  className="object-contain transition-all"
                   priority
                 />
               </div>
@@ -116,18 +110,15 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden xl:flex items-center space-x-4 xl:space-x-8">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`transition-colors font-semibold text-sm ${
-                  isHome && !isScrolled
-                    ? 'text-white/80 hover:text-primary'
-                    : 'text-foreground/80 hover:text-primary'
-                }`}
+                className="transition-colors font-semibold text-sm text-foreground/80 hover:text-primary relative group whitespace-nowrap"
               >
                 {link.name}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
               </Link>
             ))}
 
@@ -147,9 +138,7 @@ export default function Navbar() {
               </motion.div>
             )}
 
-            <div className={`pl-4 flex items-center space-x-4 border-l transition-colors ${
-              isHome && !isScrolled ? 'border-white/10' : 'border-foreground/10'
-            }`}>
+            <div className="pl-4 xl:pl-6 flex items-center space-x-3 xl:space-x-4 border-l border-gray-200 dark:border-white/10 transition-colors">
               <ThemeToggle />
               
               {/* Conditional Auth State Display */}
@@ -163,17 +152,13 @@ export default function Navbar() {
                         : 'bg-gray-50 dark:bg-gray-800 border border-gray-150 dark:border-gray-700/60 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   >
-                    <div className="w-6.5 h-6.5 rounded-full bg-gradient-to-br from-primary to-orange-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shadow-sm">
                       {getInitials()}
                     </div>
-                    <span className={`truncate max-w-[90px] transition-colors ${
-                      isHome && !isScrolled ? 'text-white/90' : 'text-foreground/85'
-                    }`}>
+                    <span className="truncate max-w-[90px] transition-colors text-foreground/90">
                       {user.displayName || user.email?.split('@')[0]}
                     </span>
-                    <ChevronDown size={14} className={`transition-all ${
-                      isHome && !isScrolled ? 'text-white/60' : 'text-foreground/50'
-                    } ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-all text-foreground/50 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Dropdown Card */}
@@ -229,11 +214,7 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/login"
-                  className={`px-5 py-2 text-sm rounded-full font-bold transition-all duration-300 border ${
-                    isHome && !isScrolled
-                      ? 'border-white/20 text-white/90 hover:bg-white/10 hover:text-white'
-                      : 'border-gray-200 dark:border-gray-800 text-foreground/80 hover:text-foreground hover:bg-gray-50 dark:hover:bg-gray-800 font-bold transition-all duration-300'
-                  }`}
+                  className="px-4 py-2 text-sm rounded-full font-bold transition-all duration-300 text-foreground/80 hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 whitespace-nowrap"
                 >
                   Sign In
                 </Link>
@@ -241,24 +222,19 @@ export default function Navbar() {
 
               <Link
                 href="/booking"
-                className="px-6 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-sm transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm shadow-primary/5 hover:shadow-primary/25"
+                className="px-4 py-2 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-sm transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-lg shadow-primary/20 hover:-translate-y-0.5 whitespace-nowrap"
               >
-                <div className="relative w-4.5 h-4.5 animate-pulse">
-                  <Image src="/warning.png" alt="Emergency" fill className="object-contain" />
-                </div>
                 Emergency Help
               </Link>
             </div>
           </div>
 
           {/* Mobile Menu Button & Theme Toggle */}
-          <div className="md:hidden flex items-center space-x-3.5">
+          <div className="xl:hidden flex items-center space-x-3.5">
             <ThemeToggle />
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className={`p-2 rounded-md focus:outline-none transition-colors ${
-                isHome && !isScrolled ? 'text-white hover:text-white/80' : 'text-foreground'
-              }`}
+              className="p-2 rounded-xl focus:outline-none transition-colors text-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -273,7 +249,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass-panel border-t border-white/10"
+            className="xl:hidden glass-panel border-t border-white/10"
           >
             <div className="px-4 pt-2 pb-6 space-y-1 shadow-xl">
               {navLinks.map((link) => (

@@ -56,6 +56,12 @@ export interface Booking {
   }[];
   paymentLink?: string | null;
   paymentLinkId?: string | null;
+  scrapBatteryExchange?: {
+    isExchanged: boolean;
+    brand: string;
+    condition: string;
+    discountValue: number;
+  } | null;
 }
 
 export interface Technician {
@@ -729,7 +735,7 @@ await get().fetchTechnicians();
         updateData.subStatus = subStatus;
       }
       if (status === 'completed') {
-        updateData.paymentStatus = 'completed';
+        // DO NOT auto-set paymentStatus here — payment must be confirmed separately
         updateData.subStatus = null;
       }
       if (status === 'cancelled') {
@@ -780,7 +786,7 @@ await get().fetchTechnicians();
           ? { 
               ...b, 
               status, 
-              paymentStatus: status === 'completed' ? 'completed' : b.paymentStatus 
+              paymentStatus: b.paymentStatus // payment status unchanged by service completion
             } 
           : b
       ),

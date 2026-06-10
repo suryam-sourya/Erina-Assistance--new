@@ -316,7 +316,9 @@ const perServiceAmount =
     const totalBase  = round2(allLineItems.reduce((s, l) => s + l.base, 0));
     const totalCgst  = round2(allLineItems.reduce((s, l) => s + l.cgst, 0));
     const totalSgst  = round2(allLineItems.reduce((s, l) => s + l.sgst, 0));
-    const grandTotal = round2(totalBase + totalCgst + totalSgst);
+    
+    const scrapBatteryDiscount = obj.scrapBatteryExchange?.isExchanged ? (Number(obj.scrapBatteryExchange.discountValue) || 0) : 0;
+    const grandTotal = Math.max(0, round2(totalBase + totalCgst + totalSgst - scrapBatteryDiscount));
 
     // Collect all active unique GST rates
     const activeRates: number[] = [];
@@ -360,6 +362,7 @@ const perServiceAmount =
         isPriority:   obj.isPriority ?? false,
         technicianName:  obj.technicianName  || null,
         technicianPhone: obj.technicianPhone || null,
+        scrapBatteryExchange: obj.scrapBatteryExchange || null,
       },
 
       // Vehicle

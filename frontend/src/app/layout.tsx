@@ -23,6 +23,17 @@ export const metadata: Metadata = {
   description:
     "India's smartest roadside assistance. Get emergency towing, flat tyre repair, battery jumpstart, fuel delivery & EV charging in Bangalore within 30 minutes. 24/7 live tracking, verified technicians.",
   manifest: "/manifest.json",
+  // Explicit favicon/icon declarations — Next.js serves these automatically
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/icon-192.png",
+  },
   appleWebApp: {
     capable: true,
     title: "Erina RSA",
@@ -48,12 +59,21 @@ export const metadata: Metadata = {
     siteName: "Erina Assistance",
     type: "website",
     locale: "en_IN",
+    images: [
+      {
+        url: "https://www.erinaassistance.in/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "Erina Assistance Logo",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Erina Assistance | 24/7 Roadside Help in Bangalore",
     description:
       "AI-powered emergency roadside assistance. Towing, battery, tyre, fuel delivery — dispatched in minutes.",
+    images: ["https://www.erinaassistance.in/icon-512.png"],
   },
   other: {
     "theme-color": "#FF3366",
@@ -100,6 +120,8 @@ const jsonLd = {
   sameAs: ["https://wa.me/917340066655"],
 };
 
+// Removed LocationServiceabilityBar
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -143,6 +165,7 @@ export default function RootLayout({
         />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <Navbar />
+          {/* Removed LocationServiceabilityBar */}
           <main className="flex-grow">
             {children}
           </main>

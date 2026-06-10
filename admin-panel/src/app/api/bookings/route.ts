@@ -27,12 +27,12 @@ async function checkAndAutoCancelBooking(booking: any) {
           await updateDoc(doc(db, "active_bookings", booking._id.toString()), {
             status: "cancelled",
             timeline: {
-              confirmedAt: booking.timeline.confirmedAt ? booking.timeline.confirmedAt.toISOString() : new Date(booking.createdAt).toISOString(),
-              assignedAt: booking.timeline.assignedAt ? booking.timeline.assignedAt.toISOString() : null,
-              enRouteAt: booking.timeline.enRouteAt ? booking.timeline.enRouteAt.toISOString() : null,
-              arrivedAt: booking.timeline.arrivedAt ? booking.timeline.arrivedAt.toISOString() : null,
-              completedAt: booking.timeline.completedAt ? booking.timeline.completedAt.toISOString() : null,
-              cancelledAt: booking.timeline.cancelledAt.toISOString(),
+              confirmedAt: booking.timeline?.confirmedAt ? new Date(booking.timeline.confirmedAt).toISOString() : new Date(booking.createdAt || Date.now()).toISOString(),
+              assignedAt: booking.timeline?.assignedAt ? new Date(booking.timeline.assignedAt).toISOString() : null,
+              enRouteAt: booking.timeline?.enRouteAt ? new Date(booking.timeline.enRouteAt).toISOString() : null,
+              arrivedAt: booking.timeline?.arrivedAt ? new Date(booking.timeline.arrivedAt).toISOString() : null,
+              completedAt: booking.timeline?.completedAt ? new Date(booking.timeline.completedAt).toISOString() : null,
+              cancelledAt: booking.timeline?.cancelledAt ? new Date(booking.timeline.cancelledAt).toISOString() : new Date().toISOString(),
             }
           });
         }

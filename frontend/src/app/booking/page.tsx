@@ -86,6 +86,7 @@ export default function BookingPage() {
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [selectedIssue, setSelectedIssue] = useState('');
   const [issueDescription, setIssueDescription] = useState('');
+  const [hasScrapBattery, setHasScrapBattery] = useState(false);
 
   const [locationName, setLocationName] = useState('');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -93,6 +94,15 @@ export default function BookingPage() {
 
   // Auto-fetch customer profile and populate form
   useEffect(() => {
+    // Read query params for auto-selection
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const serviceParam = params.get('service');
+      if (serviceParam === 'urgent_battery') {
+        setSelectedIssue('Urgent Battery');
+      }
+    }
+
     // 1. Pre-fill from localStorage if available (only if user is signed in)
     if (user && typeof window !== 'undefined') {
       const savedPhone = localStorage.getItem('erina_user_phone');
@@ -312,6 +322,7 @@ if (/^(\d)\1{9}$/.test(cleanedPhone)) {
           paymentStatus: paymentMethod === 'ONLINE' ? 'completed' : 'pending',
           paymentMethod: paymentMethod,
           imageUrl: imageUrl || undefined,
+          hasScrapBattery,
         }),
       });
 
@@ -574,6 +585,21 @@ if (/^(\d)\1{9}$/.test(cleanedPhone)) {
     </p>
   </div>
 )}
+              
+              {(selectedIssue === "Battery" || selectedIssue === "Urgent Battery") && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-3 mt-4">
+                  <input
+                    type="checkbox"
+                    id="scrapBattery"
+                    checked={hasScrapBattery}
+                    onChange={(e) => setHasScrapBattery(e.target.checked)}
+                    className="w-5 h-5 rounded text-primary focus:ring-primary border-primary/30"
+                  />
+                  <label htmlFor="scrapBattery" className="text-sm font-semibold text-foreground cursor-pointer">
+                    ♻️ I have an old battery to exchange for a discount
+                  </label>
+                </div>
+              )}
               {/* Pickup Location Map Selector */}
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Pickup Location</label>

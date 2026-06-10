@@ -117,9 +117,23 @@ export async function POST(req: Request, { params }: Params) {
     );
 
     // Recalculate paymentAmount: original service amount + all sold products
-    const originalServiceAmount = waiveServiceFee ? 0 : Math.max(0, booking.paymentAmount - existingProductsTotal);
+    const existingScrapDiscount = booking.scrapBatteryExchange?.isExchanged ? (booking.scrapBatteryExchange.discountValue || 0) : 0;
+    const originalServiceAmount = waiveServiceFee ? 0 : Math.max(0, booking.paymentAmount - existingProductsTotal + existingScrapDiscount);
+    
+    let scrapDiscount = 0;
+    if (body.scrapBattery?.isExchanged) {
+      scrapDiscount = Number(body.scrapBattery.discountValue) || 0;
+      booking.scrapBatteryExchange = body.scrapBattery;
+    } else {
+      // If no scrap battery passed or isExchanged is false, retain existing but set discount to 0
+      if (booking.scrapBatteryExchange) {
+        booking.scrapBatteryExchange.isExchanged = false;
+        booking.scrapBatteryExchange.discountValue = 0;
+      }
+    }
+
     const totalProducts = existingProductsTotal + productsTotal;
-    const newPaymentAmount = Math.round((originalServiceAmount + totalProducts) * 100) / 100;
+    const newPaymentAmount = Math.max(0, Math.round((originalServiceAmount + totalProducts - scrapDiscount) * 100) / 100);
 
     booking.soldProducts = [...(booking.soldProducts || []), ...productSnapshots];
     booking.paymentAmount = newPaymentAmount;

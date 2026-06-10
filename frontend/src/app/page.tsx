@@ -1,5 +1,6 @@
 import HeroSection from '@/components/Home/HeroSection';
 import TrustBanner from '@/components/Home/TrustBanner';
+import ScrapBatteryBanner from '@/components/Home/ScrapBatteryBanner';
 import ServicesSection from '@/components/Home/ServicesSection';
 import HowItWorksSection from '@/components/Home/HowItWorksSection';
 import StatsSection from '@/components/Home/StatsSection';
@@ -11,6 +12,7 @@ export default function Home() {
     <>
       <HeroSection />
       <TrustBanner />
+      <ScrapBatteryBanner />
       <ServicesSection />
       <HowItWorksSection />
       <StatsSection />
