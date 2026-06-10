@@ -21,12 +21,12 @@ import Booking from "@/backend/models/Booking";
 // ── Company Constants ──────────────────────────────────────────────────────
 
 const COMPANY = {
-  name: "Erina Roadside Assistance Services Pvt. Ltd.",
+  name: "Erina Assistance Pvt. Ltd.",
   shortName: "Erina Assistance",
-  address: "Shop No.02,Dinnur Main Road,Bengaluru — 560067 ",
-  gstin: "29AAFCE8436B1Z3",
+  address: "Shop No.02,Dinnur Main Road,Kadugodi,Bengaluru — 560067 ",
+  gstin: "29AAJCE0215B1Z6",
   support: "support@erinaassistance.in",
-  phone: "+91-90358 18604",
+  phone: "+91-73400 66655",
   state: "Karnataka",
   stateCode: "29",
 };

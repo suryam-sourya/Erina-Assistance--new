@@ -33,6 +33,8 @@ import {
   Mail,
   User,
   UserCog,
+  Receipt,
+  Clock3,
   
 } from "lucide-react";
 import Link from "next/link";
@@ -256,7 +258,13 @@ export default function InvoicePage() {
     fetchInvoice();
   }, [id]);
 
-  const handlePrint = () => window.print();
+ const handlePrint = () => {
+  if (invoice) {
+    document.title = invoice.invoiceNumber;
+  }
+
+  window.print();
+};
 
   const handleAddProduct = () => {
     const newItem: InvoiceLineItem = {
@@ -401,7 +409,7 @@ export default function InvoicePage() {
   // ── Loading state ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
+      <div className=" bg-[#0B0F19] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           <p className="text-gray-600 text-xs font-bold uppercase tracking-widest">Loading Invoice...</p>
@@ -413,7 +421,7 @@ export default function InvoicePage() {
   // ── Error state ────────────────────────────────────────────────────────
   if (error || !invoice) {
     return (
-      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
+      <div className=" bg-[#0B0F19] flex items-center justify-center">
         <div className="text-center space-y-4">
           <FileText size={40} className="text-foreground/20 mx-auto" />
           <h2 className="text-white font-black text-xl uppercase tracking-wider">Invoice Not Found</h2>
@@ -518,22 +526,21 @@ export default function InvoicePage() {
 
       {/* ── Main Invoice Paper ─────────────────────────────────────────── */}
       <div
-        id="invoice-paper"
-       className="
-       relative
-max-w-6xl
-mx-auto
-bg-white
-rounded-3xl
-overflow-hidden
-shadow-2xl
-border
-border-gray-200
-print:max-w-none
-print:shadow-none
-print:border-0
+ id="invoice-paper"
+ className="
+ relative
+ mx-auto
+ bg-white
+ rounded-3xl
+ print:rounded-none
+ overflow-visible
+ shadow-2xl
+ print:shadow-none
+ print:max-w-none
+ print:w-auto
+ print:overflow-visible
 "
-      >
+>
         
         {/* ── Header Band ──────────────────────────────────────────────── */}
         <div className="
@@ -541,17 +548,17 @@ print:border-0
           border-b border-white/8 px-8 py-7
          print:bg-white print:border-b-2 print:border-black print:py-6
         ">
-         <div className="relative z-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+         <div className="relative z-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
             {/* Company Branding */}
 <div className="space-y-3">
   <img
     src="/logo-full.png"
     alt="Erina Assistance"
-    className="h-30 w-auto object-contain"
+    className="h-24 w-auto object-contain"
   />
 
   <p className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-    Roadside Assistance Services Pvt. Ltd.
+    Erina Assistance Pvt. Ltd.
   </p>
 
   <div className="space-y-1 text-sm text-gray-600">
@@ -585,40 +592,64 @@ print:border-0
 </div>
 
             {/* Invoice Meta */}
-            <div className="relative z-20 text-right space-y-4">
-                <h2 className="text-4xl font-black text-gray-800">
-                   TAX INVOICE
-              </h2>
+            <div className="relative z-20 text-right space-y-5">
 
-  <div className="inline-block bg-gradient-to-r from-orange-500 to-red-600 text-white px-5 py-3 rounded-xl font-black text-lg">
-    {invoice.invoiceNumber}
+  <h2 className="text-4xl font-black text-gray-800 tracking-wide mr-4">
+    TAX INVOICE
+  </h2>
+
+  <div className="flex justify-center">
+    <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-6 py-3 rounded-xl font-black text-lg shadow-md min-w-[280px] text-center">
+      {invoice.invoiceNumber}
+    </div>
   </div>
 
-  <div className="space-y-2 text-sm text-gray-700">
-    <p>
-      <strong>Date:</strong>{" "}
-      {formatDate(invoice.invoiceDate)}
-    </p>
+  <div className="flex flex-col items-center gap-3 text-sm text-gray-700">
 
-    <p>
-      <strong>Time:</strong>{" "}
-      {formatTime(invoice.invoiceDate)}
-    </p>
+    <div className="flex items-center gap-2">
+      <Calendar
+        size={16}
+        className="text-orange-600"
+      />
+      <span className="font-semibold">
+        <strong>Date:</strong>{" "}
+        {formatDate(invoice.invoiceDate)}
+      </span>
+    </div>
+
+    <div className="flex items-center gap-2">
+      <Clock3
+        size={16}
+        className="text-orange-600"
+      />
+      <span className="font-semibold">
+        <strong>Time:</strong>{" "}
+        {formatTime(  invoice.invoiceDate)}
+      </span>
+    </div>
 
     {booking.ticketId && (
-      <p>
-        <strong>Ticket:</strong>{" "}
-        {booking.ticketId}
-      </p>
+      <div className="flex items-center gap-2">
+        <Receipt
+          size={16}
+          className="text-orange-600"
+        />
+        <span className="font-semibold">
+          <strong>Ticket:</strong>{" "}
+          {booking.ticketId}
+        </span>
+      </div>
     )}
+
   </div>
+
 </div>
 
           </div>
         </div>
 
         {/* ── Billing Details Grid ──────────────────────────────────────── */}
-        <div className="px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6 border-b border-white/5 print:border-b print:border-gray-200">
+        <div className="px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-2 border-b border-white/5 print:border-b print:border-gray-200">
 
           <div className="border rounded-2xl overflow-hidden bg-white shadow-sm">
   <p className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-3 font-black uppercase tracking-wider text-sm">
@@ -731,7 +762,7 @@ print:border-0
             <div className="p-5">
               <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
                 <Car size={18} className="text-orange-600 shrink-0" />
-                <span className="font-semibold text-base text-gray-800"> {vehicle.name || vehicle.type || "Vehicle"} </span> {vehicle.plate && ( <span className="font-semibold text-base text-gray-700"> {vehicle.plate} </span> )}
+                <span className="font-semibold text-sm text-gray-800"> {vehicle.name || vehicle.type || "Vehicle"} </span> {vehicle.plate && ( <span className="font-semibold text-sm text-gray-700"> {vehicle.plate} </span> )}
               </div>
               <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
                 <Wrench size={18} className="text-orange-600 shrink-0" />
@@ -740,7 +771,7 @@ print:border-0
               {booking.technicianName && (
                 <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
                  <Building2 size={18} className="text-orange-600 shrink-0" />
-                  <span className="font-semibold text-base"> Technician: {booking.technicianName} </span>
+                  <span className="font-semibold text-sm"> Technician: {booking.technicianName} </span>
                   {booking.technicianPhone && (
                     <span className="text-gray-600 font-medium"> ({booking.technicianPhone}) </span>
                   )}
@@ -748,11 +779,11 @@ print:border-0
               )}
               <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
                 <Calendar size={18} className="text-orange-600 shrink-0" />
-                <span className="font-semibold text-base"> Dispatched: {formatDate(invoice.invoiceDate)} </span>
+                <span className="font-semibold text-sm"> Dispatched: {formatDate(invoice.invoiceDate)} </span>
               </div>
               <div className="flex items-center gap-2 text-gray-700 text-xs print:text-gray-600">
                 <Hash size={18} className="text-orange-600 shrink-0" />
-                <span className="font-mono font-bold text-base text-black"> {booking.id.slice(-8).toUpperCase()} </span>
+                <span className="font-mono font-bold text-sm text-black"> {booking.id.slice(-8).toUpperCase()} </span>
                 <span className="text-gray-500 text-sm"> Ref ID </span>
               </div>
             </div>
@@ -770,19 +801,19 @@ print:border-0
       # Description
     </th>
 
-    <th className="py-4 text-center text-sm font-black text-white uppercase tracking-wider">
+    <th className="w-[14%] py-4 text-center text-sm font-black text-white uppercase tracking-wider">
       HSN/SAC
     </th>
 
-    <th className="py-4 text-center text-sm font-black text-white uppercase tracking-wider">
+    <th className="w-[10%] py-4 text-center text-sm font-black text-white uppercase tracking-wider">
       Qty
     </th>
 
-    <th className="py-4 text-right text-sm font-black text-white uppercase tracking-wider">
+    <th className=" w-[18%] py-4 text-right text-sm font-black text-white uppercase tracking-wider">
       Rate (₹)
     </th>
 
-    <th className="py-4 pr-6 text-right text-sm font-black text-white uppercase tracking-wider rounded-tr-2xl">
+    <th className=" w-[18%] py-4 pr-6 text-right text-sm font-black text-white uppercase tracking-wider rounded-tr-2xl">
       {invoice.invoiceStatus === "DRAFT"
         ? "GST / Actions"
         : "Amount (₹)"}
@@ -938,13 +969,15 @@ print:border-0
                     <tr key={i} className="border-b border-gray-200">
 
   <td className="py-6 pr-4">
-    <p className="font-bold text-black text-xl">
+    <p className="font-bold text-black text-lg">
+      
+      
       {item.description
         ?.replace(/_/g, " ")
         ?.replace(/\b\w/g, (c) => c.toUpperCase())}
     </p>
 
-    <p className="text-gray-700 text-base mt-3 leading-7 font-medium">
+    <p className="text-gray-700 text-sm mt-3 leading-7 font-medium">
       {item.detail}
     </p>
 
@@ -955,7 +988,7 @@ print:border-0
     )}
   </td>
 
-  <td className="py-6 text-center text-gray-600 font-mono text-base font-semibold">
+  <td className="py-6 text-center text-gray-600 font-mono text-sm font-semibold">
     {item.hsnCode || item.sacCode || "—"}
   </td>
 
@@ -980,9 +1013,10 @@ print:border-0
         </div>
 
         {/* ── Tax & Total Summary ──────────────────────────────────────── */}
-        <div className="px-8 pb-6 print:pb-4">
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="px-8 pb-6 print:pb-2 print:block">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border ">
           <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50">
+
   <h3 className="font-bold text-orange-600 mb-4 uppercase">
     Notes & Terms
   </h3>
@@ -996,13 +1030,13 @@ print:border-0
   </ul>
 </div>
 <div className="ml-auto w-full max-w-md space-y-0">
-            <div className="w-full max-w-xs space-y-0">
+            <div className="w-full space-y-0">
               <div className="flex justify-between items-center py-3 border-b border-gray-200">
   <span className="text-sm font-semibold text-gray-700">
     Subtotal (excl. GST)
   </span>
 
-  <span className="text-base font-bold text-gray-900">
+  <span className="text-sm font-bold text-gray-900">
     ₹{fmt(taxData.subtotal)}
   </span>
 </div>
@@ -1014,7 +1048,7 @@ print:border-0
       : ""}
   </span>
 
-  <span className="text-base font-bold text-gray-900">
+  <span className="text-sm font-bold text-gray-900">
     ₹{fmt(taxData.cgst)}
   </span>
 </div>
@@ -1026,7 +1060,7 @@ print:border-0
       : ""}
   </span>
 
-  <span className="text-base font-bold text-gray-900">
+  <span className="text-sm font-bold text-gray-900">
     ₹{fmt(taxData.sgst)}
   </span>
 </div>
@@ -1035,7 +1069,7 @@ print:border-0
     Grand Total
   </span>
 
-  <span className="font-black text-3xl">
+  <span className="font-black text-2xl">
     ₹{fmt(taxData.grandTotal)}
   </span>
 </div>
@@ -1055,28 +1089,16 @@ print:border-0
           </div>
         </div>
 
-        {/* ── Notes & Terms ───────────────────────────────────────────────
-        <div className="mx-8 mb-6 p-5 bg-gray-50 border border-white/5 rounded-xl print:border print:border-gray-200 print:bg-gray-50 print:rounded-none">
-          <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-2 print:text-gray-500">
-            Notes &amp; Terms
-          </p>
-          <ul className="space-y-1">
-            {terms.map((note, i) => (
-              <li key={i} className="text-[9px] text-gray-600 print:text-gray-500 print:text-[10px] leading-relaxed">
-                {i + 1}. {note}
-              </li>
-            ))}
-          </ul>
-        </div> */}
+       
 
         {/* ── Footer ────────────────────────────────────────────────────── */}
-        <div className="px-8 py-6 bg-white">
+        <div className="px-8 py-2 bg-white">
 
-  <div className="flex items-center justify-center gap-4">
+  <div className="flex items-center justify-center gap-2">
 
     <div className="w-24 border-t border-red-400" />
 
-    <p className="text-[30px] font-medium tracking-wide text-black">
+    <p className="text-[16px] font-medium tracking-wide text-black">
       THANK YOU FOR CHOOSING{" "}
       <span className="font-bold text-orange-600">
         ERINA ASSISTANCE!
@@ -1092,15 +1114,114 @@ print:border-0
       </div>
 
       {/* ── Print-only global styles ─────────────────────────────────────── */}
-      <style>{`
-        @media print {
-          body { background: white !important; color: black !important; }
-          .print\\:hidden { display: none !important; }
-          aside, header, nav { display: none !important; }
-          main { padding: 0 !important; margin: 0 !important; overflow: visible !important; }
-          #invoice-paper { box-shadow: none !important; }
-        }
-      `}</style>
+     <style>{`
+@page {
+  size: A4 portrait;
+  margin: 5mm;
+}
+
+@media print {
+
+  html,
+  body,
+  #__next {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide admin UI */
+  .print\\:hidden,
+  aside,
+  nav,
+  header,
+  footer,
+  iframe,
+  button,
+  [data-sidebar],
+  [data-radix-popper-content-wrapper],
+  [data-sonner-toaster],
+  [data-chatbot],
+  .chat-widget,
+  #chat-widget {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Show only invoice */
+  body * {
+    visibility: hidden;
+  }
+
+  #invoice-paper,
+  #invoice-paper * {
+    visibility: visible;
+  }
+
+  #invoice-paper {
+    position: static !important;
+    display: block !important;
+
+    width: auto !important;
+    max-width: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    height: auto !important;
+    min-height: auto !important;
+
+    overflow: visible !important;
+
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+
+    page-break-after: auto !important;
+    page-break-before: auto !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  tbody {
+    page-break-inside: auto !important;
+  }
+
+  tr,
+  td,
+  th {
+    page-break-inside: avoid !important;
+  }
+
+  img {
+    max-width: 100% !important;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+`}</style>
     </>
   );
 }

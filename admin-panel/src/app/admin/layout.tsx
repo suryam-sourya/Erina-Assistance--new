@@ -309,7 +309,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* 4. Floating Ops Copilot AI Chatbot Widget */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end print:hidden">
         
         {/* Glowing floating action button (FAB) */}
         <button
