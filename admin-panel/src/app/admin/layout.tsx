@@ -121,7 +121,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-foreground flex font-sans overflow-hidden relative">
+    <div className="min-h-screen bg-[#0B0F19] text-foreground flex font-sans overflow-hidden relative print:min-h-0 print:block print:overflow-visible print:bg-white">
       
       {/* 1. Dynamic Top Operational Emergency Banner */}
       {activeAlertMessage && (
@@ -150,7 +150,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* 2. Responsive Navigation Sidebar (Drawer on Mobile / Sticky on Desktop) */}
       <aside 
-        className={`fixed md:sticky top-0 left-0 z-50 md:z-20 w-64 bg-card border-r border-border shrink-0 flex flex-col h-screen transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed md:sticky top-0 left-0 z-50 md:z-20 w-64 bg-card border-r border-border shrink-0 flex flex-col h-screen transform transition-transform duration-300 ease-in-out md:translate-x-0 print:hidden ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -253,10 +253,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* 3. Main Dashboard Workspace Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden print:h-auto print:overflow-visible print:block">
         
         {/* Top Navbar */}
-        <header className="h-16 bg-card/65 backdrop-blur-md border-b border-border flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+        <header className="h-16 bg-card/65 backdrop-blur-md border-b border-border flex items-center justify-between px-4 md:px-8 z-10 shrink-0 print:hidden">
           
           {/* Mobile hamburger menu & Section Title */}
           <div className="flex items-center gap-2 md:gap-3">
@@ -303,7 +303,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Content Body Grid */}
-        <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative ${activeAlertMessage ? 'pt-16' : ''}`}>
+        <main className={`flex-1 overflow-y-auto p-4 md:p-8 relative print:p-0 print:overflow-visible print:h-auto print:block ${activeAlertMessage ? 'pt-16 print:pt-0' : ''}`}>
           {children}
         </main>
       </div>

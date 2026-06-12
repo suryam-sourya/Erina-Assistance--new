@@ -4,10 +4,68 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, X, AlertTriangle } from 'lucide-react';
+import { Phone, X, AlertTriangle, MapPin, Loader2 } from 'lucide-react';
 
 export default function EmergencyButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleGPSSOS = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser. Please call the helpline.");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        setIsLocating(false);
+        const { latitude, longitude } = position.coords;
+        
+        // Silently log to backend as a full Emergency Booking
+        let trackingId = "";
+        try {
+          const res = await fetch('/api/bookings/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              location: { lat: latitude, lng: longitude },
+              status: 'emergency',
+              serviceType: 'other',
+              customerName: 'Emergency GPS Dispatch',
+              phone: 'Pending WhatsApp Verification'
+            })
+          });
+          const data = await res.json();
+          if (data.success && data.booking) {
+            trackingId = data.booking._id || data.booking.id || data.booking.ticketId;
+          }
+        } catch (e) {
+          console.error("Failed to log SOS alert to backend", e);
+        }
+
+        const mapsLink = `https://maps.google.com/?q=${latitude},${longitude}`;
+        const trackingLink = trackingId ? `\n\nTrack my case live: https://erinaassistance.in/tracking?id=${trackingId}` : "";
+        const message = `🚨 URGENT: I am stranded and need roadside assistance!\n\nMy exact location is here:\n${mapsLink}${trackingLink}\n\nPlease send a technician immediately!`;
+        const whatsappUrl = `https://wa.me/917340066655?text=${encodeURIComponent(message)}`;
+        // Avoid window.open('_blank') inside async callbacks to bypass strict mobile Safari popup blockers.
+        // Navigate to WhatsApp deep link directly.
+        window.location.href = whatsappUrl;
+        
+        // Redirect browser to tracking page after a slight delay, so when they return to Chrome, the map is waiting.
+        setTimeout(() => {
+          if (trackingId) {
+            window.location.href = `/tracking?id=${trackingId}`;
+          }
+        }, 800);
+      },
+      (error) => {
+        setIsLocating(false);
+        alert("Unable to retrieve your location. Please check your browser permissions or call the helpline directly.");
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -20,6 +78,23 @@ export default function EmergencyButton() {
             transition={{ duration: 0.2 }}
             className="mb-4 flex flex-col gap-3"
           >
+            {/* 1-Click GPS SOS */}
+            <button
+              onClick={handleGPSSOS}
+              disabled={isLocating}
+              className="flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-2xl shadow-xl shadow-red-500/30 hover:scale-105 transition-transform text-left disabled:opacity-70 disabled:hover:scale-100 glow-emergency"
+            >
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                {isLocating ? <Loader2 size={18} className="animate-spin" /> : <MapPin size={18} />}
+              </div>
+              <div>
+                <span className="font-bold text-sm block">1-Click GPS SOS</span>
+                <span className="text-[10px] text-red-100 font-semibold">
+                  {isLocating ? "Finding your location..." : "Share location & send alert"}
+                </span>
+              </div>
+            </button>
+
             {/* Call */}
             <Link
               href="tel:+917340066655"
@@ -46,20 +121,6 @@ export default function EmergencyButton() {
               <div>
                 <span className="font-bold text-sm block">WhatsApp Chat</span>
                 <span className="text-[10px] text-foreground/50 font-semibold">Instant response</span>
-              </div>
-            </Link>
-
-            {/* Emergency Booking */}
-            <Link
-              href="/booking"
-              className="flex items-center gap-3 bg-primary text-white px-5 py-3.5 rounded-2xl shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
-            >
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-                <Image src="/warning.png" alt="Emergency" width={18} height={18} className="object-contain" />
-              </div>
-              <div>
-                <span className="font-bold text-sm block">Emergency Booking</span>
-                <span className="text-[10px] text-white/60 font-semibold">Quick dispatch</span>
               </div>
             </Link>
           </motion.div>

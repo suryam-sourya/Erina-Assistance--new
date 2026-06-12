@@ -84,7 +84,7 @@ export default function Navbar() {
     { name: 'Services', href: '/#services' },
     { name: 'Membership', href: '/membership' },
     { name: 'Partner With Us', href: '/partner' },
-    { name: 'About Us', href: '/about' },
+    { name: 'Trip Calculator', href: '/road-trip-calculator' },
     { name: 'Contact', href: '/contact' },
   ];
 

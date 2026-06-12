@@ -55,6 +55,7 @@ export default function Dashboard() {
   
   // Mounted state to handle Recharts hydration in Next.js
   const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -353,7 +354,25 @@ export default function Dashboard() {
                       
                       {booking.status?.toLowerCase() === 'emergency' && (
                         <button
-                          onClick={() => updateBookingStatus(booking.id, 'assigned')}
+                          onClick={async () => {
+                            const phone = window.prompt("Enter customer WhatsApp number to link to this dispatch:");
+                            if (phone !== null) {
+                              try {
+                                if (phone) {
+                                  // Update phone in DB
+                                  await fetch(`/api/bookings/${booking.id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ customerPhone: phone })
+                                  });
+                                }
+                                updateBookingStatus(booking.id, 'assigned');
+                              } catch(e) {
+                                console.error(e);
+                                updateBookingStatus(booking.id, 'assigned');
+                              }
+                            }
+                          }}
                           className="px-2.5 py-1 bg-emergency hover:bg-emergency/80 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer animate-pulse"
                         >
                           Assign Unit

@@ -41,6 +41,13 @@ body {
   overflow-x: hidden;
 }
 
+@media print {
+  body, html {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
 /* Glassmorphism scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

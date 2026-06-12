@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Shared/Navbar";
 import Footer from "@/components/Shared/Footer";
 import EmergencyButton from "@/components/Shared/EmergencyButton";
+import WelcomeToast from "@/components/Shared/WelcomeToast";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Script from "next/script";
 
@@ -165,6 +166,7 @@ export default function RootLayout({
         />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <Navbar />
+          <WelcomeToast />
           {/* Removed LocationServiceabilityBar */}
           <main className="flex-grow">
             {children}

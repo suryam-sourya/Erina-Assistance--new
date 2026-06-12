@@ -3,9 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-primary: #FF3366;
-  --color-primary-hover: #E62E5C;
-  --color-secondary: #FF9933;
+  --color-primary: #E60000;
+  --color-primary-hover: #CC0000;
+  --color-secondary: #FFC107;
   --color-emergency: #EF4444;
   --color-success: #22C55E;
   --color-warning: #F59E0B;
@@ -41,8 +41,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; box-shadow: 0 0 15px rgba(255, 51, 102, 0.4); }
-  50% { opacity: .7; box-shadow: 0 0 30px rgba(255, 51, 102, 0.8); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 15px rgba(230, 0, 0, 0.4); }
+  50% { opacity: .7; box-shadow: 0 0 30px rgba(230, 0, 0, 0.8); }
 }
 
 @keyframes scroll-x {
@@ -92,7 +92,7 @@ body {
 /* ── Utilities ─────────────────────────────── */
 
 .glow-primary {
-  box-shadow: 0 0 20px rgba(255, 51, 102, 0.35), 0 0 60px rgba(255, 51, 102, 0.1);
+  box-shadow: 0 0 20px rgba(230, 0, 0, 0.35), 0 0 60px rgba(230, 0, 0, 0.1);
 }
 
 .glow-emergency {
@@ -111,7 +111,7 @@ body {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #FF3366, #FF9933);
+  background: linear-gradient(135deg, #E60000, #FFC107);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -134,9 +134,9 @@ input[type="range"]::-webkit-slider-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #FF3366;
+  background: #E60000;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
+  box-shadow: 0 0 10px rgba(230, 0, 0, 0.4);
   border: 2px solid white;
 }
 
@@ -144,9 +144,9 @@ input[type="range"]::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #FF3366;
+  background: #E60000;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
+  box-shadow: 0 0 10px rgba(230, 0, 0, 0.4);
   border: 2px solid white;
 }
 
