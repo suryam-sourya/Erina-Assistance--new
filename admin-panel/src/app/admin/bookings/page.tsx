@@ -884,12 +884,14 @@ alert("Ticket Created Successfully");
                           <div className="flex flex-col items-end gap-2">
                             {/* Permanently visible Sell Products button (for all active/completed bookings, except cancelled ones) */}
                             <div className="flex gap-2 flex-wrap justify-end">
-                              <button
-                                onClick={() => openSellModal(booking)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-                              >
-                                <Package size={11} /> + Sell Products
-                              </button>
+                              {booking.status?.toLowerCase() !== "cancelled" && (
+    <button
+      onClick={() => openSellModal(booking)}
+      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+    >
+      <Package size={11} /> + Sell Products
+    </button>
+  )}
 
                               {booking.status?.toLowerCase() !== 'cancelled' && (() => {
                                 const cleanPhone = booking.customerPhone?.replace(/\D/g, '') || '';
