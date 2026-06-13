@@ -80,7 +80,7 @@ export default function GoogleReviewsSection() {
         <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
           <div className="text-center md:text-left">
             <div className="flex flex-col items-center md:items-start mb-4">
-              <span className="text-5xl md:text-6xl font-black text-gray-400 dark:text-gray-500 tracking-tight leading-none mb-1">
+              <span className="text-5xl md:text-6xl font-black text-yellow-400 dark:text-yellow-500 tracking-tight leading-none mb-1">
                 ನಮ್ಮ
               </span>
               <div className="flex items-baseline gap-3">

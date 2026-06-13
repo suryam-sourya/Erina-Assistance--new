@@ -12,9 +12,9 @@ export async function GET() {
       createdAt: -1,
     });
 
-    // Self-healing database check: release busy technicians if their assigned job is completed, cancelled, or missing
+    // Self-healing database check: release technicians if their assigned job is completed, cancelled, or missing
     for (const tech of technicians) {
-      if (tech.availability === "busy" && tech.currentJob) {
+      if (tech.currentJob) {
         const job = mongoose.Types.ObjectId.isValid(tech.currentJob)
           ? await Booking.findById(tech.currentJob)
           : await Booking.findOne({ ticketId: tech.currentJob });

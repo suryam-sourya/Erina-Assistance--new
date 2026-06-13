@@ -41,14 +41,14 @@ export default function HeroSection() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-white leading-[1.1] mb-6 tracking-tight">
-              24/7 AI-Powered<br />
+              24/7 Tech-enabled<br />
               Roadside{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
                 Assistance
               </span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl">
-              Stranded on the road? Don&apos;t panic. Our AI-powered platform dispatches the nearest verified technician to get you back on track — anywhere in Bangalore, any time.
+              Stranded on the road? Don&apos;t panic. Our tech-enabled platform dispatches the nearest verified technician to get you back on track — anywhere in Bangalore, any time.
             </p>
           </motion.div>
 

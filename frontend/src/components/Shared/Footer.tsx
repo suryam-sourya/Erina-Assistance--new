@@ -83,7 +83,10 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li><Link href="/" className="hover:text-secondary transition-colors text-[11px]">Home</Link></li>
-              <li><Link href="/road-trip-calculator" className="hover:text-secondary transition-colors text-[11px]">Trip Calculator</Link></li>
+              <li className="flex flex-col">
+                <Link href="/road-trip-calculator" className="hover:text-secondary transition-colors text-[11px]">Trip Calculator</Link>
+                <span className="text-[9px] text-primary font-bold mt-0.5">Coming soon</span>
+              </li>
               <li><Link href="/membership" className="hover:text-secondary transition-colors text-[11px]">Membership Plans</Link></li>
               <li><Link href="/partner" className="hover:text-secondary transition-colors text-[11px]">Partner With Us</Link></li>
               <li><Link href="/contact" className="hover:text-secondary transition-colors text-[11px]">Contact Us</Link></li>

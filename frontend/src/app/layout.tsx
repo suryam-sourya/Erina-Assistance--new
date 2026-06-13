@@ -7,6 +7,7 @@ import EmergencyButton from "@/components/Shared/EmergencyButton";
 import WelcomeToast from "@/components/Shared/WelcomeToast";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Script from "next/script";
+import MetaPixel from "@/components/Shared/MetaPixel";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -164,6 +165,7 @@ export default function RootLayout({
           src="https://t.contentsquare.net/uxa/2c6cb86d6f5b3.js"
           strategy="afterInteractive"
         />
+        <MetaPixel />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <Navbar />
           <WelcomeToast />
